@@ -1,9 +1,16 @@
 # ELK-14-Methods-and-Algorithms-for-Power-Systems
 
+
 Cooperation with Trude Byre
 
-First project: - 
-Second project: - 
-Third project: - 
-Fourth project: - 
+
+First project: -
+
+Second project: -
+
+Third project: -
+
+Fourth project: -
+
 Fifth project: -
+
