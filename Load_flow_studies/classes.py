@@ -1,8 +1,11 @@
-# I want one general class for the NR method
+# One general class for the NR method
 
-# I want another class or container the nodes
+# One class for the busses
 
 class Bus:
+    """
+    The bus class contains all the information of a specific bus
+    """
     def __init__(self, voltage, angle, real_power_specified, reactive_power_specified, bus_number, slack_bus_number):
         self.voltage = voltage
         self.angle = angle
