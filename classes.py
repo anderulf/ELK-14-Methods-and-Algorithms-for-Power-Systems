@@ -1,10 +1,23 @@
-# One general class for the NR method
 
-# One class for the busses
+class Power_Network:
+    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number):
+        pass
 
-class Bus:
+class NR_Method(Power_Network):
+    """
+    The power network class contains all the information about the network, and Bus objects for each bus in the network.
+    """
+    def __init__(self):
+        pass
+
+class Jacobian(NR_Method):
+    def __init__(self):
+        pass
+
+class Bus(Power_Network):
     """
     The bus class contains all the information of a specific bus
+    It is a subclass of the Power_Network class
     """
     def __init__(self, voltage, angle, real_power_specified, reactive_power_specified, bus_number, slack_bus_number):
         self.voltage = voltage
