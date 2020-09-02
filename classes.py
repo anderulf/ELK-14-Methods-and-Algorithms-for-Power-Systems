@@ -42,7 +42,7 @@ class Bus(Power_Network):
         Overwrite the string type for this class so that a class object can be printed with print-method.
         """
         if self.is_slack_bus:
-            s = " /*/*/*/ SLACK BUS (bus {}) /*/*/*/".format(self.bus_number)
+            s = 10*"*" + " SLACK BUS (bus {}) ".format(self.bus_number) + 10 * "*"
         else:
             s = "Bus {}: voltage = {} pu, angle =  {}, P_calc = {}, Q_calc = {}, delta P  = {}, delta Q = {}".format(
                 self.bus_number, self.voltage, self.angle, self.real_power_calculated, self.reactive_power_calculated,
