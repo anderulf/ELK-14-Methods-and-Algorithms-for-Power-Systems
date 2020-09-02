@@ -45,6 +45,14 @@ class Power_Network:
         if self.n_pd > 1 or self.n_pd == 0:
             print("Warning: The system is not valid. It has {} slack buses".format(self.n_pd))
 
+class NR_Method(Power_Network):
+    """
+    The newton raphson method class contains all necessary values and operations associated with the method
+    It is a subclass of the Power_Network class
+    """
+    def __init__(self):
+        pass
+
 class Jacobian(Power_Network):
     """
     The jacobian class contains the jacobian matrix builder and all values associated with the jacobian matrix
@@ -148,3 +156,5 @@ class Bus(Power_Network):
                 self.bus_number, self.voltage, self.angle, self.real_power_calculated, self.reactive_power_calculated,
                 self.real_power_delta, self.reactive_power_delta)
         return s
+from nr_classes import NR_Method as nr
+nr_object = nr
