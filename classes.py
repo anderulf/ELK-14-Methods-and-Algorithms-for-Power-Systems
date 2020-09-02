@@ -1,16 +1,19 @@
+from newton_raphson_method.nr_classes import NR_Method
 
 class Power_Network:
-    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number):
-        pass
-
-class NR_Method(Power_Network):
     """
     The power network class contains all the information about the network, and Bus objects for each bus in the network.
     """
-    def __init__(self):
+    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number):
         pass
 
+
 class Jacobian(NR_Method):
+    """
+    The jacobian class contains the jacobian matrix builder and all values associated with the jacobian matrix
+    It is a subclass of the NR_Method class
+    """
+
     def __init__(self):
         pass
 
