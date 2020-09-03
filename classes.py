@@ -68,56 +68,78 @@ class Jacobian(Power_Network):
         """
         Calculate and return the jacobian matrix for the current iteration.
         The full matrix is constructed from the submatrix parts; J1, J2, J3, J4.
-        n = n_pq + n_pv?
+        n = n_pq + n_pv
 
         Read:
-        The offset is set because a element in the matrix, ie. 0,0 should hold d P_2/d delta_2 if bus 1 is slack. Thus,
-        in this example i and j must be offset with 2.
-
+        The offset is set because a element in the matrix, ie. 0,0 should hold P_2/d delta_2 if bus 1 is slack. Thus,
+        if bus 1 is slack bus then offset with 2. Ie. one index offset due to the inherit zero-indexing of python, and
+        another for the slack bus which is not included in the matrix. With this simple method the algorithm must be
+        altered if the slack bus is not bus 1.
         """
         buses = self.buses_dict
         self.jacobian = np.zeros([self.m, self.m])
         i_offset = 2
         j_offset = 2
         for i in range(self.n):
+            # Generalized slack bus method proposal
+            #if i == self.slack_bus_number:
+            #    i_offset = 2
             # J1 of Jacobian
             for j in range(self.n):
+                #if j == self.slack_bus_number:
+                #    j_offset = 2
+                # Diagonal element
                 if i == j:
                     self.jacobian[i, j] = -buses[i + i_offset].q_calc - y_bus[i + 1, i + 1].imag * buses[
                         i + i_offset].voltage * buses[i + i_offset].voltage
+                # Non-diagonal element
                 else:
                     self.jacobian[i, j] = abs(buses[i + i_offset].voltage) * abs(buses[j + j_offset].voltage) * (
                             y_bus[i + 1, j + 1].real * np.sin(buses[i + i_offset].delta - buses[j + j_offset].delta) -
                             y_bus[i + 1, j + 1].imag * np.cos(
                         buses[i + i_offset].delta - buses[j + j_offset].delta))
+            #j_offset = 1
             # J2 of Jacobian
             for j in range(self.n_pq):
+                # if j == self.slack_bus_number:
+                #    j_offset += 1
+                # Diagonal element
                 if i == j:
                     self.jacobian[i, j + self.n] = buses[i + i_offset].p_calc / abs(buses[i + i_offset].voltage) + \
                                                    y_bus[i + 1, i + 1].real * abs(buses[i + i_offset].voltage)
+                # Non-diagonal element
                 else:
                     self.jacobian[i, j + self.n] = abs(buses[i + i_offset].voltage) * (
                                 y_bus[i + 1, j + 1].real * np.cos(
                         buses[i + i_offset].delta - buses[j + j_offset].delta) + y_bus[i + 1, j + 1].imag * np.sin(
                         buses[i + i_offset].delta - buses[j + j_offset].delta))
-
+        #i_offset = 1
+        #j_offset = 1
         for i in range(self.n_pq):
             # J3 of Jacobian
             for j in range(self.n):
+                # if j == self.slack_bus_number:
+                #    j_offset = 2
+                # Diagonal element
                 if i == j:
                     self.jacobian[i + self.n, j] = buses[i + i_offset].p_calc - y_bus[i + 1, i + 1].real * buses[
                         i + i_offset].voltage * buses[i + i_offset].voltage
+                # Non-diagonal element
                 else:
                     self.jacobian[i + self.n, j] = -abs(buses[i + i_offset].voltage) * abs(
                         buses[j + j_offset].voltage) * (y_bus[i + 1, j + 1].real * np.cos(
                         buses[i + i_offset].delta - buses[j + j_offset].delta) + y_bus[i + 1, j + 1].imag * np.sin(
                         buses[i + i_offset].delta - buses[j + j_offset].delta))
-
+            #j_offset = 1
+            # J4 of Jacobian
             for j in range(self.n_pq):
-                # J4 of Jacobian
+                # if j == self.slack_bus_number:
+                #    j_offset = 2
+                # Diagonal element
                 if i == j:
                     self.jacobian[i + self.n, j + self.n] = buses[i + i_offset].q_calc / abs(
                         buses[i + i_offset].voltage) - y_bus[i + 1, i + 1].imag * abs(buses[i + i_offset].voltage)
+                # Non-diagonal element
                 else:
                     self.jacobian[i + self.n, j + self.n] = abs(buses[i + i_offset].voltage) * (
                                 y_bus[i + 1, j + 1].real * np.sin(
@@ -156,5 +178,3 @@ class Bus(Power_Network):
                 self.bus_number, self.voltage, self.angle, self.real_power_calculated, self.reactive_power_calculated,
                 self.real_power_delta, self.reactive_power_delta)
         return s
-from nr_classes import NR_Method as nr
-nr_object = nr
