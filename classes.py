@@ -2,16 +2,16 @@ import cmath as math
 import numpy as np
 
 from supporting_methods import polar_to_rectangular
+
 class Power_Network:
     """
     The power network class contains all the information about the network, and Bus objects for each bus in the network.
     """
-    def __init__(self, real_power_dict, reactive_power_dict, voltage_dict, angle_dict, slack_bus_number):
+    def __init__(self, real_power_dict, reactive_power_dict, voltage_dict, angle_dict, slack_bus_number, ybus):
         self.slack_bus_number = slack_bus_number
-        self.ybus = None
+        self.ybus = ybus
         self.buses_dict = {}
         self.fill_buses_dict(real_power_dict, reactive_power_dict, voltage_dict, angle_dict)
-        self.create_ybus()
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, angle_dict):
         """
@@ -21,18 +21,12 @@ class Power_Network:
             self.buses_dict[int(bus_number)] = Bus(voltage_dict[bus_number],
                                                    angle_dict[bus_number], p_dict[bus_number], q_dict[bus_number], bus_number, self.slack_bus_number)
 
-    def create_ybus(self):
-        """
-        Create based on network setup or create more general which can be used for multiple configurations (different number of buses)
-        """
-        self.ybus = np.matrix([])
-
-
-class NR_Method(Power_Network):
+class NR_Method:
     """
     The newton raphson method class contains all necessary values and operations associated with the method
     """
-    def __init__(self):
+    def __init__(self, buses_dict):
+        self.buses_dict = buses_dict
         self.iteration = 1
         self.n_pq = 0
         self.n_pv = 0
