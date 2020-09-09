@@ -2,6 +2,8 @@
 from classes import NR_Method
 import numpy as np
 
+# Hei Trude
+
 error_limit = 0.001
 q_limit = True
 limit_bus = 5
