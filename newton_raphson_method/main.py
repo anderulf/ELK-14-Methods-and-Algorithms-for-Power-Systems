@@ -2,7 +2,7 @@
 from classes import NR_Method
 import numpy as np
 
-# Hei Trude Byre
+# test
 
 error_limit = 0.001
 q_limit = True
