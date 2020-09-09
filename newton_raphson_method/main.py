@@ -1,3 +1,4 @@
+#Heihei Anders
 from classes import NR_Method
 import numpy as np
 
