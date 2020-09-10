@@ -29,8 +29,8 @@ class NR_Method:
         self.n_pd = 0
         self.n = 0
         self.m = 0
-        self.jacobian = np.zeros([self.m, self.m])
         self.get_n_values()
+        self.jacobian = np.zeros([self.m, self.m])
         self.loss_matrix_p = None
         self.loss_matrix_q = None
         self.power_flow_matrix = None

@@ -61,7 +61,6 @@ while N_R.power_error() > 0.0001:
 
 print("*--- ITERATION COMPLETED ---*")
 print("Iterations: {}".format(iter))
-
 # Get post analysis results
 N_R.calculate_line_data()
 N_R.print_line_data()
