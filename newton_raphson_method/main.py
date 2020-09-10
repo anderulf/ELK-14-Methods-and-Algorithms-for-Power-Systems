@@ -1,7 +1,7 @@
 ﻿import Ybus as ad
 from classes import NR_Method
 import numpy as np
-
+# heisann
 """
 Settings:
     outage  can be set to
