@@ -352,6 +352,22 @@ class Line:
         self.impedance = complex(resistance, reactance)
         self.conductance = self.impedance.real
         self.susceptance = self.impedance.imag
+        self.p_loss = 0
+        self.q_loss = 0
+        self.current = 0
+
+
+    def __str__(self):
+        return self.name
+
+    def print_line_data(self):
+        """
+        Prints the line data on the format
+        Line #-#: Z=R+jX, Y=G+jB
+
+        where Z is the impedance and Y is the admittance
+        """
+        print(self.name + ": Z={}+j{}, Y = {}+j{}".format(round(self.resistance,2), round(self.reactance,2), round(self.conductance,2), round(self.susceptance, 2)))
 
 """
 Auxillary methods
