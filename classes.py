@@ -38,6 +38,9 @@ class NR_Method:
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
+        self.x_new = None
+        self.x_old = None
+        self.diff_b = None
 
     def fill_nodes_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
         """
@@ -96,18 +99,6 @@ class NR_Method:
                             nodes[i].delta - nodes[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
                     except Exception as e:
                         print(e)
-                if i == 1:
-                    print("Q_calc,1")
-                    print(abs(self.y_bus[0, 0]))
-                    print(nodes[1].delta - nodes[1].delta - ma.phase(self.y_bus[0, 0]))
-                    print("+")
-                    print(abs(self.y_bus[0, 1]))
-                    print(nodes[1].delta - nodes[2].delta - ma.phase(self.y_bus[0, 1]))
-                    print("+")
-                    print(abs(self.y_bus[0, 2]))
-                    print(nodes[1].delta - nodes[3].delta - ma.phase(self.y_bus[0, 2]))
-                    print("=")
-                    print(nodes[1].q_calc)
 
 
     def check_limit(self, q_limit, lim_node, lim_size):
@@ -174,23 +165,11 @@ class NR_Method:
             #if i == self.slack_node-1:
             #    i_offset = 2
             for j in range(self.n):
-                print("Jacobian J1 i,j = {},{}".format(i, j))
                 #if j == self.slack_node-1:
                 #    j_offset = 2
                 if i == j:
                     self.jacobian[i, j] = -nodes[i + 1].q_calc - self.y_bus[i, j].imag * nodes[
                         i + 1].voltage * nodes[i + 1].voltage
-                    if i == 0 and j == 0:
-                        print("Jacobian 1,1 is:")
-                        print(-nodes[1].q_calc)
-                        print("-")
-                        print(self.y_bus[0,0].imag)
-                        print("*")
-                        print(nodes[1].voltage)
-                        print("*")
-                        print(nodes[1].voltage)
-                        print("=")
-                        print(-nodes[1].q_calc - self.y_bus[0,0].imag * nodes[1].voltage * nodes[1].voltage)
                 else:
                     self.jacobian[i, j] = abs(nodes[i + 1].voltage) * abs(nodes[j + 1].voltage) * (
                             self.y_bus[i, j].real * np.sin(nodes[i + 1].delta - nodes[j + 1].delta) -
@@ -245,22 +224,20 @@ class NR_Method:
         """
         Update the the system values by calculating the next step in the NS method
         """
-        x_new = np.zeros([self.m, 1])
-        x_old = np.zeros([self.m, 1])
-        diff_b = np.zeros([self.m, 1])
+        self.x_new = np.zeros([self.m, 1])
+        self.x_old = np.zeros([self.m, 1])
+        self.diff_b = np.zeros([self.m, 1])
         for i in range(self.n):
-            x_old[i, 0] = self.nodes_dict[i + 2].delta
-            diff_b[i, 0] = self.nodes_dict[i + 2].delta_p
+            self.x_old[i, 0] = self.nodes_dict[i + 2].delta
+            self.diff_b[i, 0] = self.nodes_dict[i + 2].delta_p
         for i in range(self.n_pq):
-            diff_b[i + self.n, 0] = self.nodes_dict[i + 2].delta_q
-            x_old[i + self.n, 0] = self.nodes_dict[i + 2].voltage
-        print("delta_x")
-        print(np.linalg.solve(self.jacobian, diff_b))
-        x_new = x_old + np.linalg.solve(self.jacobian, diff_b)
+            self.diff_b[i + self.n, 0] = self.nodes_dict[i + 2].delta_q
+            self.x_old[i + self.n, 0] = self.nodes_dict[i + 2].voltage
+        self.x_new = self.x_old + np.linalg.solve(self.jacobian, self.diff_b)
         for i in range(self.n):
-            self.nodes_dict[i + 2].delta = x_new[i, 0]
+            self.nodes_dict[i + 2].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
-            self.nodes_dict[i + 2].voltage = x_new[i + self.n, 0]
+            self.nodes_dict[i + 2].voltage = self.x_new[i + self.n, 0]
 
     def calculate_line_data(self):
         """
@@ -307,16 +284,7 @@ class NR_Method:
         for i in range(rows - 1):
             for j in range(rows - 1, i, -1):
                 if self.loss_matrix_p[i, j]:
-                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1,
-                                                                                                      round(
-                                                                                                          self.current_matrix[
-                                                                                                              i, j], 4),
-                                                                                                      round(
-                                                                                                          self.power_flow_matrix[
-                                                                                                              i, j].real,
-                                                                                                          4), round(
-                            self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(
-                            self.loss_matrix_q[i, j], 4)))
+                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1, round(self.current_matrix[i, j], 4), round(self.power_flow_matrix[i, j].real,4), round(self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(self.loss_matrix_q[i, j], 4)))
 
     def calculate_slack_values(self):
         """
@@ -334,6 +302,13 @@ class NR_Method:
         self.nodes_dict[self.slack_node].p_calc += self.total_losses_p
         self.nodes_dict[self.slack_node].q_calc += self.total_losses_q
 
+    def print_matrices(self):
+        print("Jacobian:")
+        print(self.jacobian)
+        print("Mismatches")
+        print(self.diff_b)
+        print("New x vector")
+        print(self.x_new)
 
 class Node:
     """

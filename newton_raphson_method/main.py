@@ -52,8 +52,8 @@ while N_R.power_error() > 0.0001:
     N_R.error_specified_vs_calculated()
     N_R.print_nodes()
     N_R.create_jacobian()
-    print(N_R.jacobian)
     N_R.update_values()
+    N_R.print_matrices()
     iter += 1
     if iter > 7:
         print("No convergence")
