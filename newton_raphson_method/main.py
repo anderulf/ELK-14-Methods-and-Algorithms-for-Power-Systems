@@ -55,7 +55,7 @@ while N_R.power_error() > 0.0001:
     print(N_R.jacobian)
     N_R.update_values()
     iter += 1
-    if iter > 1000:
+    if iter > 6:
         print("No convergence")
         break
 
