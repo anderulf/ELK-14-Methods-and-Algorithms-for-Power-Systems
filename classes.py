@@ -157,11 +157,15 @@ class NR_Method:
         """
         nodes = self.nodes_dict
         self.jacobian = np.zeros([self.m, self.m])
-        i_offset = 2
-        j_offset = 2
+        i_offset = 1
+        j_offset = 1
         for i in range(self.n):
             # J1 of Jacobian
+            if i == self.slack_node:
+                i_offset = 2
             for j in range(self.n):
+                if j == self.slack_node:
+                    j_offset = 2
                 if i == j:
                     self.jacobian[i, j] = -nodes[i + i_offset].q_calc - self.y_bus[i + 1, i + 1].imag * nodes[
                         i + i_offset].voltage * nodes[i + i_offset].voltage
@@ -170,8 +174,11 @@ class NR_Method:
                             self.y_bus[i + 1, j + 1].real * np.sin(nodes[i + i_offset].delta - nodes[j + j_offset].delta) -
                             self.y_bus[i + 1, j + 1].imag * np.cos(
                         nodes[i + i_offset].delta - nodes[j + j_offset].delta))
+            j_offset = 1
             # J2 of Jacobian
             for j in range(self.n_pq):
+                if j == self.slack_node:
+                    j_offset = 2
                 if i == j:
                     self.jacobian[i, j + self.n] = nodes[i + i_offset].p_calc / abs(nodes[i + i_offset].voltage) + \
                                                    self.y_bus[i + 1, i + 1].real * abs(nodes[i + i_offset].voltage)
@@ -179,10 +186,15 @@ class NR_Method:
                     self.jacobian[i, j + self.n] = abs(nodes[i + i_offset].voltage) * (self.y_bus[i + 1, j + 1].real * np.cos(
                             nodes[i + i_offset].delta - nodes[j + j_offset].delta) + self.y_bus[i + 1, j + 1].imag * np.sin(
                             nodes[i + i_offset].delta - nodes[j + j_offset].delta))
-
+        i_offset = 1
+        j_offset = 1
         for i in range(self.n_pq):
             # J3 of Jacobian
+            if i == self.slack_node:
+                i_offset = 2
             for j in range(self.n):
+                if j == self.slack_node:
+                    j_offset = 2
                 if i == j:
                     self.jacobian[i + self.n, j] = nodes[i + i_offset].p_calc - self.y_bus[i + 1, i + 1].real * nodes[
                         i + i_offset].voltage * nodes[i + i_offset].voltage
@@ -191,9 +203,11 @@ class NR_Method:
                         nodes[j + j_offset].voltage) * (self.y_bus[i + 1, j + 1].real * np.cos(
                         nodes[i + i_offset].delta - nodes[j + j_offset].delta) + self.y_bus[i + 1, j + 1].imag * np.sin(
                         nodes[i + i_offset].delta - nodes[j + j_offset].delta))
-
+            j_offset = 1
             for j in range(self.n_pq):
                 # J4 of Jacobian
+                if j == self.slack_node:
+                    j_offset = 2
                 if i == j:
                     self.jacobian[i + self.n, j + self.n] = nodes[i + i_offset].q_calc / abs(
                         nodes[i + i_offset].voltage) - self.y_bus[i + 1, i + 1].imag * abs(nodes[i + i_offset].voltage)
