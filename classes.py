@@ -47,7 +47,7 @@ class NR_Method:
         Initialize buses_dict based on input data
         """
         for bus_number in p_dict:
-            self.buses_dict[int(bus_number)] = Bus(p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
+            self.buses_dict[int(bus_number)] = Bus(bus_number, p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
                                                  delta_dict[bus_number])
 
     def get_n_values(self):
@@ -75,7 +75,7 @@ class NR_Method:
             "System has {0} slack bus, {1} PQ-bus(es) and {2} PV-bus(es). The jacobian matrix has dimension: {3}x{3}".format(
                 self.n_pd, self.n_pq, self.n_pv, self.m))
         for bus_number in self.buses_dict:
-            self.buses_dict[bus_number].print_data(bus_number, self.slack_bus_number)
+            self.buses_dict[bus_number].print_data(self.slack_bus_number)
 
     def calc_new_power(self):
         """
@@ -317,7 +317,8 @@ class Bus:
     Object holding data for a bus
     """
 
-    def __init__(self, p_spec, q_spec, voltage, delta):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
+        self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
         self.voltage = voltage
@@ -327,19 +328,30 @@ class Bus:
         self.delta_p = 1
         self.delta_q = 1
 
-    def print_data(self, bus_number, slack_bus_number):
+    def print_data(self, slack_bus_number):
         """
         Print the data for a bus
         """
-        if bus_number == slack_bus_number:
+        if self.bus_number == slack_bus_number:
             s = " **** SLACK BUS ****"
         else:
             s = ""
         print(
             "Bus {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
-                bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
+                self.bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
                 round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
 
+
+class Line:
+    def __init__(self, from_bus, to_bus, resistance, reactance):
+        self.name = "Line {}-{}".format(to_bus.bus_number, to_bus.bus_number)
+        self.from_bus = to_bus
+        self.to_bus = from_bus
+        self.resistance = resistance
+        self.reactance = reactance
+        self.impedance = complex(resistance, reactance)
+        self.conductance = self.impedance.real
+        self.susceptance = self.impedance.imag
 
 """
 Auxillary methods
