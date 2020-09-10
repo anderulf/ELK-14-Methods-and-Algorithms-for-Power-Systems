@@ -89,7 +89,7 @@ class NR_Method:
             else:
                 for j in nodes:
                     try:
-                        # Adding the Q's from the lines. Node that Ybus is offset with -1 because Python uses 0-indexing and the nodes are indexed from 1
+                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the nodes are indexed from 1
                         nodes[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * nodes[i].voltage * nodes[j].voltage * np.cos(
                             nodes[i].delta - nodes[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
                         nodes[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * nodes[i].voltage * nodes[j].voltage * np.sin(
@@ -139,9 +139,6 @@ class NR_Method:
                 error_list.append(abs(nodes[i].delta_p))
             if not nodes[i].q_spec == None:
                 error_list.append(abs(nodes[i].delta_q))
-        print(error_list)
-        print(max(error_list))
-        print(max(error_list) > 0.001)
         return max(error_list)
 
     def create_jacobian(self):
@@ -216,8 +213,9 @@ class NR_Method:
         for i in range(self.n_pq):
             diff_b[i + self.n, 0] = self.nodes_dict[i + 2].delta_q
             x_old[i + self.n, 0] = self.nodes_dict[i + 2].voltage
-        inv_jac = np.linalg.inv(self.jacobian)
-        x_new = x_old + np.matmul(inv_jac, diff_b)
+        print("delta_x")
+        print(np.linalg.solve(self.jacobian, diff_b))
+        x_new = x_old + np.linalg.solve(self.jacobian, diff_b)
         for i in range(self.n):
             self.nodes_dict[i + 2].delta = x_new[i, 0]
         for i in range(self.n_pq):

@@ -1,7 +1,7 @@
 import numpy as np
 
-z12 = complex(0.1, 0.2)
-z13 = complex(0.05, 0.25)
+z12 = complex(0.05, 0.2)
+z13 = complex(0.05, 0.1)
 z23 = complex(0.05, 0.15)
 
 

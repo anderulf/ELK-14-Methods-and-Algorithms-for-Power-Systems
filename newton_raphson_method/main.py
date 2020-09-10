@@ -13,21 +13,21 @@ Settings:
 Q_limit, lim_node and lim_size decides if there is a limit, which node it applies to and the limit size
 Only works for one node.
 """
-q_limit = True
-lim_node = 5
+q_limit = False
+lim_node = 3
 lim_size = 1
 
 """
 Initial values
 """
-#  Voltages for 2,3,4 and the delta are guess initial values
-slack_node = 1
-V = {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1}
-delta = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+#  Voltages for 1,2 and the delta are guessed initial values
+slack_node = 3
+V = {"1": 1, "2": 1, "3": 1}
+delta = {"1": 0, "2": 0, "3": 0}
 # Q values from project
-Q = {"1": None, "2": -0.6, "3": -0.4, "4": -0.2, "5": None}
+Q = {"1": -0.5, "2": -0.5, "3": None}
 # P values from project
-P = {"1": None, "2": -0.4, "3": -0.8, "4": -0.3, "5": 0.9}
+P = {"1": -1, "2": -0.5, "3": None}
 
 """
 Program
