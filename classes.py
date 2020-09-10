@@ -223,21 +223,23 @@ class NR_Method:
     def update_values(self):
         """
         Update the the system values by calculating the next step in the NS method
+
+        This method uses a default offset of 1 for the nodes
         """
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.diff_b = np.zeros([self.m, 1])
         for i in range(self.n):
-            self.x_old[i, 0] = self.nodes_dict[i + 2].delta
-            self.diff_b[i, 0] = self.nodes_dict[i + 2].delta_p
+            self.x_old[i, 0] = self.nodes_dict[i + 1].delta
+            self.diff_b[i, 0] = self.nodes_dict[i + 1].delta_p
         for i in range(self.n_pq):
-            self.diff_b[i + self.n, 0] = self.nodes_dict[i + 2].delta_q
-            self.x_old[i + self.n, 0] = self.nodes_dict[i + 2].voltage
+            self.diff_b[i + self.n, 0] = self.nodes_dict[i + 1].delta_q
+            self.x_old[i + self.n, 0] = self.nodes_dict[i + 1].voltage
         self.x_new = self.x_old + np.linalg.solve(self.jacobian, self.diff_b)
         for i in range(self.n):
-            self.nodes_dict[i + 2].delta = self.x_new[i, 0]
+            self.nodes_dict[i + 1].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
-            self.nodes_dict[i + 2].voltage = self.x_new[i + self.n, 0]
+            self.nodes_dict[i + 1].voltage = self.x_new[i + self.n, 0]
 
     def calculate_line_data(self):
         """
@@ -303,11 +305,11 @@ class NR_Method:
         self.nodes_dict[self.slack_node].q_calc += self.total_losses_q
 
     def print_matrices(self):
-        print("Jacobian:")
+        print("\nJacobian:")
         print(self.jacobian)
-        print("Mismatches")
+        print("\nMismatches")
         print(self.diff_b)
-        print("New x vector")
+        print("\nNew x vector")
         print(self.x_new)
 
 class Node:
@@ -330,7 +332,7 @@ class Node:
         Print the data for a node
         """
         if node_num == slack_node:
-            s = " **SLACK NODE**"
+            s = " **** SLACK NODE ****"
         else:
             s = ""
         print(
