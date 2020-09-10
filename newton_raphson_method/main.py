@@ -39,7 +39,7 @@ print("\n*--- Newton Raphson method iteration ---*\n")
 y_bus = ad.y_bus
 
 # Initialize iteration counter
-iter = 0
+iter = 1
 
 # Initialize a system object (stores information about the grid)
 N_R = NR_Method(P, Q, V, delta, slack_node, y_bus)
@@ -55,15 +55,15 @@ while N_R.power_error() > 0.0001:
     print(N_R.jacobian)
     N_R.update_values()
     iter += 1
-    if iter > 6:
+    if iter > 7:
         print("No convergence")
         break
-
-print("*--- ITERATION COMPLETED ---*")
-print("Iterations: {}".format(iter))
-# Get post analysis results
-N_R.calculate_line_data()
-N_R.print_line_data()
-N_R.calculate_slack_values()
-N_R.print_nodes()
-print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))
+    else:
+        print("*--- ITERATION COMPLETED ---*")
+        print("Iterations: {}".format(iter))
+        # Get post analysis results
+        N_R.calculate_line_data()
+        N_R.print_line_data()
+        N_R.calculate_slack_values()
+        N_R.print_nodes()
+        print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))
