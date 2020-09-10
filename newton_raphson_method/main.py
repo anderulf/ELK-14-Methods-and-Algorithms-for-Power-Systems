@@ -58,12 +58,12 @@ while N_R.power_error() > 0.0001:
     if iter > 7:
         print("No convergence")
         break
-    else:
-        print("*--- ITERATION COMPLETED ---*")
-        print("Iterations: {}".format(iter))
-        # Get post analysis results
-        N_R.calculate_line_data()
-        N_R.print_line_data()
-        N_R.calculate_slack_values()
-        N_R.print_nodes()
-        print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))
+
+print("*--- ITERATION COMPLETED ---*")
+print("Iterations: {}".format(iter))
+# Get post analysis results
+N_R.calculate_line_data()
+N_R.print_line_data()
+N_R.calculate_slack_values()
+N_R.print_nodes()
+print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))
