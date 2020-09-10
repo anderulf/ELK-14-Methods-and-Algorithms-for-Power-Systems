@@ -21,7 +21,7 @@ lim_size = 1
 Initial values
 """
 #  Voltages for 1,2 and the delta are guessed initial values
-slack_node = 3
+slack_bus_number = 3
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
 # Q values from project
@@ -42,7 +42,7 @@ y_bus = ad.y_bus
 iter = 1
 
 # Initialize a system object (stores information about the grid)
-N_R = NR_Method(P, Q, V, delta, slack_node, y_bus)
+N_R = NR_Method(P, Q, V, delta, slack_bus_number, y_bus)
 
 # Iterate NS
 while N_R.power_error() > 0.0001:
@@ -50,7 +50,7 @@ while N_R.power_error() > 0.0001:
     N_R.calc_new_power()
     N_R.check_limit(q_limit, lim_node, lim_size)
     N_R.error_specified_vs_calculated()
-    N_R.print_nodes()
+    N_R.print_buses()
     N_R.create_jacobian()
     N_R.update_values()
     N_R.print_matrices()
@@ -65,5 +65,5 @@ print("Iterations: {}".format(iter))
 N_R.calculate_line_data()
 N_R.print_line_data()
 N_R.calculate_slack_values()
-N_R.print_nodes()
+N_R.print_buses()
 print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))

@@ -3,26 +3,26 @@ import cmath as ma
 
 
 class NR_Method:
-    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_node, y_bus):
+    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus):
         """
-        Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to node number 1, 2, .. and values equal
+        Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
 
         The object calculates the number of PQ, PV, slack buses based on the input data
 
         For voltage and delta set value to flat start value or initial value
 
-        The input data should have the same length (all nodes except slack)
+        The input data should have the same length (all buses except slack)
 
-        self.nodes_dict: dictionary holding key: node number value: node object
-            Dictionary type is used because it gives better control over indexing. Now indexing can be done per node number (key), and not from
+        self.buses_dict: dictionary holding key: bus number value: bus object
+            Dictionary type is used because it gives better control over indexing. Now indexing can be done per bus number (key), and not from
             the position in the list
 
         The limit flag is used to know if the reactive power limit has been reached
         """
-        self.nodes_dict = {}
-        self.fill_nodes_dict(p_dict, q_dict, voltage_dict, delta_dict)
-        self.slack_node = slack_node
+        self.buses_dict = {}
+        self.fill_buses_dict(p_dict, q_dict, voltage_dict, delta_dict)
+        self.slack_bus_number = slack_bus_number
         self.y_bus = y_bus
         self.n_pq = 0
         self.n_pv = 0
@@ -42,22 +42,22 @@ class NR_Method:
         self.x_old = None
         self.diff_b = None
 
-    def fill_nodes_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
+    def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
         """
-        Initialize nodes_dict based on input data
+        Initialize buses_dict based on input data
         """
-        for node_num in p_dict:
-            self.nodes_dict[int(node_num)] = Node(p_dict[node_num], q_dict[node_num], voltage_dict[node_num],
-                                                  delta_dict[node_num])
+        for bus_number in p_dict:
+            self.buses_dict[int(bus_number)] = Bus(p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
+                                                 delta_dict[bus_number])
 
     def get_n_values(self):
         """
         Calculate number of different bus types
         """
-        for node in self.nodes_dict:
-            if self.nodes_dict[node].p_spec and self.nodes_dict[node].q_spec:
+        for bus_number in self.buses_dict:
+            if self.buses_dict[bus_number].p_spec and self.buses_dict[bus_number].q_spec:
                 self.n_pq += 1
-            elif self.nodes_dict[node].p_spec and not self.nodes_dict[node].q_spec:
+            elif self.buses_dict[bus_number].p_spec and not self.buses_dict[bus_number].q_spec:
                 self.n_pv += 1
             else:
                 self.n_pd += 1
@@ -67,51 +67,51 @@ class NR_Method:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
 
-    def print_nodes(self):
+    def print_buses(self):
         """
-        Prints the data for all the node. Mostly needed for debugging
+        Prints the data for all the bus. Mostly needed for debugging
         """
         print(
             "System has {0} slack bus, {1} PQ-bus(es) and {2} PV-bus(es). The jacobian matrix has dimension: {3}x{3}".format(
                 self.n_pd, self.n_pq, self.n_pv, self.m))
-        for node_num in self.nodes_dict:
-            self.nodes_dict[node_num].print_data(node_num, self.slack_node)
+        for bus_number in self.buses_dict:
+            self.buses_dict[bus_number].print_data(bus_number, self.slack_bus_number)
 
     def calc_new_power(self):
         """
-        Calculate power values based on voltage and delta for all nodes except slack.
+        Calculate power values based on voltage and delta for all buses except slack.
         The values are saved in the object
         """
-        nodes = self.nodes_dict
-        for i in nodes:
-            nodes[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
-            nodes[i].q_calc = 0
+        buses = self.buses_dict
+        for i in buses:
+            buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
+            buses[i].q_calc = 0
             # Skip slack bus
-            if i == self.slack_node:
+            if i == self.slack_bus_number:
                 pass
             else:
-                for j in nodes:
+                for j in buses:
                     try:
-                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the nodes are indexed from 1
-                        nodes[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * nodes[i].voltage * nodes[j].voltage * np.cos(
-                            nodes[i].delta - nodes[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
-                        nodes[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * nodes[i].voltage * nodes[j].voltage * np.sin(
-                            nodes[i].delta - nodes[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                        buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                        buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
                     except Exception as e:
                         print(e)
 
 
-    def check_limit(self, q_limit, lim_node, lim_size):
+    def check_limit(self, q_limit, lim_bus, lim_size):
         """
         Check if a certain bus has reached the q_limit, and change the bus if it has
         """
         if q_limit:
-            if self.nodes_dict[lim_node].q_calc > lim_size and not self.limit_flag:
+            if self.buses_dict[lim_bus].q_calc > lim_size and not self.limit_flag:
                 self.limit_flag = 1
-                self.nodes_dict[lim_node].q_spec = lim_size
-            if self.nodes_dict[lim_node].q_calc < lim_size and self.limit_flag:
+                self.buses_dict[lim_bus].q_spec = lim_size
+            if self.buses_dict[lim_bus].q_calc < lim_size and self.limit_flag:
                 self.limit_flag = 0
-                self.nodes_dict[lim_node].q_spec = None
+                self.buses_dict[lim_bus].q_spec = None
             self.n_pq = 0
             self.n_pv = 0
             self.n_pd = 0
@@ -121,28 +121,28 @@ class NR_Method:
         """
         Finds all the error terms and store in object
         """
-        for node in self.nodes_dict:
-            if node == self.slack_node:
+        for bus in self.buses_dict:
+            if bus == self.slack_bus_number:
                 pass
             else:
-                # Ignore all nodes which doesn't have a specified value (value == None)
-                if self.nodes_dict[node].p_spec:
-                    self.nodes_dict[node].delta_p = self.nodes_dict[node].p_spec - self.nodes_dict[node].p_calc
-                if self.nodes_dict[node].q_spec:
-                    self.nodes_dict[node].delta_q = self.nodes_dict[node].q_spec - self.nodes_dict[node].q_calc
+                # Ignore all buses which doesn't have a specified value (value == None)
+                if self.buses_dict[bus].p_spec:
+                    self.buses_dict[bus].delta_p = self.buses_dict[bus].p_spec - self.buses_dict[bus].p_calc
+                if self.buses_dict[bus].q_spec:
+                    self.buses_dict[bus].delta_q = self.buses_dict[bus].q_spec - self.buses_dict[bus].q_calc
 
     def power_error(self):
         """
         Adds all the error terms to a list and returns the maximum value of the list
         """
         error_list = []
-        nodes = self.nodes_dict
-        for i in nodes:
-            # Ignore all nodes which doesn't have a specified value (value == None)
-            if not nodes[i].p_spec == None:
-                error_list.append(abs(nodes[i].delta_p))
-            if not nodes[i].q_spec == None:
-                error_list.append(abs(nodes[i].delta_q))
+        buses = self.buses_dict
+        for i in buses:
+            # Ignore all buses which doesn't have a specified value (value == None)
+            if not buses[i].p_spec == None:
+                error_list.append(abs(buses[i].delta_p))
+            if not buses[i].q_spec == None:
+                error_list.append(abs(buses[i].delta_q))
         return max(error_list)
 
     def create_jacobian(self):
@@ -156,96 +156,96 @@ class NR_Method:
         in this example i and j must be offset with 2.
 
         """
-        nodes = self.nodes_dict
+        buses = self.buses_dict
         self.jacobian = np.zeros([self.m, self.m])
         #i_offset = 1
         #j_offset = 0
         for i in range(self.n):
             # J1 of Jacobian
-            #if i == self.slack_node-1:
+            #if i == self.slack_bus_number-1:
             #    i_offset = 2
             for j in range(self.n):
-                #if j == self.slack_node-1:
+                #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i, j] = -nodes[i + 1].q_calc - self.y_bus[i, j].imag * nodes[
-                        i + 1].voltage * nodes[i + 1].voltage
+                    self.jacobian[i, j] = -buses[i + 1].q_calc - self.y_bus[i, j].imag * buses[
+                        i + 1].voltage * buses[i + 1].voltage
                 else:
-                    self.jacobian[i, j] = abs(nodes[i + 1].voltage) * abs(nodes[j + 1].voltage) * (
-                            self.y_bus[i, j].real * np.sin(nodes[i + 1].delta - nodes[j + 1].delta) -
+                    self.jacobian[i, j] = abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (
+                            self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) -
                             self.y_bus[i, j].imag * np.cos(
-                        nodes[i + 1].delta - nodes[j + 1].delta))
+                        buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             # J2 of Jacobian
             for j in range(self.n_pq):
-                #if j == self.slack_node-1:
+                #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i, j + self.n] = nodes[i + 1].p_calc / abs(nodes[i + 1].voltage) + \
-                                                   self.y_bus[i, i].real * abs(nodes[i + 1].voltage)
+                    self.jacobian[i, j + self.n] = buses[i + 1].p_calc / abs(buses[i + 1].voltage) + \
+                                                   self.y_bus[i, i].real * abs(buses[i + 1].voltage)
                 else:
-                    self.jacobian[i, j + self.n] = abs(nodes[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(
-                            nodes[i + 1].delta - nodes[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
-                            nodes[i + 1].delta - nodes[j + 1].delta))
+                    self.jacobian[i, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(
+                            buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
+                            buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
         #i_offset = 1
         #j_offset = 1
         for i in range(self.n_pq):
             # J3 of Jacobian
-            #if i == self.slack_node-1:
+            #if i == self.slack_bus_number-1:
             #    i_offset = 2
             for j in range(self.n):
-                #if j == self.slack_node-1:
+                #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i + self.n, j] = nodes[i + 1].p_calc - self.y_bus[i, i].real * nodes[
-                        i + 1].voltage * nodes[i + 1].voltage
+                    self.jacobian[i + self.n, j] = buses[i + 1].p_calc - self.y_bus[i, i].real * buses[
+                        i + 1].voltage * buses[i + 1].voltage
                 else:
-                    self.jacobian[i + self.n, j] = -abs(nodes[i + 1].voltage) * abs(
-                        nodes[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(
-                        nodes[i + 1].delta - nodes[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
-                        nodes[i + 1].delta - nodes[j + 1].delta))
+                    self.jacobian[i + self.n, j] = -abs(buses[i + 1].voltage) * abs(
+                        buses[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(
+                        buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
+                        buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             for j in range(self.n_pq):
                 # J4 of Jacobian
-                #if j == self.slack_node-1:
+                #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i + self.n, j + self.n] = nodes[i + 1].q_calc / abs(
-                        nodes[i + 1].voltage) - self.y_bus[i, i].imag * abs(nodes[i + 1].voltage)
+                    self.jacobian[i + self.n, j + self.n] = buses[i + 1].q_calc / abs(
+                        buses[i + 1].voltage) - self.y_bus[i, i].imag * abs(buses[i + 1].voltage)
                 else:
-                    self.jacobian[i + self.n, j + self.n] = abs(nodes[i + 1].voltage) * (
+                    self.jacobian[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (
                                 self.y_bus[i, j].real * np.sin(
-                            nodes[i + 1].delta - nodes[j + 1].delta) - self.y_bus[i, j].imag * np.cos(
-                            nodes[i + 1].delta - nodes[j + 1].delta))
+                            buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(
+                            buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
     def update_values(self):
         """
         Update the the system values by calculating the next step in the NS method
 
-        This method uses a default offset of 1 for the nodes
+        This method uses a default offset of 1 for the buses
         """
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.diff_b = np.zeros([self.m, 1])
         for i in range(self.n):
-            self.x_old[i, 0] = self.nodes_dict[i + 1].delta
-            self.diff_b[i, 0] = self.nodes_dict[i + 1].delta_p
+            self.x_old[i, 0] = self.buses_dict[i + 1].delta
+            self.diff_b[i, 0] = self.buses_dict[i + 1].delta_p
         for i in range(self.n_pq):
-            self.diff_b[i + self.n, 0] = self.nodes_dict[i + 1].delta_q
-            self.x_old[i + self.n, 0] = self.nodes_dict[i + 1].voltage
+            self.diff_b[i + self.n, 0] = self.buses_dict[i + 1].delta_q
+            self.x_old[i + self.n, 0] = self.buses_dict[i + 1].voltage
         self.x_new = self.x_old + np.linalg.solve(self.jacobian, self.diff_b)
         for i in range(self.n):
-            self.nodes_dict[i + 1].delta = self.x_new[i, 0]
+            self.buses_dict[i + 1].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
-            self.nodes_dict[i + 1].voltage = self.x_new[i + self.n, 0]
+            self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
 
     def calculate_line_data(self):
         """
         Calculate the losses for all the top right values (skipping diagonals) and store in seperate matrices for active and reactive losses
         """
-        nodes = self.nodes_dict
+        buses = self.buses_dict
         rows, cols = self.y_bus.shape
         self.loss_matrix_p = np.zeros([rows, cols])
         self.loss_matrix_q = np.zeros([rows, cols])
@@ -256,8 +256,8 @@ class NR_Method:
                 # Ignore non-existing lines
                 if self.y_bus[i, j]:
                     # Get rectangular values
-                    v_i = polar_to_rectangular(nodes[i + 1].voltage, nodes[i + 1].delta)
-                    v_j = polar_to_rectangular(nodes[j + 1].voltage, nodes[j + 1].delta)
+                    v_i = polar_to_rectangular(buses[i + 1].voltage, buses[i + 1].delta)
+                    v_j = polar_to_rectangular(buses[j + 1].voltage, buses[j + 1].delta)
                     # Calculate losses
                     current_ij = self.y_bus[i, j] * (v_i - v_j)
                     current_ji = self.y_bus[i, j] * (v_j - v_i)
@@ -292,17 +292,17 @@ class NR_Method:
         """
         Calculate the slack bus values based on the NS iteration
         """
-        for i in self.nodes_dict:
+        for i in self.buses_dict:
             # Skip slack
-            if i == self.slack_node:
+            if i == self.slack_bus_number:
                 pass
             else:
                 # Append injections for each bus. Using negative values because slack should cover loads but are covered by other generators
-                self.nodes_dict[self.slack_node].p_calc += -self.nodes_dict[i].p_calc
-                self.nodes_dict[self.slack_node].q_calc += -self.nodes_dict[i].q_calc
+                self.buses_dict[self.slack_bus_number].p_calc += -self.buses_dict[i].p_calc
+                self.buses_dict[self.slack_bus_number].q_calc += -self.buses_dict[i].q_calc
         # Add losses
-        self.nodes_dict[self.slack_node].p_calc += self.total_losses_p
-        self.nodes_dict[self.slack_node].q_calc += self.total_losses_q
+        self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
+        self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
 
     def print_matrices(self):
         print("\nJacobian:")
@@ -312,9 +312,9 @@ class NR_Method:
         print("\nNew x vector")
         print(self.x_new)
 
-class Node:
+class Bus:
     """
-    Object holding data for a node
+    Object holding data for a bus
     """
 
     def __init__(self, p_spec, q_spec, voltage, delta):
@@ -327,17 +327,17 @@ class Node:
         self.delta_p = 1
         self.delta_q = 1
 
-    def print_data(self, node_num, slack_node):
+    def print_data(self, bus_number, slack_bus_number):
         """
-        Print the data for a node
+        Print the data for a bus
         """
-        if node_num == slack_node:
-            s = " **** SLACK NODE ****"
+        if bus_number == slack_bus_number:
+            s = " **** SLACK BUS ****"
         else:
             s = ""
         print(
-            "Node {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
-                node_num, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
+            "Bus {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
+                bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
                 round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
 
 
