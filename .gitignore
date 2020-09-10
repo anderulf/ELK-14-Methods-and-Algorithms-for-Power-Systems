@@ -1,6 +1,0 @@
-.env
-\vendor
-.idea/*
-_pycache__/*
-.DS_Store
-*.exe
