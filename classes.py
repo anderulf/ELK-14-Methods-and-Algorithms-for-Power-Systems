@@ -305,10 +305,14 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
 
     def print_matrices(self):
-        print("\nJacobian:")
+        print("\nJacobi matrix:")
         print(self.jacobian)
+        print("\nNet injections")
+        print("----------------")
         print("\nMismatches")
         print(self.diff_b)
+        print("\nCorrection vector")
+        print(self.x_new-self.x_old)
         print("\nNew x vector")
         print(self.x_new)
 
