@@ -1,5 +1,6 @@
 ﻿import Ybus as ad
 from classes import NR_Method
+#Heiheihallo Anders
 import numpy as np
 # heisann
 """
