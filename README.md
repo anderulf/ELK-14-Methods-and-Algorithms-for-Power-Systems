@@ -4,9 +4,9 @@
 Cooperation with Trude Byre and Hilde Enevoldsen
 
 
-First project: Load flow
+First project: Newton-Raphson Load flow
 
-Second project: -
+Second project: Continuation Power Flow
 
 Third project: -
 
