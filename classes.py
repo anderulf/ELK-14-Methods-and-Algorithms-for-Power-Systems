@@ -95,7 +95,7 @@ class NR_Method:
                         print(e)
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3) # -1 offset due to zero-index
-                self.net_injections_vector[i + self.n -1] = round(buses[i].q_calc,3) # self.n is the offset between a bus P value and Q value ie. [P1, P2, Q1, Q2]
+                self.net_injections_vector[i + self.n -1] = round(buses[i].q_calc,3) # self.n is the offset between a bus P value and Q value ie. [P1, P2, Q1, Q2] has 2 offset between P1 and Q1. self.n is the number of buses having specified active power
 
     def check_limit(self, q_limit, lim_bus, lim_size):
         """
