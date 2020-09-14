@@ -132,9 +132,6 @@ class NR_Method:
                 if self.buses_dict[bus].q_spec:
                     self.buses_dict[bus].delta_q = self.buses_dict[bus].q_spec - self.buses_dict[bus].q_calc
 
-#            self.net_injections[bus-1]=buses[bus].p_calc
-#            self.net_injections[i-1+self.buses_dict] = buses[bus].q_calc
-
 
     def power_error(self):
         """
