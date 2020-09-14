@@ -41,7 +41,8 @@ class NR_Method:
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.diff_b = np.zeros([self.m, 1])
-        self.net_injections_vector = np.zeros([self.m+2, 1]) #Adding 2 for the slack bus (P3 and Q3)
+        self.net_injections_vector = np.zeros([self.m + 2*self.n_pd, 1]) #Adding 2 for the slack bus (P3 and Q3)
+        self.net_injections_vector_labels = np.zeros([self.m + 2*self.n_pd, 1])
 
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
@@ -69,7 +70,6 @@ class NR_Method:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
 
-
     def calc_new_power_injections(self):
         """
         Calculate power values based on voltage and delta for all buses except slack.
@@ -78,12 +78,15 @@ class NR_Method:
         Additionally add these values to the net injections vector
         """
         buses = self.buses_dict
+        self.sum_real_power_injections = 0
+        self.sum_ractive_power_injections = 0
         for number, i in enumerate(buses):
             buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
             buses[i].q_calc = 0
             # Skip slack bus
             if i == self.slack_bus_number:
-                pass
+                self.net_injections_vector[i - 1] = 0 # -1 offset due to zero-index
+                self.net_injections_vector[i + self.n - 1] = 0 # self.n is the offset between a bus P value and Q value ie. [P1, P2, Q1, Q2] has 2 offset between P1 and Q1. self.n is the number of buses having specified active power
             else:
                 for j in buses:
                     try:
@@ -95,8 +98,9 @@ class NR_Method:
                     except Exception as e:
                         print(e)
                 # Add values to net injection vector
-                self.net_injections_vector[i-1] = round(buses[i].p_calc, 3) # -1 offset due to zero-index
-                self.net_injections_vector[i + self.n -1] = round(buses[i].q_calc,3) # self.n is the offset between a bus P value and Q value ie. [P1, P2, Q1, Q2] has 2 offset between P1 and Q1. self.n is the number of buses having specified active power
+                self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
+                self.net_injections_vector[i + self.n -1] = round(buses[i].q_calc,3)
+
 
     def check_limit(self, q_limit, lim_bus, lim_size):
         """
@@ -271,8 +275,6 @@ class NR_Method:
                     # Save total losses
                     self.total_losses_p += self.loss_matrix_p[i, j]
                     self.total_losses_q += self.loss_matrix_q[i, j]
-    self.net_injections_vector[self.m] = round(self.net_injections_vector[0] + self.net_injections_vector[2] + self.total_losses_p,3)  # hardkodet, need to be changed
-    self.net_injections_vector[self.m + 1] = round(self.net_injections_vector[1] + self.net_injections_vector[3] + self.total_losses_q,3)
 
     def print_line_data(self):
         """
@@ -300,6 +302,13 @@ class NR_Method:
         # Add losses
         self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
+        self.net_injections_vector[self.slack_bus_number - 1] = self.buses_dict[self.slack_bus_number].p_calc
+        self.net_injections_vector[self.slack_bus_number + self.n - 1] = self.buses_dict[self.slack_bus_number].q_calc
+
+    def create_label_vectors(self):
+        """
+        WIP
+        """
 
     def print_buses(self):
         """
