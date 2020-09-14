@@ -40,7 +40,9 @@ class NR_Method:
         self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
+        self.x_vector_labels = np.zeros([self.m, 1])
         self.diff_b = np.zeros([self.m, 1])
+        self.dibb_b_vector_labels = np.zeros([self.m, 1])
         self.net_injections_vector = np.zeros([self.m + 2*self.n_pd, 1]) #Adding 2 for the slack bus (P3 and Q3)
         self.net_injections_vector_labels = np.zeros([self.m + 2*self.n_pd, 1])
 
@@ -85,8 +87,7 @@ class NR_Method:
             buses[i].q_calc = 0
             # Skip slack bus
             if i == self.slack_bus_number:
-                self.net_injections_vector[i - 1] = 0 # -1 offset due to zero-index
-                self.net_injections_vector[i + self.n - 1] = 0 # self.n is the offset between a bus P value and Q value ie. [P1, P2, Q1, Q2] has 2 offset between P1 and Q1. self.n is the number of buses having specified active power
+                pass
             else:
                 for j in buses:
                     try:
@@ -99,7 +100,7 @@ class NR_Method:
                         print(e)
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
-                self.net_injections_vector[i + self.n -1] = round(buses[i].q_calc,3)
+                self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
 
 
     def check_limit(self, q_limit, lim_bus, lim_size):
@@ -303,7 +304,8 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
         self.net_injections_vector[self.slack_bus_number - 1] = self.buses_dict[self.slack_bus_number].p_calc
-        self.net_injections_vector[self.slack_bus_number + self.n - 1] = self.buses_dict[self.slack_bus_number].q_calc
+        self.net_injections_vector[self.slack_bus_number + self.n] = self.buses_dict[self.slack_bus_number].q_calc
+        print("Slack Q: {}".format(self.slack_bus_number + self.n))
 
     def create_label_vectors(self):
         """
