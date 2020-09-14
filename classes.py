@@ -41,6 +41,7 @@ class NR_Method:
         self.x_new = None
         self.x_old = None
         self.diff_b = None
+        self.net_injections = None
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
         """
@@ -130,6 +131,10 @@ class NR_Method:
                     self.buses_dict[bus].delta_p = self.buses_dict[bus].p_spec - self.buses_dict[bus].p_calc
                 if self.buses_dict[bus].q_spec:
                     self.buses_dict[bus].delta_q = self.buses_dict[bus].q_spec - self.buses_dict[bus].q_calc
+
+#            self.net_injections[bus-1]=buses[bus].p_calc
+#            self.net_injections[i-1+self.buses_dict] = buses[bus].q_calc
+
 
     def power_error(self):
         """
