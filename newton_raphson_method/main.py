@@ -47,7 +47,7 @@ N_R = NR_Method(P, Q, V, delta, slack_bus_number, y_bus)
 # Iterate NS
 while N_R.power_error() > 0.0001:
     print("\nIteration: {}\n".format(iter))
-    N_R.calc_new_power()
+    N_R.calc_new_power_injections()
     N_R.check_limit(q_limit, lim_node, lim_size)
     N_R.error_specified_vs_calculated()
     N_R.print_buses()
@@ -55,7 +55,7 @@ while N_R.power_error() > 0.0001:
     N_R.update_values()
     N_R.print_matrices()
     iter += 1
-    if iter > 7:
+    if iter > 15:
         print("No convergence")
         break
 
