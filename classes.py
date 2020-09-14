@@ -38,17 +38,11 @@ class NR_Method:
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
-<<<<<<< HEAD
-        self.x_new = None
-        self.x_old = None
-        self.diff_b = None
-        self.net_injections = None
-=======
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.diff_b = np.zeros([self.m, 1])
-        self.net_injections_vector = np.zeros([self.m, 1])
->>>>>>> 2a6a4e6b7046195226c519978db29095ea37bab3
+        self.net_injections_vector = np.zeros([self.m+2, 1]) #Adding 2 for the slack bus (P3 and Q3)
+
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
         """
@@ -277,6 +271,8 @@ class NR_Method:
                     # Save total losses
                     self.total_losses_p += self.loss_matrix_p[i, j]
                     self.total_losses_q += self.loss_matrix_q[i, j]
+    self.net_injections_vector[self.m] = round(self.net_injections_vector[0] + self.net_injections_vector[2] + self.total_losses_p,3)  # hardkodet, need to be changed
+    self.net_injections_vector[self.m + 1] = round(self.net_injections_vector[1] + self.net_injections_vector[3] + self.total_losses_q,3)
 
     def print_line_data(self):
         """
@@ -314,6 +310,8 @@ class NR_Method:
                 self.n_pd, self.n_pq, self.n_pv, self.m))
         for bus_number in self.buses_dict:
             self.buses_dict[bus_number].print_data(self.slack_bus_number)
+
+
 
     def print_matrices(self):
         print("\nJacobi matrix:")
