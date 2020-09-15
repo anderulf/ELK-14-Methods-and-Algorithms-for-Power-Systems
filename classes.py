@@ -310,6 +310,8 @@ class NR_Method:
         """
         WIP
         """
+  #      for i in self.buses_dict:
+
 
     def print_buses(self):
         """
