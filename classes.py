@@ -306,7 +306,7 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
 
-    def print_matrices(self):
+ def print_matrices(self):
         print("\nJacobi matrix:")
         print(self.jacobian)
         print("\nNet injections")
