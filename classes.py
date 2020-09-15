@@ -305,7 +305,6 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
         self.net_injections_vector[self.slack_bus_number - 1] = self.buses_dict[self.slack_bus_number].p_calc
         self.net_injections_vector[self.slack_bus_number + self.n] = self.buses_dict[self.slack_bus_number].q_calc
-        print("Slack Q: {}".format(self.slack_bus_number + self.n))
 
     def create_label_vectors(self):
         """
