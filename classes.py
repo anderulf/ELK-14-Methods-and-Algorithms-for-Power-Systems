@@ -40,15 +40,11 @@ class NR_Method:
         self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
-        #self.x_vector_labels = np.chararray([self.m, 1])
         self.x_vector_labels = []
         self.diff_b = np.zeros([self.m, 1])
-        #self.mismatch_vector_labels = np.chararray([self.m, 1])
         self.mismatch_vector_labels = []
         self.net_injections_vector = np.zeros([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1]) #Adding 2 for each bus (Pi, Qi)
-        #self.net_injections_vector_labels = np.chararray([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1])
         self.net_injections_vector_labels = []
-        #self.correction_vector_labels=np.chararray([self.m, 1])
         self.correction_vector_labels = []
         self.create_label_vectors()
 
