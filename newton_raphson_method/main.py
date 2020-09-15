@@ -1,5 +1,6 @@
 ﻿import Ybus as ad
 from classes import NR_Method
+#Heiheihallo Anders
 import numpy as np
 # heisann
 """
@@ -32,7 +33,7 @@ P = {"1": -1, "2": -0.5, "3": None}
 """
 Program
 """
-
+#hei
 print("\n*--- Newton Raphson method iteration ---*\n")
 
 
@@ -47,15 +48,17 @@ N_R = NR_Method(P, Q, V, delta, slack_bus_number, y_bus)
 # Iterate NS
 while N_R.power_error() > 0.0001:
     print("\nIteration: {}\n".format(iter))
-    N_R.calc_new_power()
+    N_R.calc_new_power_injections()
     N_R.check_limit(q_limit, lim_node, lim_size)
     N_R.error_specified_vs_calculated()
     N_R.print_buses()
     N_R.create_jacobian()
     N_R.update_values()
+    N_R.calculate_line_data()
+    N_R.calculate_slack_values()
     N_R.print_matrices()
     iter += 1
-    if iter > 7:
+    if iter > 15:
         print("No convergence")
         break
 

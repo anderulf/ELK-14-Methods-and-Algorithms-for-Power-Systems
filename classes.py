@@ -29,7 +29,7 @@ class NR_Method:
         self.n_pd = 0
         self.n = 0
         self.m = 0
-        self.get_n_values()
+        self.calculate_n_values()
         self.jacobian = np.zeros([self.m, self.m])
         self.loss_matrix_p = None
         self.loss_matrix_q = None
@@ -38,10 +38,14 @@ class NR_Method:
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
-        self.x_new = None
-        self.x_old = None
-        self.diff_b = None
-        self.net_injections = None
+        self.x_new = np.zeros([self.m, 1])
+        self.x_old = np.zeros([self.m, 1])
+        self.x_vector_labels = np.zeros([self.m, 1])
+        self.diff_b = np.zeros([self.m, 1])
+        self.dibb_b_vector_labels = np.zeros([self.m, 1])
+        self.net_injections_vector = np.zeros([self.m + 2*self.n_pd, 1]) #Adding 2 for the slack bus (P3 and Q3)
+        self.net_injections_vector_labels = np.zeros([self.m + 2*self.n_pd, 1])
+
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
         """
@@ -51,7 +55,7 @@ class NR_Method:
             self.buses_dict[int(bus_number)] = Bus(bus_number, p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
                                                  delta_dict[bus_number])
 
-    def get_n_values(self):
+    def calculate_n_values(self):
         """
         Calculate number of different bus types
         """
@@ -68,23 +72,17 @@ class NR_Method:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
 
-    def print_buses(self):
-        """
-        Prints the data for all the bus. Mostly needed for debugging
-        """
-        print(
-            "System has {0} slack bus, {1} PQ-bus(es) and {2} PV-bus(es). The jacobian matrix has dimension: {3}x{3}".format(
-                self.n_pd, self.n_pq, self.n_pv, self.m))
-        for bus_number in self.buses_dict:
-            self.buses_dict[bus_number].print_data(self.slack_bus_number)
-
-    def calc_new_power(self):
+    def calc_new_power_injections(self):
         """
         Calculate power values based on voltage and delta for all buses except slack.
         The values are saved in the object
+
+        Additionally add these values to the net injections vector
         """
         buses = self.buses_dict
-        for i in buses:
+        self.sum_real_power_injections = 0
+        self.sum_ractive_power_injections = 0
+        for number, i in enumerate(buses):
             buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
             buses[i].q_calc = 0
             # Skip slack bus
@@ -100,6 +98,9 @@ class NR_Method:
                             buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
                     except Exception as e:
                         print(e)
+                # Add values to net injection vector
+                self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
+                self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
 
 
     def check_limit(self, q_limit, lim_bus, lim_size):
@@ -116,7 +117,7 @@ class NR_Method:
             self.n_pq = 0
             self.n_pv = 0
             self.n_pd = 0
-            self.get_n_values()
+            self.calculate_n_values()
 
     def error_specified_vs_calculated(self):
         """
@@ -228,9 +229,6 @@ class NR_Method:
 
         This method uses a default offset of 1 for the buses
         """
-        self.x_new = np.zeros([self.m, 1])
-        self.x_old = np.zeros([self.m, 1])
-        self.diff_b = np.zeros([self.m, 1])
         for i in range(self.n):
             self.x_old[i, 0] = self.buses_dict[i + 1].delta
             self.diff_b[i, 0] = self.buses_dict[i + 1].delta_p
@@ -305,18 +303,41 @@ class NR_Method:
         # Add losses
         self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
+        self.net_injections_vector[self.slack_bus_number - 1] = self.buses_dict[self.slack_bus_number].p_calc
+        self.net_injections_vector[self.slack_bus_number + self.n] = self.buses_dict[self.slack_bus_number].q_calc
+
+    def create_label_vectors(self):
+        """
+        WIP
+        """
+  #      for i in self.buses_dict:
+
+
+    def print_buses(self):
+        """
+        Prints the data for all the bus. Mostly needed for debugging
+        """
+        print(
+            "System has {0} slack bus, {1} PQ-bus(es) and {2} PV-bus(es). The jacobian matrix has dimension: {3}x{3}".format(
+                self.n_pd, self.n_pq, self.n_pv, self.m))
+        for bus_number in self.buses_dict:
+            self.buses_dict[bus_number].print_data(self.slack_bus_number)
+
+
 
  def print_matrices(self):
         print("\nJacobi matrix:")
         print(self.jacobian)
         print("\nNet injections")
-        print("----------------")
+        print(self.net_injections_vector)
         print("\nMismatches")
         print(self.diff_b)
         print("\nCorrection vector")
         print(self.x_new-self.x_old)
         print("\nNew x vector")
         print(self.x_new)
+
+
 
 class Bus:
     """
@@ -346,7 +367,6 @@ class Bus:
             "Bus {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
                 self.bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
                 round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
-
 
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
