@@ -367,7 +367,6 @@ class Bus:
                 self.bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
                 round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
 
-
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
         self.name = "Line {}-{}".format(to_bus.bus_number, to_bus.bus_number)
