@@ -317,16 +317,16 @@ class NR_Method:
                 pass
             elif not self.buses_dict[i].q_spec: #dersom PV bus
                 self.mismatch_vector_labels.insert(i-1, "P" + str(i))
-                self.correction_vector_labels.insert(i-1, "delta_theta" + str(i))
-                self.x_vector_labels.insert(i-1, "theta" + str(i))
+                self.correction_vector_labels.insert(i-1, "\u0394\u03B4" + str(i)) # \u0394 = Delta (greek), \u03B4 = delta (greek)
+                self.x_vector_labels.insert(i-1, "\u03B4" + str(i)) # \u03B4 = delta (greek)
             else:
                 self.mismatch_vector_labels.insert(i-1, "P" + str(i))
                 self.mismatch_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "Q" + str(i))
 
-                self.correction_vector_labels.insert(i - 1, "delta_theta" + str(i))
+                self.correction_vector_labels.insert(i - 1, "\u0394\u03B4" + str(i))
                 self.correction_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
 
-                self.x_vector_labels.insert(i-1, "theta" + str(i))
+                self.x_vector_labels.insert(i-1, "\u03B4" + str(i))
                 self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
 
         #prints when debugging
