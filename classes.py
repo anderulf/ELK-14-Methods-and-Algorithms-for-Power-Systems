@@ -40,11 +40,17 @@ class NR_Method:
         self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
-        self.x_vector_labels = np.zeros([self.m, 1])
+        #self.x_vector_labels = np.chararray([self.m, 1])
+        self.x_vector_labels = []
         self.diff_b = np.zeros([self.m, 1])
-        self.dibb_b_vector_labels = np.zeros([self.m, 1])
-        self.net_injections_vector = np.zeros([self.m + 2*self.n_pd, 1]) #Adding 2 for the slack bus (P3 and Q3)
-        self.net_injections_vector_labels = np.zeros([self.m + 2*self.n_pd, 1])
+        #self.mismatch_vector_labels = np.chararray([self.m, 1])
+        self.mismatch_vector_labels = []
+        self.net_injections_vector = np.zeros([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1]) #Adding 2 for each bus (Pi, Qi)
+        #self.net_injections_vector_labels = np.chararray([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1])
+        self.net_injections_vector_labels = []
+        #self.correction_vector_labels=np.chararray([self.m, 1])
+        self.correction_vector_labels = []
+        self.create_label_vectors()
 
 
     def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
@@ -59,7 +65,7 @@ class NR_Method:
         """
         Calculate number of different bus types
         """
-        for bus_number in self.buses_dict:
+        for bus_number in self.buses_dict: #bus_number is the key of each element in the dictionary
             if self.buses_dict[bus_number].p_spec and self.buses_dict[bus_number].q_spec:
                 self.n_pq += 1
             elif self.buses_dict[bus_number].p_spec and not self.buses_dict[bus_number].q_spec:
@@ -123,7 +129,7 @@ class NR_Method:
         """
         Finds all the error terms and store in object
         """
-        for bus in self.buses_dict:
+        for bus in self.buses_dict: #bus is equal to the key for each element in the dict.
             if bus == self.slack_bus_number:
                 pass
             else:
@@ -303,14 +309,38 @@ class NR_Method:
         # Add losses
         self.buses_dict[self.slack_bus_number].p_calc += self.total_losses_p
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
-        self.net_injections_vector[self.slack_bus_number - 1] = self.buses_dict[self.slack_bus_number].p_calc
-        self.net_injections_vector[self.slack_bus_number + self.n] = self.buses_dict[self.slack_bus_number].q_calc
+        self.net_injections_vector[self.slack_bus_number - 1] = round(self.buses_dict[self.slack_bus_number].p_calc, 3)
+        self.net_injections_vector[self.slack_bus_number + self.n] = round(self.buses_dict[self.slack_bus_number].q_calc, 3)
 
     def create_label_vectors(self):
-        """
-        WIP
-        """
-  #      for i in self.buses_dict:
+        for i in self.buses_dict:
+            self.net_injections_vector_labels.insert(i-1, "P" + str(i))
+            self.net_injections_vector_labels.insert(i - 1 + self.n_pq + self.n_pv + self.n_pd, "Q" + str(i))
+
+            if i == self.slack_bus_number:
+                pass
+            elif not self.buses_dict[i].q_spec: #dersom PV bus
+                self.mismatch_vector_labels.insert(i-1, "P" + str(i))
+                self.correction_vector_labels.insert(i-1, "delta_theta" + str(i))
+                self.x_vector_labels.insert(i-1, "theta" + str(i))
+            else:
+                self.mismatch_vector_labels.insert(i-1, "P" + str(i))
+                self.mismatch_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "Q" + str(i))
+
+                self.correction_vector_labels.insert(i - 1, "delta_theta" + str(i))
+                self.correction_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
+
+                self.x_vector_labels.insert(i-1, "theta" + str(i))
+                self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
+
+        #prints when debugging
+        print(*self.net_injections_vector_labels, sep = '\n')
+        print(self.mismatch_vector_labels)
+        print(self.correction_vector_labels)
+        print(self.x_vector_labels)
+
+
+
 
 
     def print_buses(self):
@@ -325,17 +355,18 @@ class NR_Method:
 
 
 
- def print_matrices(self):
+    def print_matrices(self):
         print("\nJacobi matrix:")
         print(self.jacobian)
         print("\nNet injections")
-        print(self.net_injections_vector)
+        print(np.c_[self.net_injections_vector_labels, self.net_injections_vector])
+        #print(self.net_injections_vector)
         print("\nMismatches")
-        print(self.diff_b)
+        print(np.c_[self.mismatch_vector_labels, self.diff_b])
         print("\nCorrection vector")
-        print(self.x_new-self.x_old)
+        print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
-        print(self.x_new)
+        print(np.c_[self.x_vector_labels, self.x_new])
 
 
 
