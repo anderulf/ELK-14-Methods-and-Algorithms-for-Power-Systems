@@ -3,7 +3,7 @@ import cmath as ma
 
 
 class NR_Method:
-    def __init__(self, buses, slack_bus_number, y_bus, lines):
+    def __init__(self, buses, slack_bus_number, lines):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -26,7 +26,7 @@ class NR_Method:
         self.lines = lines
         self.buses_dict = buses
         self.slack_bus_number = slack_bus_number
-        self.y_bus = y_bus
+        self.create_y_bus()
         self.n_pq = 0
         self.n_pv = 0
         self.n_pd = 0
@@ -46,8 +46,6 @@ class NR_Method:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
-        self.create_y_bus()
-        print(self.y_bus_test)
 
     def calculate_n_values(self):
         """
