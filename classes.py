@@ -35,10 +35,6 @@ class NR_Method:
         self.m = 0
         self.calculate_n_values()
         self.jacobian = np.zeros([self.m, self.m])
-        self.loss_matrix_p = None
-        self.loss_matrix_q = None
-        self.power_flow_matrix = None
-        self.current_matrix = None
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
