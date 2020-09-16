@@ -319,7 +319,7 @@ class NR_Method:
         Print line values (losses, flows, current)
         """
         for line in self.lines:
-            print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(line.from_bus.bus_number, line.to_bus.bus_number, line.from_current, line.real_power_flow, line.reactive_power_flow, line.p_loss, line.q_loss))
+            print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(line.from_bus.bus_number, line.to_bus.bus_number, round(line.from_current,3), round(line.real_power_flow,3), round(line.reactive_power_flow,3), round(line.p_loss,3), round(line.q_loss,3)))
 
     def print_matrices(self):
         print("\nJacobi matrix:")
