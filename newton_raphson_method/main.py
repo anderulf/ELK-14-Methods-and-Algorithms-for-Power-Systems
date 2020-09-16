@@ -30,6 +30,7 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 # P values from project
 P = {"1": -1, "2": -0.5, "3": None}
 
+
 """
 Program
 """

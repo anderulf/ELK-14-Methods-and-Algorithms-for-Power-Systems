@@ -62,9 +62,9 @@ class NR_Method:
         Calculate number of different bus types
         """
         for bus_number in self.buses_dict: #bus_number is the key of each element in the dictionary
-            if self.buses_dict[bus_number].p_spec and self.buses_dict[bus_number].q_spec:
+            if self.buses_dict[bus_number].bus_type == "PQ":
                 self.n_pq += 1
-            elif self.buses_dict[bus_number].p_spec and not self.buses_dict[bus_number].q_spec:
+            elif self.buses_dict[bus_number].bus_type == "PV":
                 self.n_pv += 1
             else:
                 self.n_pd += 1
@@ -315,7 +315,7 @@ class NR_Method:
 
             if i == self.slack_bus_number:
                 pass
-            elif not self.buses_dict[i].q_spec: #dersom PV bus
+            elif self.buses_dict[i].bus_type == "PV":
                 self.mismatch_vector_labels.insert(i-1, "P" + str(i))
                 self.correction_vector_labels.insert(i-1, "\u0394\u03B4" + str(i)) # \u0394 = Delta (greek), \u03B4 = delta (greek)
                 self.x_vector_labels.insert(i-1, "\u03B4" + str(i)) # \u03B4 = delta (greek)
@@ -356,7 +356,6 @@ class NR_Method:
         print(self.jacobian)
         print("\nNet injections")
         print(np.c_[self.net_injections_vector_labels, self.net_injections_vector])
-        #print(self.net_injections_vector)
         print("\nMismatches")
         print(np.c_[self.mismatch_vector_labels, self.diff_b])
         print("\nCorrection vector")
@@ -381,6 +380,19 @@ class Bus:
         self.q_calc = 0
         self.delta_p = 1
         self.delta_q = 1
+        self.bus_type = None
+        self.classify_bus_type()
+
+    def classify_bus_type(self):
+        """
+        Sets the correct bus type for the bus object
+        """
+        if self.p_spec and self.q_spec:
+            self.bus_type = "PQ"
+        elif self.p_spec and not self.q_spec:
+            self.bus_type = "PV"
+        else:
+            self.bus_type = "PD"
 
     def print_data(self, slack_bus_number):
         """
