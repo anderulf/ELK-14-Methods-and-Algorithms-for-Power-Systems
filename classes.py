@@ -406,6 +406,16 @@ class Line:
         """
         print(self.name + ": Z={}+j{}, Y = {}+j{}".format(round(self.resistance,2), round(self.reactance,2), round(self.conductance,2), round(self.susceptance, 2)))
 
+class Jacobian:
+    """
+    The jacobian class holds the matrix, its dimensions and methods for creating and altering the matrix for use
+    with the Newton Raphson method and continuation power flow
+    """
+    def __init__(self):
+        self.matrix = []
+        self.dimensions = [0, 0]
+        self.cols = 0
+        self.rows = 0
 """
 Auxillary methods
 """
