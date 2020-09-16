@@ -46,6 +46,8 @@ class NR_Method:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
+        self.create_y_bus()
+        print(self.y_bus_test)
 
     def calculate_n_values(self):
         """
@@ -65,7 +67,7 @@ class NR_Method:
             self.n = self.n_pq + self.n_pv
 
     def create_y_bus(self):
-        self.y_bus = np.zeros([self.m, self.m])
+        self.y_bus = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=complex)
         for line in self.lines:
             self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1] = -1/complex(line.resistance, line.reactance)
             self.y_bus[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1]
