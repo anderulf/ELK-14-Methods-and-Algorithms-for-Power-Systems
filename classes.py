@@ -62,9 +62,9 @@ class NR_Method:
         Calculate number of different bus types
         """
         for bus_number in self.buses_dict: #bus_number is the key of each element in the dictionary
-            if self.buses_dict[bus_number].p_spec and self.buses_dict[bus_number].q_spec:
+            if self.buses_dict[bus_number].bus_type == "PQ":
                 self.n_pq += 1
-            elif self.buses_dict[bus_number].p_spec and not self.buses_dict[bus_number].q_spec:
+            elif self.buses_dict[bus_number].bus_type == "PV":
                 self.n_pv += 1
             else:
                 self.n_pd += 1
