@@ -1,8 +1,4 @@
-﻿#import Ybus as ad
-from classes import NR_Method, Bus, Line
-#Heiheihallo Anders
-import numpy as np
-# heisann
+﻿from classes import NR_Method, Bus, Line
 """
 Settings:
     outage  can be set to
