@@ -336,13 +336,16 @@ class Jacobian:
     The jacobian class holds the matrix, its dimensions and methods for creating and altering the matrix for use
     with the Newton Raphson method and continuation power flow
     """
-    def __init__(self, m, buses_dict, y_bus):
+    def __init__(self,n_pq, n, m, buses_dict, y_bus):
+        self.n_pq = n_pq
+        self.n = n
         self.dimensions = [m, m]
         self.cols = m
         self.rows = m
         self.buses_dict = buses_dict
         self.matrix = np.zeros([self.m, self.m])
         self.y_bus = y_bus
+        self.create_jacobian()
 
     def create_jacobian(self):
         """
@@ -366,25 +369,19 @@ class Jacobian:
                 #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i, j] = -buses[i + 1].q_calc - self.y_bus[i, j].imag * buses[
-                        i + 1].voltage * buses[i + 1].voltage
+                    self.matrix[i, j] = -buses[i + 1].q_calc - self.y_bus[i, j].imag * buses[i + 1].voltage * buses[i + 1].voltage
                 else:
-                    self.jacobian[i, j] = abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (
-                            self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) -
-                            self.y_bus[i, j].imag * np.cos(
-                        buses[i + 1].delta - buses[j + 1].delta))
+                    self.matrix[i, j] = abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) -self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             # J2 of Jacobian
             for j in range(self.n_pq):
                 #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i, j + self.n] = buses[i + 1].p_calc / abs(buses[i + 1].voltage) + \
+                    self.matrix[i, j + self.n] = buses[i + 1].p_calc / abs(buses[i + 1].voltage) + \
                                                    self.y_bus[i, i].real * abs(buses[i + 1].voltage)
                 else:
-                    self.jacobian[i, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(
-                            buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
-                            buses[i + 1].delta - buses[j + 1].delta))
+                    self.matrix[i, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
         #i_offset = 1
         #j_offset = 1
@@ -396,26 +393,18 @@ class Jacobian:
                 #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i + self.n, j] = buses[i + 1].p_calc - self.y_bus[i, i].real * buses[
-                        i + 1].voltage * buses[i + 1].voltage
+                    self.matrix[i + self.n, j] = buses[i + 1].p_calc - self.y_bus[i, i].real * buses[i + 1].voltage * buses[i + 1].voltage
                 else:
-                    self.jacobian[i + self.n, j] = -abs(buses[i + 1].voltage) * abs(
-                        buses[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(
-                        buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(
-                        buses[i + 1].delta - buses[j + 1].delta))
+                    self.matrix[i + self.n, j] = -abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             for j in range(self.n_pq):
                 # J4 of Jacobian
                 #if j == self.slack_bus_number-1:
                 #    j_offset = 2
                 if i == j:
-                    self.jacobian[i + self.n, j + self.n] = buses[i + 1].q_calc / abs(
-                        buses[i + 1].voltage) - self.y_bus[i, i].imag * abs(buses[i + 1].voltage)
+                    self.matrix[i + self.n, j + self.n] = buses[i + 1].q_calc / abs(buses[i + 1].voltage) - self.y_bus[i, i].imag * abs(buses[i + 1].voltage)
                 else:
-                    self.jacobian[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (
-                                self.y_bus[i, j].real * np.sin(
-                            buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(
-                            buses[i + 1].delta - buses[j + 1].delta))
+                    self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
 """
