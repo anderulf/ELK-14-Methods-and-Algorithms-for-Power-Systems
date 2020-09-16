@@ -57,7 +57,7 @@ y_bus = ad.y_bus
 iter = 1
 
 # Initialize a system object (stores information about the grid)
-N_R = NR_Method(P, Q, V, delta, slack_bus_number, y_bus, lines)
+N_R = NR_Method(bus_dict, slack_bus_number, y_bus, lines)
 
 # Iterate NS
 while N_R.power_error() > 0.0001:
