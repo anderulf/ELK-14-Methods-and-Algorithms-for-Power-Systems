@@ -61,6 +61,7 @@ N_R = NR_Method(buses, slack_bus_number, y_bus, lines)
 
 # Iterate NS
 while N_R.power_error() > 0.0001:
+    N_R.reset_values()
     print("\nIteration: {}\n".format(iter))
     N_R.calc_new_power_injections()
     N_R.check_limit(q_limit, lim_node, lim_size)
