@@ -322,13 +322,8 @@ class NR_Method:
         """
         Print line values (losses, flows, current)
         """
-        rows, cols = self.loss_matrix_p.shape
-        print("Power losses in lines: ")
-        for i in range(rows - 1):
-            for j in range(rows - 1, i, -1):
-                if self.loss_matrix_p[i, j]:
-                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1, round(self.current_matrix[i, j], 4), round(self.power_flow_matrix[i, j].real,4), round(self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(self.loss_matrix_q[i, j], 4)))
-
+        for line in self.lines:
+            print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(line.from_bus.bus_number, line.to_bus.bus_number, line.from_current, -1, -1, line.p_loss, line.q_loss))
 
     def print_matrices(self):
         print("\nJacobi matrix:")
