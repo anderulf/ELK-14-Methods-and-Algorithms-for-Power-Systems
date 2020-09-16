@@ -235,14 +235,16 @@ class NR_Method:
         """
         Calculate the line data for all the line objects
         """
+        total_p_loss = 0
         for line in self.lines:
-            v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta)
-            v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta)
-            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from)
-            line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to)
+            v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
+            v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta) # v_j
+            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from) # i_ij
+            line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to) # i_ji
             apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
-            line.p_loss = abs(apparent_loss.real)
-            line.q_loss = apparent_loss.imag # shunts can supply reactive power and increase losses
+            line.p_loss = apparent_loss.real
+            total_p_loss += line.p_loss
+            line.q_loss = apparent_loss.imag
             line.real_power_flow = (-v_from * line.from_current).real
             line.reactive_power_flow = (-v_from * line.from_current).imag
             self.total_losses_p += line.p_loss
@@ -265,6 +267,13 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
         self.net_injections_vector[self.slack_bus_number - 1] = round(self.buses_dict[self.slack_bus_number].p_calc, 3)
         self.net_injections_vector[self.slack_bus_number + self.n] = round(self.buses_dict[self.slack_bus_number].q_calc, 3)
+
+    def reset_values(self):
+        """
+        Reset values before new iteration
+        """
+        self.total_losses_p = 0
+        self.total_losses_q = 0
 
     def create_label_vectors(self):
         for i in self.buses_dict:
