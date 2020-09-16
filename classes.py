@@ -3,7 +3,7 @@ import cmath as ma
 
 
 class NR_Method:
-    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus):
+    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus, lines):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -20,6 +20,7 @@ class NR_Method:
 
         The limit flag is used to know if the reactive power limit has been reached
         """
+        self.lines = lines
         self.buses_dict = {}
         self.fill_buses_dict(p_dict, q_dict, voltage_dict, delta_dict)
         self.slack_bus_number = slack_bus_number
@@ -30,7 +31,6 @@ class NR_Method:
         self.n = 0
         self.m = 0
         self.calculate_n_values()
-        self.create_lines()
         self.jacobian = np.zeros([self.m, self.m])
         self.loss_matrix_p = None
         self.loss_matrix_q = None
@@ -74,12 +74,6 @@ class NR_Method:
         else:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
-
-    def create_lines(self):
-        """
-        WIP
-        """
-        pass
 
     def calc_new_power_injections(self):
         """
@@ -258,7 +252,7 @@ class NR_Method:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta)
             v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta)
             line.to_current = self.y_bus[line.from_bus.bus_number -1,line.to_bus.bus_number -1] * (v_from - v_to)
-            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_b] * (v_to - v_from)
+            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from)
             apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
             line.p_loss = abs(apparent_loss.real)
             line.q_loss = apparent_loss.imag # shunts can supply reactive power and increase losses
