@@ -235,7 +235,6 @@ class NR_Method:
         """
         Calculate the line data for all the line objects
         """
-        total_p_loss = 0
         for line in self.lines:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
             v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta) # v_j
@@ -243,7 +242,6 @@ class NR_Method:
             line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to) # i_ji
             apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
             line.p_loss = apparent_loss.real
-            total_p_loss += line.p_loss
             line.q_loss = apparent_loss.imag
             line.real_power_flow = (-v_from * line.from_current).real
             line.reactive_power_flow = (-v_from * line.from_current).imag
