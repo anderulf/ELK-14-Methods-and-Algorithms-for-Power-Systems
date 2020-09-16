@@ -64,6 +64,16 @@ class NR_Method:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
 
+    def create_y_bus(self):
+        self.y_bus = np.zeros([self.m, self.m])
+        for line in self.lines:
+            self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1] = -1/complex(line.resistance, line.reactance)
+            self.y_bus[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1]
+        # Get the sum of the rows
+        diagonal_elements = np.sum(self.y_bus, axis = 1) # axis 1 meaning the we sum each colomn along the rows
+        for i, Y_ii in enumerate(diagonal_elements):
+            self.y_bus[i,i] = -Y_ii # subracting because the off diagonal elements are negative (--=+)
+
     def calc_new_power_injections(self):
         """
         Calculate power values based on voltage and delta for all buses except slack.
