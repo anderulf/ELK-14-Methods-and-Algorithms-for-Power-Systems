@@ -86,8 +86,6 @@ class NR_Method:
         Additionally add these values to the net injections vector
         """
         buses = self.buses_dict
-        self.sum_real_power_injections = 0
-        self.sum_ractive_power_injections = 0
         for number, i in enumerate(buses):
             buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
             buses[i].q_calc = 0
