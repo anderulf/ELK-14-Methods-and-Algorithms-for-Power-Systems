@@ -64,13 +64,10 @@ class NR_Method:
         for bus_number in self.buses_dict: #bus_number is the key of each element in the dictionary
             if self.buses_dict[bus_number].p_spec and self.buses_dict[bus_number].q_spec:
                 self.n_pq += 1
-                self.buses_dict[bus_number].bus_type = "PQ"
             elif self.buses_dict[bus_number].p_spec and not self.buses_dict[bus_number].q_spec:
                 self.n_pv += 1
-                self.buses_dict[bus_number].bus_type = "PV"
             else:
                 self.n_pd += 1
-                self.buses_dict[bus_number].bus_type = "PD"
         if self.n_pd > 1 or self.n_pd == 0:
             print("WARNING INVALID SYSTEM: system has {} slack buses".format(self.n_pd))
         else:
@@ -384,6 +381,18 @@ class Bus:
         self.delta_p = 1
         self.delta_q = 1
         self.bus_type = None
+        self.classify_bus_type()
+
+    def classify_bus_type(self):
+        """
+        Sets the correct bus type for the bus object
+        """
+        if self.p_spec and self.q_spec:
+            self.bus_type = "PQ"
+        elif self.p_spec and not self.q_spec:
+            self.bus_type = "PV"
+        else:
+            self.bus_type = "PD"
 
     def print_data(self, slack_bus_number):
         """
