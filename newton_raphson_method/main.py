@@ -34,13 +34,13 @@ r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
 
 # Create buses
-bus_dict = {}
+buses = {}
 for bus_number in V:
-    bus_dict[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 # Add lines
-line_12 = Line(bus_dict[1], bus_dict[2], r["1-2"], x["1-2"])
-line_13 = Line(bus_dict[1], bus_dict[3], r["1-3"], x["1-3"])
-line_23 = Line(bus_dict[2], bus_dict[3], r["2-3"], x["2-3"])
+line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
+line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
+line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 
 lines = [line_12, line_13, line_23]
 
@@ -57,7 +57,7 @@ y_bus = ad.y_bus
 iter = 1
 
 # Initialize a system object (stores information about the grid)
-N_R = NR_Method(bus_dict, slack_bus_number, y_bus, lines)
+N_R = NR_Method(buses, slack_bus_number, y_bus, lines)
 
 # Iterate NS
 while N_R.power_error() > 0.0001:
