@@ -1,4 +1,4 @@
-﻿import Ybus as ad
+﻿#import Ybus as ad
 from classes import NR_Method, Bus, Line
 #Heiheihallo Anders
 import numpy as np
@@ -51,7 +51,6 @@ Program
 print("\n*--- Newton Raphson method iteration ---*\n")
 
 
-y_bus = ad.y_bus
 
 # Initialize iteration counter
 iter = 1
