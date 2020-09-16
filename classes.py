@@ -3,7 +3,7 @@ import cmath as ma
 
 
 class NR_Method:
-    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus, lines):
+    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -21,7 +21,6 @@ class NR_Method:
         The limit flag is used to know if the reactive power limit has been reached
         """
         self.buses_dict = {}
-        self.lines = lines
         self.fill_buses_dict(p_dict, q_dict, voltage_dict, delta_dict)
         self.slack_bus_number = slack_bus_number
         self.y_bus = y_bus
@@ -31,6 +30,7 @@ class NR_Method:
         self.n = 0
         self.m = 0
         self.calculate_n_values()
+        self.create_lines()
         self.jacobian = np.zeros([self.m, self.m])
         self.loss_matrix_p = None
         self.loss_matrix_q = None
@@ -74,6 +74,12 @@ class NR_Method:
         else:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
+
+    def create_lines(self):
+        """
+        WIP
+        """
+        pass
 
     def calc_new_power_injections(self):
         """
