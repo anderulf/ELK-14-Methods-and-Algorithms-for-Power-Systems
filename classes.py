@@ -247,37 +247,16 @@ class NR_Method:
         """
         Calculate the losses for all the top right values (skipping diagonals) and store in seperate matrices for active and reactive losses
         """
-        buses = self.buses_dict
-        rows, cols = self.y_bus.shape
-        self.loss_matrix_p = np.zeros([rows, cols])
-        self.loss_matrix_q = np.zeros([rows, cols])
-        self.power_flow_matrix = np.zeros([rows, cols], dtype=np.complex_)
-        self.current_matrix = np.zeros([rows, cols], dtype=np.complex_)
-        for i in range(rows - 1):
-            for j in range(rows - 1, i, -1):
-                # Ignore non-existing lines
-                if self.y_bus[i, j]:
-                    # Get rectangular values
-                    v_i = polar_to_rectangular(buses[i + 1].voltage, buses[i + 1].delta)
-                    v_j = polar_to_rectangular(buses[j + 1].voltage, buses[j + 1].delta)
-                    # Calculate losses
-                    current_ij = self.y_bus[i, j] * (v_i - v_j)
-                    current_ji = self.y_bus[i, j] * (v_j - v_i)
-                    self.power_flow_matrix[
-                        i, j] = -v_i * current_ij.conjugate()  # Negative values because power injections are defined into branch, but this is not intuitive for flow between branches
-                    self.power_flow_matrix[
-                        j, i] = -v_j * current_ji.conjugate()  # Negative values because power injections are defined into branch, but this is not intuitive for flow between branches
-                    loss = v_i * current_ij.conjugate() + v_j * current_ji.conjugate()
-                    self.current_matrix[i, j] = current_ij
-                    self.current_matrix[j, i] = current_ji
-                    self.loss_matrix_p[i, j] = abs(loss.real)
-                    self.loss_matrix_q[i, j] = abs(loss.imag)
-                    # Copy to other side of diagonal just in case
-                    self.loss_matrix_p[j, i] = self.loss_matrix_p[i, j]
-                    self.loss_matrix_q[j, i] = self.loss_matrix_q[i, j]
-                    # Save total losses
-                    self.total_losses_p += self.loss_matrix_p[i, j]
-                    self.total_losses_q += self.loss_matrix_q[i, j]
+        for line in self.lines:
+            v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta)
+            v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta)
+            line.to_current = self.y_bus[line.from_bus.bus_number -1,line.to_bus.bus_number -1] * (v_from - v_to)
+            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_b] * (v_to - v_from)
+            apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
+            line.p_loss = abs(apparent_loss.real)
+            line.q_loss = apparent_loss.imag # shunts can supply reactive power and increase losses
+            self.total_losses_p += line.p_loss
+            self.total_losses_q += line.q_loss
 
     def print_line_data(self):
         """
@@ -363,8 +342,6 @@ class NR_Method:
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
 
-
-
 class Bus:
     """
     Object holding data for a bus
@@ -419,7 +396,9 @@ class Line:
         self.susceptance = self.impedance.imag
         self.p_loss = 0
         self.q_loss = 0
-        self.current = 0
+        # to and from currents usually denoted I_ij and I_ji are not necessary equal but opposite due to shunts
+        self.to_current = 0
+        self.from_current = 0
 
 
     def __str__(self):
