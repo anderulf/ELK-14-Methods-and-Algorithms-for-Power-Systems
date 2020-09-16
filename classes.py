@@ -383,8 +383,8 @@ class Line:
         # to and from currents usually denoted I_ij and I_ji are not necessary equal but opposite due to shunts
         self.to_current = 0
         self.from_current = 0
-        self.real_power_flow = 0
-        self.reactive_power_flow = 0
+        self.p_power_flow = 0
+        self.q_power_flow = 0
 
 
     def __str__(self):
