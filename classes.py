@@ -33,7 +33,7 @@ class NR_Method:
         self.n = 0
         self.m = 0
         self.calculate_n_values()
-        self.jacobian = np.zeros([self.m, self.m])
+        self.jacobian = Jacobian(self.n_pq, self.n, self.m, buses, y_bus)
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
@@ -150,7 +150,7 @@ class NR_Method:
         for i in range(self.n_pq):
             self.diff_b[i + self.n, 0] = self.buses_dict[i + 1].delta_q
             self.x_old[i + self.n, 0] = self.buses_dict[i + 1].voltage
-        self.x_new = self.x_old + np.linalg.solve(self.jacobian, self.diff_b)
+        self.x_new = self.x_old + np.linalg.solve(self.jacobian.matrix, self.diff_b)
         for i in range(self.n):
             self.buses_dict[i + 1].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
@@ -248,7 +248,7 @@ class NR_Method:
 
     def print_matrices(self):
         print("\nJacobi matrix:")
-        print(self.jacobian)
+        print(self.jacobian.matrix)
         print("\nNet injections")
         print(np.c_[self.net_injections_vector_labels, self.net_injections_vector])
         print("\nMismatches")
@@ -343,7 +343,7 @@ class Jacobian:
         self.cols = m
         self.rows = m
         self.buses_dict = buses_dict
-        self.matrix = np.zeros([self.m, self.m])
+        self.matrix = np.zeros([m, m])
         self.y_bus = y_bus
         self.create_jacobian()
 
