@@ -384,8 +384,8 @@ class Bus:
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
         self.name = "Line {}-{}".format(to_bus.bus_number, to_bus.bus_number)
-        self.from_bus = to_bus
-        self.to_bus = from_bus
+        self.from_bus = from_bus
+        self.to_bus = to_bus
         self.resistance = resistance
         self.reactance = reactance
         self.impedance = complex(resistance, reactance)
