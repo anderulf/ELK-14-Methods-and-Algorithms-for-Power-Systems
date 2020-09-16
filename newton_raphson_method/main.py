@@ -36,9 +36,7 @@ x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
 # Create buses
 bus_dict = {}
 for bus_number in V:
-    print(bus_number)
     bus_dict[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
-print(bus_dict.keys())
 # Add lines
 line_12 = Line(bus_dict[1], bus_dict[2], r["1-2"], x["1-2"])
 line_13 = Line(bus_dict[1], bus_dict[3], r["1-3"], x["1-3"])
