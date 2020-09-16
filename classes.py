@@ -19,6 +19,9 @@ class NR_Method:
             the position in the list
 
         The limit flag is used to know if the reactive power limit has been reached
+
+        The line objects in lines contains bus objects, which means that changing the buses will also change the lines.
+        Hence updating the lines is not necessary if the buses are updated.
         """
         self.lines = lines
         self.buses_dict = buses
