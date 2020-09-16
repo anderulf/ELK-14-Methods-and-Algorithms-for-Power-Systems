@@ -3,7 +3,7 @@ import cmath as ma
 
 
 class NR_Method:
-    def __init__(self, p_dict, q_dict, voltage_dict, delta_dict, slack_bus_number, y_bus):
+    def __init__(self, buses, slack_bus_number, y_bus, lines):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -19,9 +19,12 @@ class NR_Method:
             the position in the list
 
         The limit flag is used to know if the reactive power limit has been reached
+
+        The line objects in lines contains bus objects, which means that changing the buses will also change the lines.
+        Hence updating the lines is not necessary if the buses are updated.
         """
-        self.buses_dict = {}
-        self.fill_buses_dict(p_dict, q_dict, voltage_dict, delta_dict)
+        self.lines = lines
+        self.buses_dict = buses
         self.slack_bus_number = slack_bus_number
         self.y_bus = y_bus
         self.n_pq = 0
@@ -31,10 +34,6 @@ class NR_Method:
         self.m = 0
         self.calculate_n_values()
         self.jacobian = np.zeros([self.m, self.m])
-        self.loss_matrix_p = None
-        self.loss_matrix_q = None
-        self.power_flow_matrix = None
-        self.current_matrix = None
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
@@ -47,15 +46,6 @@ class NR_Method:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
-
-
-    def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
-        """
-        Initialize buses_dict based on input data
-        """
-        for bus_number in p_dict:
-            self.buses_dict[int(bus_number)] = Bus(bus_number, p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
-                                                 delta_dict[bus_number])
 
     def calculate_n_values(self):
         """
@@ -82,8 +72,6 @@ class NR_Method:
         Additionally add these values to the net injections vector
         """
         buses = self.buses_dict
-        self.sum_real_power_injections = 0
-        self.sum_ractive_power_injections = 0
         for number, i in enumerate(buses):
             buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
             buses[i].q_calc = 0
@@ -245,50 +233,20 @@ class NR_Method:
 
     def calculate_line_data(self):
         """
-        Calculate the losses for all the top right values (skipping diagonals) and store in seperate matrices for active and reactive losses
+        Calculate the line data for all the line objects
         """
-        buses = self.buses_dict
-        rows, cols = self.y_bus.shape
-        self.loss_matrix_p = np.zeros([rows, cols])
-        self.loss_matrix_q = np.zeros([rows, cols])
-        self.power_flow_matrix = np.zeros([rows, cols], dtype=np.complex_)
-        self.current_matrix = np.zeros([rows, cols], dtype=np.complex_)
-        for i in range(rows - 1):
-            for j in range(rows - 1, i, -1):
-                # Ignore non-existing lines
-                if self.y_bus[i, j]:
-                    # Get rectangular values
-                    v_i = polar_to_rectangular(buses[i + 1].voltage, buses[i + 1].delta)
-                    v_j = polar_to_rectangular(buses[j + 1].voltage, buses[j + 1].delta)
-                    # Calculate losses
-                    current_ij = self.y_bus[i, j] * (v_i - v_j)
-                    current_ji = self.y_bus[i, j] * (v_j - v_i)
-                    self.power_flow_matrix[
-                        i, j] = -v_i * current_ij.conjugate()  # Negative values because power injections are defined into branch, but this is not intuitive for flow between branches
-                    self.power_flow_matrix[
-                        j, i] = -v_j * current_ji.conjugate()  # Negative values because power injections are defined into branch, but this is not intuitive for flow between branches
-                    loss = v_i * current_ij.conjugate() + v_j * current_ji.conjugate()
-                    self.current_matrix[i, j] = current_ij
-                    self.current_matrix[j, i] = current_ji
-                    self.loss_matrix_p[i, j] = abs(loss.real)
-                    self.loss_matrix_q[i, j] = abs(loss.imag)
-                    # Copy to other side of diagonal just in case
-                    self.loss_matrix_p[j, i] = self.loss_matrix_p[i, j]
-                    self.loss_matrix_q[j, i] = self.loss_matrix_q[i, j]
-                    # Save total losses
-                    self.total_losses_p += self.loss_matrix_p[i, j]
-                    self.total_losses_q += self.loss_matrix_q[i, j]
-
-    def print_line_data(self):
-        """
-        Print line values (losses, flows, current)
-        """
-        rows, cols = self.loss_matrix_p.shape
-        print("Power losses in lines: ")
-        for i in range(rows - 1):
-            for j in range(rows - 1, i, -1):
-                if self.loss_matrix_p[i, j]:
-                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1, round(self.current_matrix[i, j], 4), round(self.power_flow_matrix[i, j].real,4), round(self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(self.loss_matrix_q[i, j], 4)))
+        for line in self.lines:
+            v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
+            v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta) # v_j
+            line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from) # i_ij
+            line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to) # i_ji
+            apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
+            line.p_loss = apparent_loss.real
+            line.q_loss = apparent_loss.imag
+            line.real_power_flow = (-v_from * line.from_current).real
+            line.reactive_power_flow = (-v_from * line.from_current).imag
+            self.total_losses_p += line.p_loss
+            self.total_losses_q += line.q_loss
 
     def calculate_slack_values(self):
         """
@@ -307,6 +265,13 @@ class NR_Method:
         self.buses_dict[self.slack_bus_number].q_calc += self.total_losses_q
         self.net_injections_vector[self.slack_bus_number - 1] = round(self.buses_dict[self.slack_bus_number].p_calc, 3)
         self.net_injections_vector[self.slack_bus_number + self.n] = round(self.buses_dict[self.slack_bus_number].q_calc, 3)
+
+    def reset_values(self):
+        """
+        Reset values before new iteration
+        """
+        self.total_losses_p = 0
+        self.total_losses_q = 0
 
     def create_label_vectors(self):
         for i in self.buses_dict:
@@ -349,7 +314,12 @@ class NR_Method:
         for bus_number in self.buses_dict:
             self.buses_dict[bus_number].print_data(self.slack_bus_number)
 
-
+    def print_line_data(self):
+        """
+        Print line values (losses, flows, current)
+        """
+        for line in self.lines:
+            print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(line.from_bus.bus_number, line.to_bus.bus_number, round(line.from_current,3), round(line.real_power_flow,3), round(line.reactive_power_flow,3), round(line.p_loss,3), round(line.q_loss,3)))
 
     def print_matrices(self):
         print("\nJacobi matrix:")
@@ -362,8 +332,6 @@ class NR_Method:
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
-
-
 
 class Bus:
     """
@@ -410,8 +378,8 @@ class Bus:
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
         self.name = "Line {}-{}".format(to_bus.bus_number, to_bus.bus_number)
-        self.from_bus = to_bus
-        self.to_bus = from_bus
+        self.from_bus = from_bus
+        self.to_bus = to_bus
         self.resistance = resistance
         self.reactance = reactance
         self.impedance = complex(resistance, reactance)
@@ -419,7 +387,11 @@ class Line:
         self.susceptance = self.impedance.imag
         self.p_loss = 0
         self.q_loss = 0
-        self.current = 0
+        # to and from currents usually denoted I_ij and I_ji are not necessary equal but opposite due to shunts
+        self.to_current = 0
+        self.from_current = 0
+        self.p_power_flow = 0
+        self.q_power_flow = 0
 
 
     def __str__(self):
