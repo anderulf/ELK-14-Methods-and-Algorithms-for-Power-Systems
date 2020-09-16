@@ -43,10 +43,8 @@ lines = [line_12, line_13, line_23]
 """
 Program
 """
-#hei
+
 print("\n*--- Newton Raphson method iteration ---*\n")
-
-
 
 # Initialize iteration counter
 iter = 1
