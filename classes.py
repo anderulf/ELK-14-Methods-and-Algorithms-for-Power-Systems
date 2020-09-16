@@ -65,6 +65,11 @@ class NR_Method:
             self.n = self.n_pq + self.n_pv
 
     def create_y_bus(self):
+        """
+        Creates the y_bus from the line data
+        First the off diagonal elements are added by using the line resistance and reactance
+        Then the diagonal elements are found by summing the rows of each diagonal element
+        """
         self.y_bus = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=complex)
         for line in self.lines:
             self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1] = -1/complex(line.resistance, line.reactance)
