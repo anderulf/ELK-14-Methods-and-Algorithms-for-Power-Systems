@@ -246,16 +246,18 @@ class NR_Method:
 
     def calculate_line_data(self):
         """
-        Calculate the losses for all the top right values (skipping diagonals) and store in seperate matrices for active and reactive losses
+        Calculate the line data for all the line objects
         """
         for line in self.lines:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta)
             v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta)
-            line.to_current = self.y_bus[line.from_bus.bus_number -1,line.to_bus.bus_number -1] * (v_from - v_to)
             line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from)
+            line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to)
             apparent_loss = v_from * line.from_current.conjugate() + v_to * line.to_current.conjugate() # v_i * I_ij + v_j * I_ji
             line.p_loss = abs(apparent_loss.real)
             line.q_loss = apparent_loss.imag # shunts can supply reactive power and increase losses
+            line.real_power_flow = (-v_from * line.from_current).real
+            line.reactive_power_flow = (-v_from * line.from_current).imag
             self.total_losses_p += line.p_loss
             self.total_losses_q += line.q_loss
 
