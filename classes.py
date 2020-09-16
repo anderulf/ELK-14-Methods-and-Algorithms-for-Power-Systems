@@ -25,7 +25,6 @@ class NR_Method:
         """
         self.lines = lines
         self.buses_dict = buses
-        #self.fill_buses_dict(p_dict, q_dict, voltage_dict, delta_dict)
         self.slack_bus_number = slack_bus_number
         self.y_bus = y_bus
         self.n_pq = 0
@@ -47,15 +46,6 @@ class NR_Method:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
-
-
-    def fill_buses_dict(self, p_dict, q_dict, voltage_dict, delta_dict):
-        """
-        Initialize buses_dict based on input data
-        """
-        for bus_number in p_dict:
-            self.buses_dict[int(bus_number)] = Bus(bus_number, p_dict[bus_number], q_dict[bus_number], voltage_dict[bus_number],
-                                                 delta_dict[bus_number])
 
     def calculate_n_values(self):
         """
