@@ -259,17 +259,6 @@ class NR_Method:
             self.total_losses_p += line.p_loss
             self.total_losses_q += line.q_loss
 
-    def print_line_data(self):
-        """
-        Print line values (losses, flows, current)
-        """
-        rows, cols = self.loss_matrix_p.shape
-        print("Power losses in lines: ")
-        for i in range(rows - 1):
-            for j in range(rows - 1, i, -1):
-                if self.loss_matrix_p[i, j]:
-                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1, round(self.current_matrix[i, j], 4), round(self.power_flow_matrix[i, j].real,4), round(self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(self.loss_matrix_q[i, j], 4)))
-
     def calculate_slack_values(self):
         """
         Calculate the slack bus values based on the NS iteration
@@ -329,6 +318,16 @@ class NR_Method:
         for bus_number in self.buses_dict:
             self.buses_dict[bus_number].print_data(self.slack_bus_number)
 
+    def print_line_data(self):
+        """
+        Print line values (losses, flows, current)
+        """
+        rows, cols = self.loss_matrix_p.shape
+        print("Power losses in lines: ")
+        for i in range(rows - 1):
+            for j in range(rows - 1, i, -1):
+                if self.loss_matrix_p[i, j]:
+                    print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(i + 1, j + 1, round(self.current_matrix[i, j], 4), round(self.power_flow_matrix[i, j].real,4), round(self.power_flow_matrix[i, j].imag, 4), round(self.loss_matrix_p[i, j], 4), round(self.loss_matrix_q[i, j], 4)))
 
 
     def print_matrices(self):
