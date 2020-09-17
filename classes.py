@@ -175,6 +175,9 @@ class NR_Method:
     def calculate_line_data(self):
         """
         Calculate the line data for all the line objects
+
+        Note that writing to line updates self.lines because line and lines[i] is the same object ie. points to same
+        location in memory
         """
         for line in self.lines:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
