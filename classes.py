@@ -306,6 +306,12 @@ class Bus:
         else:
             self.bus_type = "PD"
 
+    def update_values(self, p_spec, q_spec, voltage, delta):
+        self.p_spec = p_spec
+        self.q_spec = q_spec
+        self.voltage = voltage
+        self.delta = delta
+
     def print_data(self, slack_bus_number):
         """
         Print the data for a bus
