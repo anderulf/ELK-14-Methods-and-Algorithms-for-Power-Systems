@@ -77,12 +77,7 @@ else:
 while convergence:
     # Recreate Bus-objects
     for bus_number in V:
-        buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
-    # Add lines
-    line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
-    line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
-    line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
-    lines = [line_12, line_13, line_23]
+        buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
     N_R = NR_Method(buses, slack_bus_number, lines)
     # Iterate NS
     while N_R.power_error() > 0.0001:
