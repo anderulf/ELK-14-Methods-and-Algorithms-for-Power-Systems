@@ -1,8 +1,4 @@
-﻿import Ybus as ad
-from classes import NR_Method, Bus, Line
-#Heiheihallo Anders
-import numpy as np
-# heisann
+﻿from classes import NR_Method, Bus, Line
 """
 Settings:
     outage  can be set to
@@ -47,17 +43,14 @@ lines = [line_12, line_13, line_23]
 """
 Program
 """
-#hei
+
 print("\n*--- Newton Raphson method iteration ---*\n")
-
-
-y_bus = ad.y_bus
 
 # Initialize iteration counter
 iter = 1
 
 # Initialize a system object (stores information about the grid)
-N_R = NR_Method(buses, slack_bus_number, y_bus, lines)
+N_R = NR_Method(buses, slack_bus_number, lines)
 
 # Iterate NS
 while N_R.power_error() > 0.0001:

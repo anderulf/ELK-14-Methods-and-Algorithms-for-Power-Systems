@@ -1,9 +1,10 @@
 ﻿import numpy as np
 import cmath as ma
+from supporting_methods import polar_to_rectangular
 
 
 class NR_Method:
-    def __init__(self, buses, slack_bus_number, y_bus, lines):
+    def __init__(self, buses, slack_bus_number, lines):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -26,7 +27,7 @@ class NR_Method:
         self.lines = lines
         self.buses_dict = buses
         self.slack_bus_number = slack_bus_number
-        self.y_bus = y_bus
+        self.create_y_bus()
         self.n_pq = 0
         self.n_pv = 0
         self.n_pd = 0
@@ -63,6 +64,21 @@ class NR_Method:
         else:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
+
+    def create_y_bus(self):
+        """
+        Creates the y_bus from the line data
+        First the off diagonal elements are added by using the line resistance and reactance
+        Then the diagonal elements are found by summing the rows of each diagonal element
+        """
+        self.y_bus = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=complex)
+        for line in self.lines:
+            self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1] = -1/complex(line.resistance, line.reactance)
+            self.y_bus[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.y_bus[line.from_bus.bus_number -1, line.to_bus.bus_number -1]
+        # Get the sum of the rows
+        diagonal_elements = np.sum(self.y_bus, axis = 1) # axis 1 meaning the we sum each colomn along the rows
+        for i, Y_ii in enumerate(diagonal_elements):
+            self.y_bus[i,i] = -Y_ii # subracting because the off diagonal elements are negative (--=+)
 
     def calc_new_power_injections(self):
         """
@@ -406,34 +422,3 @@ class Jacobian:
                 else:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
-
-"""
-Auxillary methods
-"""
-def rectangular_to_polar(complex_number):
-    r = np.sqrt(complex_number.real * complex_number.real + complex_number.imag * complex_number.imag).real
-    if complex_number.real < 0 and complex_number.imag > 0:  # second quadrant
-        angle = np.pi - np.arctan(abs(complex_number.imag / complex_number.real))
-    elif complex_number.real < 0 and complex_number.imag < 0:  # third quadrant
-        angle = -(np.pi - np.arctan(abs(complex_number.imag / complex_number.real)))
-    elif complex_number.real > 0 and complex_number.imag < 0:  # fourth quadrant
-        angle = -np.arctan(abs(complex_number.imag / complex_number.real))
-    else:  # first quadrant
-        angle = np.arctan(abs(complex_number.imag / complex_number.real))
-    return r, angle
-
-
-def polar_to_rectangular(abs, angle):
-    a = abs * np.cos(angle)
-    b = abs * np.sin(angle)
-    return complex(a, b)
-
-
-def complex_angle(complex_number):
-    r, angle = rectangular_to_polar(complex_number)
-    return angle
-
-
-def complex_radius(complex_number):
-    r, angle = rectangular_to_polar(complex_number)
-    return r
