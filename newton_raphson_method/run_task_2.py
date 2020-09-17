@@ -1,5 +1,5 @@
 
-from classes import NR_Method, Bus, Line
+from classes import Load_Flow, Bus, Line
 import matplotlib.pyplot as plt
 
 """
@@ -78,7 +78,7 @@ while convergence:
     # Recreate Bus-objects
     for bus_number in V:
         buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
-    N_R = NR_Method(buses, slack_bus_number, lines)
+    N_R = Load_Flow(buses, slack_bus_number, lines)
     # Iterate NS
     while N_R.power_error() > 0.0001:
         print("\nIteration: {}\n".format(iter))

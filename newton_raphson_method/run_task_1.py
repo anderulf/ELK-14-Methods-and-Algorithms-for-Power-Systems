@@ -1,4 +1,4 @@
-﻿from classes import NR_Method, Bus, Line
+﻿from classes import Load_Flow, Bus, Line
 """
 Settings:
     outage  can be set to
@@ -50,9 +50,9 @@ print("\n*--- Newton Raphson method iteration ---*\n")
 iter = 1
 
 # Initialize a system object (stores information about the grid)
-N_R = NR_Method(buses, slack_bus_number, lines)
+N_R = Load_Flow(buses, slack_bus_number, lines)
 
-# Iterate NS
+# Iterate NR
 while N_R.power_error() > 0.0001:
     N_R.reset_values()
     print("\nIteration: {}\n".format(iter))
