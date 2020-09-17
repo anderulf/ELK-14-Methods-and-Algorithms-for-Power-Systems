@@ -449,3 +449,11 @@ class Jacobian:
         new_col[-1] = [1]
         self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
         self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
+
+class Continuation:
+    """
+    The class is used to run the continuation load flow method
+    """
+    def __init__(self, alpha_list, beta_list):
+        self.alpha_list = alpha_list
+        self.beta_list = beta_list
