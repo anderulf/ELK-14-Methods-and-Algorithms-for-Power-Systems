@@ -34,7 +34,7 @@ class NR_Method:
         self.n = 0
         self.m = 0
         self.calculate_n_values()
-        self.jacobian = Jacobian(self.n_pq, self.n, self.m, buses, y_bus)
+        self.jacobian = Jacobian(self.n_pq, self.n, self.m, buses, self.y_bus)
         self.total_losses_p = 0
         self.total_losses_q = 0
         self.limit_flag = 0
