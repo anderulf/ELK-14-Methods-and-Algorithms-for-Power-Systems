@@ -152,6 +152,7 @@ class NR_Method:
                 error_list.append(abs(buses[i].delta_p))
             if not buses[i].q_spec == None:
                 error_list.append(abs(buses[i].delta_q))
+        print(error_list)
         return max(error_list)
 
     def update_values(self):
@@ -238,16 +239,6 @@ class NR_Method:
                 self.x_vector_labels.insert(i-1, "\u03B4" + str(i))
                 self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
 
-        #prints when debugging
-        print(*self.net_injections_vector_labels, sep = '\n')
-        print(self.mismatch_vector_labels)
-        print(self.correction_vector_labels)
-        print(self.x_vector_labels)
-
-
-
-
-
     def print_buses(self):
         """
         Prints the data for all the bus. Mostly needed for debugging
@@ -311,6 +302,8 @@ class Bus:
         self.q_spec = q_spec
         self.voltage = voltage
         self.delta = delta
+        self.delta_p = 1
+        self.delta_q = 1
 
     def print_data(self, slack_bus_number):
         """
