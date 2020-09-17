@@ -13,6 +13,8 @@ Settings:
 Q_limit, lim_node and lim_size decides if there is a limit, which node it applies to and the limit size
 Only works for one node.
 """
+updating_values = 1
+flat_start = 0
 q_limit = False
 lim_node = 3
 lim_size = 1
@@ -61,14 +63,11 @@ V_vector_bus2 = []
 
 # Initialize a system object (stores information about the grid)
 convergence = 1
-# Decisions:
-updating_values = 1
-flat_start = 0
 if flat_start:
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
-    P_increase.append(-(P["1"]+P["2"]))
+    P_increase.append(-(V["1"]+V["2"]))
     P["1"] -= 0.06
     P["2"] -= 0.14
 else:
@@ -76,7 +75,14 @@ else:
 # start is used to get the correct order of the list which are used to make plot
 # If flat start, then the first elements are initialized earlier in the code.
 while convergence:
-
+    # Recreate Bus-objects
+    for bus_number in V:
+        buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+    # Add lines
+    line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
+    line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
+    line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
+    lines = [line_12, line_13, line_23]
     N_R = NR_Method(buses, slack_bus_number, lines)
     # Iterate NS
     while N_R.power_error() > 0.0001:
