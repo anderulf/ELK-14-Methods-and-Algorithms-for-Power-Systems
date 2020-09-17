@@ -1,7 +1,5 @@
-from typing import List
 
-import Ybus as ad
-from classes import NR_Method
+from classes import NR_Method, Bus, Line
 import matplotlib.pyplot as plt
 
 """
@@ -30,15 +28,26 @@ delta = {"1": 0, "2": 0, "3": 0}
 Q = {"1": -0.5, "2": -0.5, "3": None}
 # P values from project
 P = {"1": -0.8, "2": -0.4, "3": None}
+# line data
+r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
+x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
 
+# Create buses
+buses = {}
+for bus_number in V:
+    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+# Add lines
+line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
+line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
+line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
+
+lines = [line_12, line_13, line_23]
 """
 Program
 """
 
-print("\n*--- Newton Raphson method iteration ---*\n")
+print("\n*--- Newton Raphson method iteration with load increases ---*\n")
 
-
-y_bus = ad.y_bus
 
 # Initialize iteration counter
 iter = 1
@@ -68,15 +77,15 @@ else:
 # If flat start, then the first elements are initialized earlier in the code.
 while convergence:
 
-    N_R = NR_Method(P, Q, V, delta, slack_bus_number, y_bus)
+    N_R = NR_Method(buses, slack_bus_number, lines)
     # Iterate NS
     while N_R.power_error() > 0.0001:
         print("\nIteration: {}\n".format(iter))
-        N_R.calc_new_power()
+        N_R.calc_new_power_injections()
         N_R.check_limit(q_limit, lim_node, lim_size)
         N_R.error_specified_vs_calculated()
         N_R.print_buses()
-        N_R.create_jacobian()
+        N_R.jacobian.create_jacobian()
         N_R.update_values()
         N_R.print_matrices()
         iter += 1
