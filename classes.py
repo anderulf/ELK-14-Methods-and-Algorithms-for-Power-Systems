@@ -3,8 +3,8 @@ import cmath as ma
 from supporting_methods import polar_to_rectangular
 
 
-class NR_Method:
-    def __init__(self, buses, slack_bus_number, lines):
+class Load_Flow:
+    def __init__(self, buses, slack_bus_number, lines, continuation_flag=False):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -23,6 +23,10 @@ class NR_Method:
 
         The line objects in lines contains bus objects, which means that changing the buses will also change the lines.
         Hence updating the lines is not necessary if the buses are updated.
+
+        continuation_flag is used to give further functionality for the continuation power flow method. It is set to
+        False by default which means it does not need to be inputed. Setting it to True will activate continuation
+        power flow functions which is necessary if doing this approach.
         """
         self.lines = lines
         self.buses_dict = buses
@@ -47,6 +51,7 @@ class NR_Method:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
+        self.continuation_flag = continuation_flag
 
     def calculate_n_values(self):
         """
