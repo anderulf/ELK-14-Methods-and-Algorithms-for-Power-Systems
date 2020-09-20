@@ -14,7 +14,7 @@ Q_limit, lim_node and lim_size decides if there is a limit, which node it applie
 Only works for one node.
 """
 updating_values = 1
-flat_start = 0
+flat_start = 1
 q_limit = False
 lim_node = 3
 lim_size = 1
@@ -31,8 +31,8 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 # P values from project
 P = {"1": -0.8, "2": -0.4, "3": None}
 # line data
-r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
-x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
+r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
+x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
 
 # Create buses
 buses = {}
@@ -67,7 +67,7 @@ if flat_start:
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
-    P_increase.append(-(V["1"]+V["2"]))
+    P_increase.append(-(P["1"]+P["2"]))
     P["1"] -= 0.06
     P["2"] -= 0.14
 else:
