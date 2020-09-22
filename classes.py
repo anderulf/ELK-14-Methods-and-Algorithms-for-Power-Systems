@@ -431,7 +431,7 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def sensitivity_jacobian_expansion(self, alpha_list, beta_list):
+    def predictor_phase_expand(self, alpha_list, beta_list):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
