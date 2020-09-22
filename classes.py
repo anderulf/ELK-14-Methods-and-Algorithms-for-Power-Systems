@@ -455,13 +455,12 @@ class Jacobian:
     def reset_original_matrix(self):
         """
         Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
-        :return:
         """
         if self.cols > self.m and self.rows > self.m:
             # Delete last row
             self.matrix = np.delete(self.matrix, obj=-1, axis=0)
             # Delete last col
-            self.matrix = np.delete(self.matrix, obj=-1, axis=0)
+            self.matrix = np.delete(self.matrix, obj=-1, axis=1)
         else: return
 
 class Continuation:
