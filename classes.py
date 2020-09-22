@@ -434,6 +434,8 @@ class Jacobian:
     def sensitivity_jacobian_expansion(self, alpha_list, beta_list):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
+
+        Note that these values should be removable aswell
         """
         self.cols = self.m + 1
         self.rows = self.m + 1
@@ -449,6 +451,18 @@ class Jacobian:
         new_col[-1] = [1]
         self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
         self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
+
+    def reset_original_matrix(self):
+        """
+        Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
+        :return:
+        """
+        if self.cols > self.m and self.rows > self.m:
+            # Delete last row
+            self.matrix = np.delete(self.matrix, obj=-1, axis=0)
+            # Delete last col
+            self.matrix = np.delete(self.matrix, obj=-1, axis=0)
+        else: return
 
 class Continuation:
     """
