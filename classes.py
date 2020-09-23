@@ -157,7 +157,6 @@ class Load_Flow:
                 error_list.append(abs(buses[i].delta_p))
             if not buses[i].q_spec == None:
                 error_list.append(abs(buses[i].delta_q))
-        print(error_list)
         return max(error_list)
 
     def update_values(self):
