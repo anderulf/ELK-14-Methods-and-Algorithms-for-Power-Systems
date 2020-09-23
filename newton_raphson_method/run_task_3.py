@@ -2,19 +2,8 @@
 from classes import Load_Flow, Bus, Line
 import matplotlib.pyplot as plt
 
-"""
-Settings:
-    outage  can be set to
-    0: no outage
-    1: line 2-3
-    2: line 2-5
-    3: line 3-5
-
-Q_limit, lim_node and lim_size decides if there is a limit, which node it applies to and the limit size
-Only works for one node.
-"""
 updating_values = 1
-flat_start = 1
+flat_start = 0
 q_limit = False
 lim_node = 3
 lim_size = 1
@@ -57,7 +46,7 @@ iter = 1
 
 # Assignment 1 Task 2
 # initializing vectors for plot
-P_increase = []
+Q_increase = []
 V_vector_bus1 = []
 V_vector_bus2 = []
 
@@ -67,9 +56,9 @@ if flat_start:
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
-    P_increase.append(-(P["1"]+P["2"]))
-    P["1"] -= 0.06
-    P["2"] -= 0.14
+    Q_increase.append(-(Q["1"]+Q["2"]))
+    Q["1"] -= 0.06
+    Q["2"] -= 0.14
 else:
     start = 0
 # start is used to get the correct order of the list which are used to make plot
@@ -118,9 +107,9 @@ while convergence:
         # Adding additional load 0.2pu 30% at Bus 1, and 70% at Bus 2.
         V_vector_bus1.append(N_R.buses_dict[1].voltage)
         V_vector_bus2.append(N_R.buses_dict[2].voltage)
-        P_increase.append(-(P["1"]+P["2"]))
-        P["1"] -= 0.06
-        P["2"] -= 0.14
+        Q_increase.append(-(Q["1"]+Q["2"]))
+        Q["1"] -= 0.06
+        Q["2"] -= 0.14
 
     # initializing for next iteration (while loop)
 
@@ -128,9 +117,9 @@ while convergence:
     start = 1
 
 
-plt.plot(P_increase,V_vector_bus1,label='V_Bus_1')
-plt.plot(P_increase,V_vector_bus2, label='V_Bus_2')
-plt.xlabel('Total load power drawn from the system')
+plt.plot(Q_increase,V_vector_bus1,label='V_Bus_1')
+plt.plot(Q_increase,V_vector_bus2, label='V_Bus_2')
+plt.xlabel('Total Reactive power drawn from the system')
 plt.ylabel('Voltage [pu]')
 plt.legend()
 plt.show()
