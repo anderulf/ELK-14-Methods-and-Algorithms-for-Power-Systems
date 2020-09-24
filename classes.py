@@ -487,7 +487,9 @@ class Jacobian:
             new_row[-1] = 1 # index -1 is the last element ie. the diagonal element
         elif parameter == "voltage":
             new_row[-2] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
-        else: print("Error: The parameter in Jacobian.continium_expand is not a valid input.")
+        else:
+            print("Error: The parameter \"{}\" in Jacobian.continium_expand is not a valid input.".format(parameter))
+            return
         self.matrix = np.hstack([self.matrix, new_col]) # Add the new column
         self.matrix = np.vstack([self.matrix, new_row]) # Add the new row
 
