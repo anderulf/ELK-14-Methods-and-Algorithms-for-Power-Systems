@@ -277,7 +277,7 @@ class Bus:
     Object holding data for a bus
     """
 
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, alpha=None, beta=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -289,6 +289,8 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
+        self.alpha = alpha
+        self.beta = beta
 
     def classify_bus_type(self):
         """
@@ -430,9 +432,11 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def sensitivity_jacobian_expansion(self, alpha_list, beta_list):
+    def predictor_phase_expand(self, alpha_list, beta_list):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
+
+        Note that these values should be removable aswell
         """
         self.cols = self.m + 1
         self.rows = self.m + 1
@@ -448,3 +452,32 @@ class Jacobian:
         new_col[-1] = [1]
         self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
         self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
+
+    def corrector_constant_load_expand(self):
+        pass
+
+    def corrector_constant_voltage_expand(self):
+        pass
+
+    def reset_original_matrix(self):
+        """
+        Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
+
+        in np.delete obj is the row or column to delete
+        """
+        if self.cols > self.m and self.rows > self.m:
+            # Delete last row
+            self.matrix = np.delete(self.matrix, obj=-1, axis=0) # obj=-1 is the last element, axis=0 means row
+            # Delete last col
+            self.matrix = np.delete(self.matrix, obj=-1, axis=1) # obj=-1 is the last element, axis=1 means column
+            self.cols = self.m
+            self.rows = self.m
+        else: return
+
+class Continuation:
+    """
+    The class is used to run the continuation load flow method
+    """
+    def __init__(self, alpha_list, beta_list):
+        self.alpha_list = alpha_list
+        self.beta_list = beta_list
