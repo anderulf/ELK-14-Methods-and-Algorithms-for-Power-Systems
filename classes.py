@@ -28,6 +28,7 @@ class Load_Flow:
         False by default which means it does not need to be inputed. Setting it to True will activate continuation
         power flow functions which is necessary if doing this approach.
         """
+        self.iteration = 1
         self.lines = lines
         self.buses_dict = buses
         self.slack_bus_number = slack_bus_number
@@ -54,6 +55,7 @@ class Load_Flow:
         self.continuation_flag = continuation_flag
         self.net_losses_p = 0
         self.net_losses_q = 0
+        self.error_history = []
 
     def calculate_n_values(self):
         """
@@ -175,7 +177,25 @@ class Load_Flow:
                 error_list.append(abs(buses[i].delta_p))
             if not buses[i].q_spec == None:
                 error_list.append(abs(buses[i].delta_q))
+        self.error_history.append(max(error_list))
         return max(error_list)
+
+    def diverging(self):
+        """
+        Determines if the load flow is diverging by looking at the last three errors. If they are increasing or not
+        changing the method determines that the system is diverging. Does not compare before the third iteration
+        """
+        if len(self.error_history) < 3:
+            # Continue if less than three iterations has been run
+            return False
+        else:
+            # Check if error increased or was unchanged the last two iterations
+            if (self.error_history[-1] >= self.error_history[-2]) and (self.error_history[-2] >= self.error_history[-3]):
+                return True
+            elif self.iteration > 7:
+                # Stop if too many iterations were run
+                return True
+            else: return False
 
     def update_values(self):
         """
