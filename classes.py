@@ -278,7 +278,7 @@ class Bus:
     Object holding data for a bus
     """
 
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, alpha=None, beta=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -290,6 +290,8 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
+        self.alpha = alpha
+        self.beta = beta
 
     def classify_bus_type(self):
         """
@@ -455,12 +457,16 @@ class Jacobian:
     def reset_original_matrix(self):
         """
         Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
+
+        in np.delete obj is the row or column to delete
         """
         if self.cols > self.m and self.rows > self.m:
             # Delete last row
-            self.matrix = np.delete(self.matrix, obj=-1, axis=0)
+            self.matrix = np.delete(self.matrix, obj=-1, axis=0) # obj=-1 is the last element, axis=0 means row
             # Delete last col
-            self.matrix = np.delete(self.matrix, obj=-1, axis=1)
+            self.matrix = np.delete(self.matrix, obj=-1, axis=1) # obj=-1 is the last element, axis=1 means column
+            self.cols = self.m
+            self.rows = self.m
         else: return
 
 class Continuation:
