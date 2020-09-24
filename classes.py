@@ -566,7 +566,7 @@ class Continuation(Load_Flow):
         """
         self.some_value = some_value
 
-    def predictor_phase_initialization(self):
+    def initialize_predictor_phase(self):
         """
         Set up the predictor phase
 
@@ -575,7 +575,7 @@ class Continuation(Load_Flow):
         self.jacobian.continuation_expand("load", self.buses_dict)
         self.mismatch.continuation_expansion("predictor")
 
-    def corrector_phase_initialization(self, parameter):
+    def initialize_corrector_phase(self, parameter):
         """
         Set up the corrector phase
 
