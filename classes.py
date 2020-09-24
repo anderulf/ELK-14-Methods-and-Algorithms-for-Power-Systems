@@ -303,9 +303,12 @@ class Load_Flow:
 class Bus:
     """
     Object holding data for a bus
-    """
 
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
+    Takes OPTIONAL inputs alpha and beta defaulting to None.
+
+    alpha and beta should only be inputed for continuation load flow method
+    """
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, beta=None, alpha=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -317,6 +320,8 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
+        self.beta = beta
+        self.alpha = alpha
 
     def classify_bus_type(self):
         """
@@ -396,9 +401,9 @@ class Jacobian:
         self.buses_dict = buses_dict
         self.matrix = np.zeros([m, m])
         self.y_bus = y_bus
-        self.create_jacobian()
+        self.create()
 
-    def create_jacobian(self):
+    def create(self):
         """
         Calculate and return the jacobian matrix for the current iteration.
         The full matrix is constructed from the submatrix parts; J1, J2, J3, J4.
@@ -406,7 +411,7 @@ class Jacobian:
 
         Read:
         The offset is set because a element in the matrix, ie. 0,0 should hold d P_2/d delta_2 if bus 1 is slack. Thus,
-        in this example i and j must be offset with 2.
+        in this example i and j must be offset with 1 because slack bus is bus 3.
 
         """
         buses = self.buses_dict
@@ -458,11 +463,33 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def corrector_constant_load_expand(self):
-        pass
+    def continium_expand(self, parameter, buses):
+        """
+        This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
-    def corrector_constant_voltage_expand(self):
-        pass
+        Parameter should be a string type input with value either "voltage" or "load". "load" input is also used in
+        predictor phase.
+
+        buses is the buses dictionary from the load flow class
+        """
+        self.cols = self.m + 1
+        self.rows = self.m + 1
+        new_row = [0] * (self.m +1)
+        new_col = [0] * self.m
+        for bus in buses.values():
+            if bus.bus_type == "PD":
+                pass # skip slack bus
+            else:
+                new_col[bus.bus_number-1] = [bus.beta]
+                new_col[bus.bus_number-1+self.n] = [bus.alpha]
+        # Add row element which is based on phase
+        if parameter == "load":
+            new_row[-1] = 1 # index -1 is the last element ie. the diagonal element
+        elif parameter == "voltage":
+            new_row[-2] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
+        else: print("Error: The parameter in Jacobian.continium_expand is not a valid input.")
+        self.matrix = np.hstack([self.matrix, new_col]) # Add the new column
+        self.matrix = np.vstack([self.matrix, new_row]) # Add the new row
 
     def reset_original_matrix(self):
         """
@@ -480,11 +507,3 @@ class Jacobian:
         else:
             return
 
-class Continuation:
-    """
-    The class is used to run the continuation load flow method
-    """
-
-    def __init__(self, alpha_list, beta_list):
-        self.alpha_list = alpha_list
-        self.beta_list = beta_list
