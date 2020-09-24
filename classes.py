@@ -401,7 +401,7 @@ class Jacobian:
         self.buses_dict = buses_dict
         self.matrix = np.zeros([m, m])
         self.y_bus = y_bus
-        self.create_jacobian()
+        self.create()
 
     def create(self):
         """
