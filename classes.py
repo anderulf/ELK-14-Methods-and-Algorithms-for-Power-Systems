@@ -303,9 +303,12 @@ class Load_Flow:
 class Bus:
     """
     Object holding data for a bus
-    """
 
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
+    Takes OPTIONAL inputs alpha and beta defaulting to None.
+
+    alpha and beta should only be inputed for continuation load flow method
+    """
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, alpha=None, beta=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -317,6 +320,8 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
+        self.alpha = alpha
+        self.beta = beta
 
     def classify_bus_type(self):
         """
