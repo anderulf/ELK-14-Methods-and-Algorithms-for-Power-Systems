@@ -506,11 +506,3 @@ class Jacobian:
         else:
             return
 
-class Continuation:
-    """
-    The class is used to run the continuation load flow method
-    """
-
-    def __init__(self, alpha_list, beta_list):
-        self.alpha_list = alpha_list
-        self.beta_list = beta_list
