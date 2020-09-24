@@ -45,7 +45,7 @@ class Load_Flow:
         self.x_new = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.x_vector_labels = []
-        self.diff_b = np.zeros([self.m, 1])
+        self.mismatch = Mismatch(self.m)
         self.mismatch_vector_labels = []
         self.net_injections_vector = np.zeros([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1]) #Adding 2 for each bus (Pi, Qi)
         self.net_injections_vector_labels = []
@@ -185,11 +185,11 @@ class Load_Flow:
         """
         for i in range(self.n):
             self.x_old[i, 0] = self.buses_dict[i + 1].delta
-            self.diff_b[i, 0] = self.buses_dict[i + 1].delta_p
+            self.mismatch.vector[i, 0] = self.buses_dict[i + 1].delta_p
         for i in range(self.n_pq):
-            self.diff_b[i + self.n, 0] = self.buses_dict[i + 1].delta_q
+            self.mismatch.vector[i + self.n, 0] = self.buses_dict[i + 1].delta_q
             self.x_old[i + self.n, 0] = self.buses_dict[i + 1].voltage
-        self.x_new = self.x_old + np.linalg.solve(self.jacobian.matrix, self.diff_b)
+        self.x_new = self.x_old + np.linalg.solve(self.jacobian.matrix, self.mismatch.vector)
         for i in range(self.n):
             self.buses_dict[i + 1].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
@@ -292,7 +292,7 @@ class Load_Flow:
         print("\nNet injections")
         print(np.c_[self.net_injections_vector_labels, self.net_injections_vector])
         print("\nMismatches")
-        print(np.c_[self.mismatch_vector_labels, self.diff_b])
+        print(np.c_[self.mismatch_vector_labels, self.mismatch.vector])
         print("\nCorrection vector")
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
