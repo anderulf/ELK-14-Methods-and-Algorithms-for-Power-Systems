@@ -458,21 +458,33 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def sensitivity_jacobian_expansion(self, alpha_list, beta_list):
+    def corrector_constant_load_expand(self):
+        pass
+
+    def corrector_constant_voltage_expand(self):
+        pass
+
+    def reset_original_matrix(self):
         """
-        This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
+        Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
+
+        in np.delete obj is the row or column to delete
         """
-        self.cols = self.m + 1
-        self.rows = self.m + 1
-        new_row = [0] * self.m
-        new_col = [0] * (self.m +1)
-        for i in range(len(alpha_list)):
-            new_col[i] = [alpha_list[i]]
-            print("i: ",i)
-        for j in range(1, len(beta_list) +1):
-            print("i+j = ", i+j)
-            new_col[i+j] = [beta_list[j-1]] # offset with i
-        # Add last 1 which is the new diagonal element in the jacobian
-        new_col[-1] = [1]
-        self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
-        self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
+        if self.cols > self.m and self.rows > self.m:
+            # Delete last row
+            self.matrix = np.delete(self.matrix, obj=-1, axis=0)  # obj=-1 is the last element, axis=0 means row
+            # Delete last col
+            self.matrix = np.delete(self.matrix, obj=-1, axis=1)  # obj=-1 is the last element, axis=1 means column
+            self.cols = self.m
+            self.rows = self.m
+        else:
+            return
+
+class Continuation:
+    """
+    The class is used to run the continuation load flow method
+    """
+
+    def __init__(self, alpha_list, beta_list):
+        self.alpha_list = alpha_list
+        self.beta_list = beta_list
