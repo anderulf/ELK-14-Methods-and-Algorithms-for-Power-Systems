@@ -308,7 +308,7 @@ class Bus:
 
     alpha and beta should only be inputed for continuation load flow method
     """
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, alpha=None, beta=None):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, beta=None, alpha=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -320,8 +320,8 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
-        self.alpha = alpha
         self.beta = beta
+        self.alpha = alpha
 
     def classify_bus_type(self):
         """
@@ -403,9 +403,6 @@ class Jacobian:
         self.y_bus = y_bus
         self.create_jacobian()
 
-    def __str__(self):
-        return self.matrix
-
     def create_jacobian(self):
         """
         Calculate and return the jacobian matrix for the current iteration.
@@ -466,7 +463,7 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def continium_expand(self, parameter, beta_list, alpha_list):
+    def continium_expand(self, parameter, buses):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
@@ -477,10 +474,12 @@ class Jacobian:
         self.rows = self.m + 1
         new_row = [0] * (self.m +1)
         new_col = [0] * self.m
-        for i in range(len(beta_list)):
-            new_col[i] = [beta_list[i]]
-        for j in range(1, len(alpha_list) +1):
-            new_col[i+j] = [alpha_list[j-1]] # offset with i
+        for bus in buses.values():
+            if bus.bus_type == "PD":
+                pass # skip slack bus
+            else:
+                new_col[bus.bus_number-1] = [bus.beta]
+                new_col[bus.bus_number-1+self.n] = [bus.alpha]
         # Add row element which is based on phase
         if parameter == "load":
             new_row[-1] = 1 # index -1 is the last element ie. the diagonal element
