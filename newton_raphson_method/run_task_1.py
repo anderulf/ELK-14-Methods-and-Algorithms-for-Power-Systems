@@ -46,8 +46,6 @@ Program
 
 print("\n*--- Newton Raphson method iteration ---*\n")
 
-# Initialize iteration counter
-iter = 1
 
 # Initialize a system object (stores information about the grid)
 N_R = Load_Flow(buses, slack_bus_number, lines)
@@ -55,7 +53,7 @@ N_R = Load_Flow(buses, slack_bus_number, lines)
 # Iterate NR
 while N_R.power_error() > 0.0001:
     N_R.reset_values()
-    print("\nIteration: {}\n".format(iter))
+    print("\nIteration: {}\n".format(N_R.iteration))
     N_R.calc_new_power_injections()
     N_R.check_limit(q_limit, lim_node, lim_size)
     N_R.error_specified_vs_calculated()
@@ -63,13 +61,13 @@ while N_R.power_error() > 0.0001:
     N_R.jacobian.create()
     N_R.update_values()
     N_R.print_matrices()
-    iter += 1
-    if iter > 7:
+    N_R.iteration += 1
+    if N_R.diverging():
         print("No convergence")
         break
 
 print("*--- ITERATION COMPLETED ---*")
-print("Iterations: {}".format(iter))
+print("Iterations: {}".format(N_R.iteration))
 # Get post analysis results
 N_R.calculate_line_data()
 N_R.print_line_data()

@@ -90,7 +90,7 @@ while convergence:
         N_R.update_values()
         N_R.print_matrices()
         iter += 1
-        if iter > 7:
+        if N_R.diverging():
             print("No convergence")
             convergence = 0
             break
