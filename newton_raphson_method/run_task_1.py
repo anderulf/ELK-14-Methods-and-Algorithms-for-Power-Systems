@@ -62,8 +62,6 @@ while N_R.power_error() > 0.0001:
     N_R.print_buses()
     N_R.jacobian.create_jacobian()
     N_R.update_values()
-    N_R.calculate_line_data()
-    N_R.calculate_slack_values()
     N_R.print_matrices()
     iter += 1
     if iter > 15:

@@ -52,6 +52,8 @@ class Load_Flow:
         self.correction_vector_labels = []
         self.create_label_vectors()
         self.continuation_flag = continuation_flag
+        self.net_losses_p = 0
+        self.net_losses_q = 0
 
     def calculate_n_values(self):
         """
@@ -98,7 +100,21 @@ class Load_Flow:
             buses[i].q_calc = 0
             # Skip slack bus
             if i == self.slack_bus_number:
-                pass
+                for j in buses:
+                    try:
+                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                        buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                        buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                    except Exception as e:
+                        print(e)
+                # Add values to net injection vector
+                self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
+                self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
+                self.net_losses_p += round(buses[i].p_calc, 3)
+                self.net_losses_q += round(buses[i].q_calc,3)
+
             else:
                 for j in buses:
                     try:
@@ -112,6 +128,8 @@ class Load_Flow:
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
                 self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
+                self.net_losses_p += round(buses[i].p_calc, 3)
+                self.net_losses_q += round(buses[i].q_calc, 3)
 
 
     def check_limit(self, q_limit, lim_bus, lim_size):
@@ -177,12 +195,15 @@ class Load_Flow:
         for i in range(self.n_pq):
             self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
 
+
     def calculate_line_data(self):
         """
         Calculate the line data for all the line objects
 
         Note that writing to line updates self.lines because line and lines[i] is the same object ie. points to same
         location in memory
+
+        This function may not work properly, yields the first five lines
         """
         for line in self.lines:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
@@ -200,6 +221,8 @@ class Load_Flow:
     def calculate_slack_values(self):
         """
         Calculate the slack bus values based on the NS iteration
+
+        This function is currently not in use
         """
         for i in self.buses_dict:
             # Skip slack
@@ -221,6 +244,9 @@ class Load_Flow:
         """
         self.total_losses_p = 0
         self.total_losses_q = 0
+
+        self.net_losses_p = 0
+        self.net_losses_q = 0
 
     def create_label_vectors(self):
         for i in self.buses_dict:
@@ -271,6 +297,8 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
+        print("P_total_losses {}".format(self.net_losses_p))
+        print("Q_total_losses {}".format(self.net_losses_q))
 
 class Bus:
     """
