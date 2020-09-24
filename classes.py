@@ -463,6 +463,27 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
+    def predictor_phase_expand(self, alpha_list, beta_list):
+        """
+        This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
+
+        Note that these values should be removable aswell
+        """
+        self.cols = self.m + 1
+        self.rows = self.m + 1
+        new_row = [0] * self.m
+        new_col = [0] * (self.m +1)
+        for i in range(len(alpha_list)):
+            new_col[i] = [alpha_list[i]]
+            print("i: ",i)
+        for j in range(1, len(beta_list) +1):
+            print("i+j = ", i+j)
+            new_col[i+j] = [beta_list[j-1]] # offset with i
+        # Add last 1 which is the new diagonal element in the jacobian
+        new_col[-1] = [1]
+        self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
+        self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
+
     def corrector_constant_load_expand(self):
         pass
 
