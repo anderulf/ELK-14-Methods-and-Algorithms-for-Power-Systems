@@ -469,6 +469,8 @@ class Jacobian:
 
         Parameter should be a string type input with value either "voltage" or "load". "load" input is also used in
         predictor phase.
+
+        buses is the buses dictionary from the load flow class
         """
         self.cols = self.m + 1
         self.rows = self.m + 1
