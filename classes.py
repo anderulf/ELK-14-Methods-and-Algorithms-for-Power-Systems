@@ -463,7 +463,7 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def continium_expand(self, parameter, buses):
+    def continuation_expand(self, parameter, buses):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
@@ -520,7 +520,7 @@ class Mismatch:
         self.rows = m
         self.vector = np.zeros([self.m, 1])
 
-    def continium_expansion(self, phase):
+    def continuation_expansion(self, phase):
         """
         expands the vector for continium
 
