@@ -472,6 +472,7 @@ class Jacobian:
 
         buses is the buses dictionary from the load flow class
         """
+        self.reset_original_matrix()
         self.cols = self.m + 1
         self.rows = self.m + 1
         new_row = [0] * (self.m +1)
