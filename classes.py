@@ -403,7 +403,7 @@ class Jacobian:
         self.y_bus = y_bus
         self.create_jacobian()
 
-    def create_jacobian(self):
+    def create(self):
         """
         Calculate and return the jacobian matrix for the current iteration.
         The full matrix is constructed from the submatrix parts; J1, J2, J3, J4.
@@ -411,7 +411,7 @@ class Jacobian:
 
         Read:
         The offset is set because a element in the matrix, ie. 0,0 should hold d P_2/d delta_2 if bus 1 is slack. Thus,
-        in this example i and j must be offset with 2.
+        in this example i and j must be offset with 1 because slack bus is bus 3.
 
         """
         buses = self.buses_dict
