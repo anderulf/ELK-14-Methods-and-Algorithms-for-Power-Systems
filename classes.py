@@ -454,6 +454,12 @@ class Jacobian:
         self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
         self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
 
+    def corrector_constant_load_expand(self):
+        pass
+
+    def corrector_constant_voltage_expand(self):
+        pass
+
     def reset_original_matrix(self):
         """
         Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
