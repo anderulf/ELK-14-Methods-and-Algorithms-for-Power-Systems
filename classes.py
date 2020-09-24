@@ -28,7 +28,7 @@ class Load_Flow:
         False by default which means it does not need to be inputed. Setting it to True will activate continuation
         power flow functions which is necessary if doing this approach.
         """
-        self.iteration = 1
+        self.iteration = 0 # Is incremented to one on the first iteration
         self.lines = lines
         self.buses_dict = buses
         self.slack_bus_number = slack_bus_number

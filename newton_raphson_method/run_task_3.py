@@ -70,7 +70,8 @@ while convergence:
     N_R = Load_Flow(buses, slack_bus_number, lines)
     # Iterate NS
     while N_R.power_error() > 0.0001:
-        print("\nIteration: {}\n".format(iter))
+        N_R.iteration += 1
+        print("\nIteration: {}\n".format(N_R.iteration))
         N_R.calc_new_power_injections()
         N_R.check_limit(q_limit, lim_node, lim_size)
         N_R.error_specified_vs_calculated()
@@ -78,14 +79,13 @@ while convergence:
         N_R.jacobian.create()
         N_R.update_values()
         N_R.print_matrices()
-        iter += 1
-        if iter > 7:
+        if N_R.diverging():
             print("No convergence")
             convergence = 0
             break
 
     print("*--- ITERATION COMPLETED ---*")
-    print("Iterations: {}".format(iter))
+    print("Iterations: {}".format(N_R.iteration))
     # Get post analysis results
     N_R.calculate_line_data()
     N_R.print_line_data()
@@ -113,7 +113,7 @@ while convergence:
 
     # initializing for next iteration (while loop)
 
-    iter = 1
+    N_R.iteration = 1
     start = 1
 
 

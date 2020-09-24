@@ -52,6 +52,7 @@ N_R = Load_Flow(buses, slack_bus_number, lines)
 
 # Iterate NR
 while N_R.power_error() > 0.0001:
+    N_R.iteration += 1
     N_R.reset_values()
     print("\nIteration: {}\n".format(N_R.iteration))
     N_R.calc_new_power_injections()
@@ -61,7 +62,6 @@ while N_R.power_error() > 0.0001:
     N_R.jacobian.create()
     N_R.update_values()
     N_R.print_matrices()
-    N_R.iteration += 1
     if N_R.diverging():
         print("No convergence")
         break
