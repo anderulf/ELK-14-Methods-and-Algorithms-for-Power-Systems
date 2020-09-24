@@ -403,6 +403,9 @@ class Jacobian:
         self.y_bus = y_bus
         self.create_jacobian()
 
+    def __str__(self):
+        return self.matrix
+
     def create_jacobian(self):
         """
         Calculate and return the jacobian matrix for the current iteration.
