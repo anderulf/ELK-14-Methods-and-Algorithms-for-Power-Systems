@@ -52,6 +52,8 @@ class Load_Flow:
         self.correction_vector_labels = []
         self.create_label_vectors()
         self.continuation_flag = continuation_flag
+        self.net_losses_p = 0
+        self.net_losses_q = 0
 
     def calculate_n_values(self):
         """
@@ -98,7 +100,21 @@ class Load_Flow:
             buses[i].q_calc = 0
             # Skip slack bus
             if i == self.slack_bus_number:
-                pass
+                for j in buses:
+                    try:
+                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                        buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                        buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
+                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                    except Exception as e:
+                        print(e)
+                # Add values to net injection vector
+                self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
+                self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
+                self.net_losses_p += round(buses[i].p_calc, 3)
+                self.net_losses_q += round(buses[i].q_calc,3)
+
             else:
                 for j in buses:
                     try:
@@ -112,6 +128,8 @@ class Load_Flow:
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
                 self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
+                self.net_losses_p += round(buses[i].p_calc, 3)
+                self.net_losses_q += round(buses[i].q_calc, 3)
 
 
     def check_limit(self, q_limit, lim_bus, lim_size):
@@ -177,12 +195,15 @@ class Load_Flow:
         for i in range(self.n_pq):
             self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
 
+
     def calculate_line_data(self):
         """
         Calculate the line data for all the line objects
 
         Note that writing to line updates self.lines because line and lines[i] is the same object ie. points to same
         location in memory
+
+        This function may not work properly, yields the first five lines
         """
         for line in self.lines:
             v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
@@ -200,6 +221,8 @@ class Load_Flow:
     def calculate_slack_values(self):
         """
         Calculate the slack bus values based on the NS iteration
+
+        This function is currently not in use
         """
         for i in self.buses_dict:
             # Skip slack
@@ -221,6 +244,9 @@ class Load_Flow:
         """
         self.total_losses_p = 0
         self.total_losses_q = 0
+
+        self.net_losses_p = 0
+        self.net_losses_q = 0
 
     def create_label_vectors(self):
         for i in self.buses_dict:
@@ -271,13 +297,15 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
+        #print("P_total_losses {}".format(self.net_losses_p))
+        #print("Q_total_losses {}".format(self.net_losses_q))
 
 class Bus:
     """
     Object holding data for a bus
     """
 
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, alpha=None, beta=None):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -289,8 +317,6 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
-        self.alpha = alpha
-        self.beta = beta
 
     def classify_bus_type(self):
         """
@@ -432,11 +458,9 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def predictor_phase_expand(self, alpha_list, beta_list):
+    def sensitivity_jacobian_expansion(self, alpha_list, beta_list):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
-
-        Note that these values should be removable aswell
         """
         self.cols = self.m + 1
         self.rows = self.m + 1
@@ -452,32 +476,3 @@ class Jacobian:
         new_col[-1] = [1]
         self.matrix = np.append(self.matrix, [new_row], 0) # Add zeros on the bottom of the jacobian
         self.matrix = np.append(self.matrix , new_col, 1) # new_col is in format [[],[],[]]
-
-    def corrector_constant_load_expand(self):
-        pass
-
-    def corrector_constant_voltage_expand(self):
-        pass
-
-    def reset_original_matrix(self):
-        """
-        Remove the last column and row from the altered jacobian matrix to get the original jacobian matrix
-
-        in np.delete obj is the row or column to delete
-        """
-        if self.cols > self.m and self.rows > self.m:
-            # Delete last row
-            self.matrix = np.delete(self.matrix, obj=-1, axis=0) # obj=-1 is the last element, axis=0 means row
-            # Delete last col
-            self.matrix = np.delete(self.matrix, obj=-1, axis=1) # obj=-1 is the last element, axis=1 means column
-            self.cols = self.m
-            self.rows = self.m
-        else: return
-
-class Continuation:
-    """
-    The class is used to run the continuation load flow method
-    """
-    def __init__(self, alpha_list, beta_list):
-        self.alpha_list = alpha_list
-        self.beta_list = beta_list
