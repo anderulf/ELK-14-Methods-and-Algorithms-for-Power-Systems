@@ -297,8 +297,8 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
-        print("P_total_losses {}".format(self.net_losses_p))
-        print("Q_total_losses {}".format(self.net_losses_q))
+        #print("P_total_losses {}".format(self.net_losses_p))
+        #print("Q_total_losses {}".format(self.net_losses_q))
 
 class Bus:
     """
