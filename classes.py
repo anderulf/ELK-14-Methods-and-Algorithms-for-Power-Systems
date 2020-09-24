@@ -509,3 +509,26 @@ class Jacobian:
         else:
             return
 
+class Mismatch:
+    """
+    A class for the mismatch vector in load flow methods.
+
+    The class has continium method extensions which makes for a cleaner implementation
+    """
+    def __init__(self, m):
+        self.m = m
+        self.rows = m
+        self.vector = np.zeros([self.m, 1])
+
+    def continium_expansion(self, phase):
+        """
+        expands the vector for continium
+
+        inputs phase which is either "predictor" or "correction"
+        """
+        if phase == "predictor":
+            self.vector = np.vstack([self.vector, 1])
+        elif phase == "correction":
+            self.vector = np.vstack([self.vector, 0])
+        else:
+            print("Error: phase {} is not defined in mismatch.continium_expansion".format(phase))
