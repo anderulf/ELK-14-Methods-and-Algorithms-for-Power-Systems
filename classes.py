@@ -526,9 +526,21 @@ class Mismatch:
 
         inputs phase which is either "predictor" or "correction"
         """
+        self.rows = self.m + 1
         if phase == "predictor":
             self.vector = np.vstack([self.vector, 1])
         elif phase == "correction":
             self.vector = np.vstack([self.vector, 0])
         else:
+            self.rows = self.m
             print("Error: phase {} is not defined in mismatch.continium_expansion".format(phase))
+
+    def reset_original_vector(self):
+        """
+        Removes the added row if it was added
+        Do nothing if no rows have been added
+        """
+        if self.rows > self.m:
+            self.vector = np.delete(self.vector, obj=-1, axis=0)  # obj=-1 is the last element, axis=0 means row
+        self.rows = self.m
+
