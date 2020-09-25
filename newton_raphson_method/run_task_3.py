@@ -51,10 +51,10 @@ V_vector_bus2 = []
 
 # Initialize a system object (stores information about the grid)
 convergence = True
-updating_values = False
+updating_values = True
 
 if flat_start:
-    updating_values = True
+    updating_values = False
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])

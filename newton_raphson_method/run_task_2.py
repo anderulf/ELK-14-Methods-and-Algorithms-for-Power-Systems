@@ -13,7 +13,7 @@ Settings:
 Q_limit, lim_node and lim_size decides if there is a limit, which node it applies to and the limit size
 Only works for one node.
 """
-flat_start = True
+flat_start = False
 q_limit = False
 lim_node = 3
 lim_size = 1
@@ -58,9 +58,10 @@ V_vector_bus2 = []
 
 # Initialize a system object (stores information about the grid)
 convergence = True
-updating_values = False
+updating_values = True
+
 if flat_start:
-    updating_values = True
+    updating_values = False
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
