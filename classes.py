@@ -203,10 +203,9 @@ class Load_Flow:
         Note that writing to line updates self.lines because line and lines[i] is the same object ie. points to same
         location in memory
 
-        This function may not work properly, yields the first five lines
         """
         for line in self.lines:
-            v_from = polar_to_rectangular(line.from_bus.voltage, line.to_bus.delta) # v_i
+            v_from = polar_to_rectangular(line.from_bus.voltage, line.from_bus.delta) # v_i
             v_to = polar_to_rectangular(line.to_bus.voltage, line.to_bus.delta) # v_j
             line.from_current = self.y_bus[line.to_bus.bus_number -1, line.from_bus.bus_number -1] * (v_to - v_from) # i_ij
             line.to_current = self.y_bus[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] * (v_from - v_to) # i_ji
@@ -297,8 +296,10 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
-        #print("P_total_losses {}".format(self.net_losses_p))
-        #print("Q_total_losses {}".format(self.net_losses_q))
+        print("P_total_losses {}".format(self.net_losses_p))
+        print("Q_total_losses {}".format(self.net_losses_q))
+        print("P_total_losses_2nd_method {}".format(self.total_losses_p))
+        print("Q_total_losses_2nd_method {}".format(self.total_losses_q))
 
 class Bus:
     """
@@ -357,7 +358,7 @@ class Bus:
 
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
-        self.name = "Line {}-{}".format(to_bus.bus_number, to_bus.bus_number)
+        self.name = "Line {}-{}".format(from_bus.bus_number, to_bus.bus_number)
         self.from_bus = from_bus
         self.to_bus = to_bus
         self.resistance = resistance
