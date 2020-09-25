@@ -493,6 +493,7 @@ class Jacobian:
 
         buses is the buses dictionary from the load flow class
         """
+        self.reset_original_matrix()
         self.cols = self.m + 1
         self.rows = self.m + 1
         new_row = [0] * (self.m +1)
@@ -547,6 +548,7 @@ class Mismatch:
 
         inputs phase which is either "predictor" or "correction"
         """
+        self.reset_original_vector()
         self.rows = self.m + 1
         if phase == "predictor":
             self.vector = np.vstack([self.vector, 1])
@@ -563,5 +565,50 @@ class Mismatch:
         """
         if self.rows > self.m:
             self.vector = np.delete(self.vector, obj=-1, axis=0)  # obj=-1 is the last element, axis=0 means row
-        self.rows = self.m
+            self.rows = self.m
+        else: return
+
+class Continuation(Load_Flow):
+    """
+    The continuation class is a subclass of the Load_Flow class which means Load_Flow (it's super) is
+    available for it to use. Ie. inside Continuation you can use self.jacobian, even though jacobian is
+    a member variable of the Load_Flow class. Basically everything in Load_Flow is available for
+    Continuation, but Continuation is not available for Load_Flow.
+
+    It is implemented as a subclass to have access to these variables and methods, while getting some
+    own variables and methods used for the continuation load flow method.
+
+    Note that the class does not have a __init__ because it is done in the super
+    """
+    def initialize(self, some_value):
+        """
+        Initialize some values
+
+        ie max voltage, max load, a?, alphas, betas? etc. etc.
+        """
+        self.some_value = some_value
+
+    def initialize_predictor_phase(self):
+        """
+        Set up the predictor phase
+
+        expand jacobian matrix and mismatch vector
+        """
+        self.jacobian.continuation_expand("load", self.buses_dict)
+        self.mismatch.continuation_expansion("predictor")
+
+    def initialize_corrector_phase(self, parameter):
+        """
+        Set up the corrector phase
+
+        input parameter should be "load" or "voltage"
+        """
+        self.jacobian.continuation_expand(parameter, self.buses_dict)
+        self.mismatch.continuation_expansion("corrector")
+
+    def determine_continuation_parameter(self):
+        """
+        To be implemented
+        """
+        pass
 
