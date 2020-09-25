@@ -13,8 +13,7 @@ Settings:
 Q_limit, lim_node and lim_size decides if there is a limit, which node it applies to and the limit size
 Only works for one node.
 """
-updating_values = 1
-flat_start = 1
+flat_start = True
 q_limit = False
 lim_node = 3
 lim_size = 1
@@ -50,7 +49,7 @@ Program
 
 print("\n*--- Newton Raphson method iteration with load increases ---*\n")
 
-
+total_iterations = 1
 # Assignment 1 Task 2
 # initializing vectors for plot
 P_increase = []
@@ -58,8 +57,10 @@ V_vector_bus1 = []
 V_vector_bus2 = []
 
 # Initialize a system object (stores information about the grid)
-convergence = 1
+convergence = True
+updating_values = False
 if flat_start:
+    updating_values = True
     start = 1
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
@@ -78,6 +79,7 @@ while convergence:
     # Iterate NS
     while N_R.power_error() > 0.0001:
         N_R.iteration += 1
+        total_iterations += 1
         print("\nIteration: {}\n".format(N_R.iteration))
         N_R.calc_new_power_injections()
         N_R.check_limit(q_limit, lim_node, lim_size)
@@ -123,7 +125,7 @@ while convergence:
     N_R.iteration = 1
     start = 1
 
-
+print("Total iterations: ", total_iterations)
 plt.plot(P_increase,V_vector_bus1,label='V_Bus_1')
 plt.plot(P_increase,V_vector_bus2, label='V_Bus_2')
 plt.xlabel('Total load power drawn from the system')
