@@ -44,6 +44,7 @@ class Load_Flow:
         self.total_losses_q = 0
         self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
+        self.x_diff = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.x_vector_labels = []
         self.mismatch = Mismatch(self.m)
@@ -201,24 +202,26 @@ class Load_Flow:
                 return True
             else: return False
 
-    def update_values(self):
-        """
-        Update the the system values by calculating the next step in the NS method
-
-        This method uses a default offset of 1 for the buses
-        """
+    def find_x_diff(self):
         for i in range(self.n):
             self.x_old[i, 0] = self.buses_dict[i + 1].delta
             self.mismatch.vector[i, 0] = self.buses_dict[i + 1].delta_p
         for i in range(self.n_pq):
             self.mismatch.vector[i + self.n, 0] = self.buses_dict[i + 1].delta_q
             self.x_old[i + self.n, 0] = self.buses_dict[i + 1].voltage
-        self.x_new = self.x_old + np.linalg.solve(self.jacobian.matrix, self.mismatch.vector)
+        self.x_diff = np.linalg.solve(self.jacobian.matrix, self.mismatch.vector)
+
+    def update_values(self):
+        """
+        Update the the system values by calculating the next step in the NS method
+
+        This method uses a default offset of 1 for the buses
+        """
+        self.x_new = self.x_old + self.x_diff
         for i in range(self.n):
             self.buses_dict[i + 1].delta = self.x_new[i, 0]
         for i in range(self.n_pq):
             self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
-
 
     def calculate_line_data(self):
         """
@@ -488,7 +491,7 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def continuation_expand(self, parameter, buses):
+    def continuation_expand(self, parameter, buses, constant_voltage_bus_number=None):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
@@ -512,7 +515,7 @@ class Jacobian:
         if parameter == "load":
             new_row[-1] = 1 # index -1 is the last element ie. the diagonal element
         elif parameter == "voltage":
-            new_row[-2] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
+            new_row[constant_voltage_bus_number] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
         else:
             print("Error: The parameter \"{}\" in Jacobian.continium_expand is not a valid input.".format(parameter))
             return
@@ -591,8 +594,11 @@ class Continuation(Load_Flow):
         self.max_voltage_step = max_voltage_step
         self.max_load_step = max_load_step
         self.old_buses_dict = self.buses_dict # Stores the last step to be able to reverse
+        self.old_mismatch = self.mismatch
         self.continuation_parameter = None
         self.phase = None
+        self.step = 1
+        self.S = 1
 
     def initialize_predictor_phase(self):
         """
@@ -635,9 +641,45 @@ class Continuation(Load_Flow):
                 break
         if convergence:
             self.continuation_parameter = "load"
+            # It converged so save the new solution to avoid doing this step again
+            self.store_values()
         else:
             self.continuation_flag = "voltage"
+            # It did not converge, so don't save the new solution
+            self.reverse_step()
+
         return self.continuation_parameter
+
+    def increment_values(self):
+        """
+        Increase x and P,Q
+        """
+        for bus in self.buses_dict.values():
+            if bus.bus_number == self.slack_bus_number:
+                pass
+            else:
+                self.bus.p_spec -= self.step * self.bus.beta * self.S
+                self.bus.q_spec -= self.step * self.bus.alpha * self.S
+                if self.phase == "predictor":
+                    self.bus.delta +=  self.x_diff[bus.bus_number-1] * self.step
+                    self.bus.voltage += self.x_diff[bus.bus_number - 1 + self.n] * self.step
+                else:
+                    self.bus.delta += self.x_diff[bus.bus_number - 1]
+                    self.bus.voltage += self.x_diff[bus.bus_number - 1 + self.n]
+
+    def constant_voltage_bus(self):
+        """
+        Return the highest voltage change
+        """
+        voltage_change_list = []
+        for bus_number in self.buses_dict:
+            max_voltage_temp = self.buses_dict[bus_number].voltage - self.old_buses_dict[bus_number].voltage
+            if max_voltage_temp > max_voltage:
+                max_voltage = max_voltage_temp
+                max_voltage_bus_number = bus_number;
+            else:
+                pass
+        return max_voltage_bus_number
 
     def store_values(self):
         """
@@ -645,6 +687,7 @@ class Continuation(Load_Flow):
         :return:
         """
         self.old_buses_dict = self.buses_dict
+        self.old_mismatch = self.mismatch
         # some other values? mismatch etc.
 
     def reverse_step(self):
@@ -652,4 +695,5 @@ class Continuation(Load_Flow):
         If a step was unsuccessful revert the values to the last step
         """
         self.buses_dict = self.old_buses_dict
+        self.mismatch = self.old_mismatch
         # some other values? mismatch etc.
