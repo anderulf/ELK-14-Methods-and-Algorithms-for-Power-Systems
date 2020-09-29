@@ -4,7 +4,7 @@ from supporting_methods import polar_to_rectangular
 
 
 class Load_Flow:
-    def __init__(self, buses, slack_bus_number, lines, continuation_flag=False):
+    def __init__(self, buses, slack_bus_number, lines):
         """
         Initializing the class. p_dict and q_dict should be lists of dictionary types holding key equal to bus number 1, 2, .. and values equal
         their rated values in pu. If the rated active or reactive power is not given set value to None.
@@ -52,10 +52,14 @@ class Load_Flow:
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
-        self.continuation_flag = continuation_flag
         self.net_losses_p = 0
         self.net_losses_q = 0
-        self.error_history = []
+        self.error_history = [] # A list of all load flow errors (maximum of delta_p and delta_q) for every iteration taken
+        # Variables for continuation load flow
+        self.max_voltage_step = None
+        self.max_load_step = None
+        self.old_buses_dict = None
+        self.continuation_parameter = None
 
     def calculate_n_values(self):
         """
@@ -580,13 +584,15 @@ class Continuation(Load_Flow):
 
     Note that the class does not have a __init__ because it is done in the super
     """
-    def initialize(self, some_value):
+    def initialize(self, max_voltage_step, max_load_step):
         """
         Initialize some values
-
-        ie max voltage, max load, a?, alphas, betas? etc. etc.
         """
-        self.some_value = some_value
+        self.max_voltage_step = max_voltage_step
+        self.max_load_step = max_load_step
+        self.old_buses_dict = self.buses_dict # Stores the last step to be able to reverse
+        self.continuation_parameter = None
+        self.phase = None
 
     def initialize_predictor_phase(self):
         """
@@ -594,8 +600,9 @@ class Continuation(Load_Flow):
 
         expand jacobian matrix and mismatch vector
         """
+        self.phase = "predictor"
         self.jacobian.continuation_expand("load", self.buses_dict)
-        self.mismatch.continuation_expansion("predictor")
+        self.mismatch.continuation_expansion(self.phase)
 
     def initialize_corrector_phase(self, parameter):
         """
@@ -603,12 +610,46 @@ class Continuation(Load_Flow):
 
         input parameter should be "load" or "voltage"
         """
+        self.phase = "corrector"
         self.jacobian.continuation_expand(parameter, self.buses_dict)
-        self.mismatch.continuation_expansion("corrector")
+        self.mismatch.continuation_expansion(self.phase)
 
     def determine_continuation_parameter(self):
         """
-        To be implemented
-        """
-        pass
+        Determine if NR load flow converges at the current step
 
+        Computational heavy way of determining this. Could perhaps allow higher error limit? Other ways of determining?
+        """
+        self.jacobian.reset_original_matrix()
+        self.mismatch.reset_original_vector()
+        convergence = True
+        while self.power_error() > 0.0001:
+            self.iteration += 1
+            self.reset_values()
+            self.calc_new_power_injections()
+            self.error_specified_vs_calculated()
+            self.jacobian.create()
+            self.update_values()
+            if self.diverging():
+                convergence = False
+                break
+        if convergence:
+            self.continuation_parameter = "load"
+        else:
+            self.continuation_flag = "voltage"
+        return self.continuation_parameter
+
+    def store_values(self):
+        """
+        If a step was successful store the new values in the old variable
+        :return:
+        """
+        self.old_buses_dict = self.buses_dict
+        # some other values? mismatch etc.
+
+    def reverse_step(self):
+        """
+        If a step was unsuccessful revert the values to the last step
+        """
+        self.buses_dict = self.old_buses_dict
+        # some other values? mismatch etc.
