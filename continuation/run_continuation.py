@@ -1,4 +1,4 @@
-from classes import Bus, Line, Continuation
+from classes import Bus, Line, Continuation, Load_Flow
 
 """
 Continuation settings
@@ -41,21 +41,23 @@ continuation.initialize(max_voltage_step, max_load_step)
 
 # Calculate initial load flow (horizontal move)
 
-continuation.iteration += 1
-continuation.reset_values()
-print("\nIteration: {}\n".format(continuation.iteration))
-continuation.calc_new_power_injections()
-continuation.error_specified_vs_calculated()
-continuation.print_buses()
-continuation.jacobian.create()
-continuation.update_values()
-continuation.print_matrices()
+while continuation.power_error() > 0.0001:
+    continuation.iteration += 1
+    continuation.reset_values()
+    print("\nIteration: {}\n".format(N_R.iteration))
+    continuation.calc_new_power_injections()
+    continuation.error_specified_vs_calculated()
+    continuation.print_buses()
+    continuation.jacobian.create()
+    continuation.update_values()
+    continuation.print_matrices()
+    if continuation.diverging():
+        print("No convergence")
+        break
 
 # Start predictions and corrections
 
-while continuation.not_converging:
-    # Initialize first phase as predictor
-    continuation.initialize_predictor_phase()
+continuation.initialize_predictor_phase()
 
 
 
