@@ -1,14 +1,15 @@
-
 from classes import Load_Flow, Bus, Line
 import matplotlib.pyplot as plt
-
+"""
+Settings:
+    flat_start can be True or False
+        True: For load increases the load flow starts from the input values
+        False: For load increases the load flow starts from the previous load flow
+"""
 flat_start = False
-q_limit = False
-lim_node = 3
-lim_size = 1
 
 """
-Initial values
+Input values
 """
 #  Voltages for 1,2 and the delta are guessed initial values
 slack_bus_number = 3
@@ -22,6 +23,11 @@ P = {"1": -0.8, "2": -0.4, "3": None}
 r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
 
+"""
+Program
+"""
+print("\n*--- Newton Raphson method iteration with load increases ---*\n")
+
 # Create buses
 buses = {}
 for bus_number in V:
@@ -32,12 +38,6 @@ line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
 line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 
 lines = [line_12, line_13, line_23]
-"""
-Program
-"""
-
-print("\n*--- Newton Raphson method iteration with load increases ---*\n")
-
 
 # Initialize iteration counter
 total_iterations = 1
@@ -76,7 +76,6 @@ while convergence:
         total_iterations += 1
         print("\nIteration: {}\n".format(N_R.iteration))
         N_R.calc_new_power_injections()
-        N_R.check_limit(q_limit, lim_node, lim_size)
         N_R.error_specified_vs_calculated()
         N_R.print_buses()
         N_R.jacobian.create()
