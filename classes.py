@@ -501,6 +501,8 @@ class Jacobian:
         buses is the buses dictionary from the load flow class
         """
         self.reset_original_matrix()
+        if parameter == "load":
+            return
         self.cols = self.m + 1
         self.rows = self.m + 1
         new_row = [0] * (self.m +1)
@@ -549,13 +551,15 @@ class Mismatch:
         self.rows = m
         self.vector = np.zeros([self.m, 1])
 
-    def continuation_expansion(self, phase):
+    def continuation_expansion(self, phase, parameter = None):
         """
         expands the vector for continium
 
         inputs phase which is either "predictor" or "correction"
         """
         self.reset_original_vector()
+        if parameter == "load":
+            return
         self.rows = self.m + 1
         if phase == "predictor":
             self.vector = np.vstack([self.vector, 1])
@@ -597,7 +601,7 @@ class Continuation(Load_Flow):
         self.old_mismatch = self.mismatch
         self.continuation_parameter = None
         self.phase = None
-        self.step = 1
+        self.step = max_load_step
         self.S = 1
 
     def initialize_predictor_phase(self):

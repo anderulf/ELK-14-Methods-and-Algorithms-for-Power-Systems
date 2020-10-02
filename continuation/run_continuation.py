@@ -44,7 +44,7 @@ continuation.initialize(max_voltage_step, max_load_step)
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
     continuation.reset_values()
-    print("\nIteration: {}\n".format(N_R.iteration))
+    print("\nIteration: {}\n".format(continuation.iteration))
     continuation.calc_new_power_injections()
     continuation.error_specified_vs_calculated()
     continuation.print_buses()
@@ -56,6 +56,30 @@ while continuation.power_error() > 0.0001:
         break
 
 # Start predictions and corrections
+#2.
+continuation.initialize_predictor_phase()
+continuation.reset_values()
+continuation.find_x_diff()
+continuation.increment_values()
+continuation.print_matrices()
+
+#3.
+continuation.step=0.3;
+continuation.initialize_corrector_phase("load")
+while continuation.power_error() > 0.0001:
+    continuation.iteration += 1
+    continuation.reset_values()
+    print("\nIteration: {}\n".format(continuation.iteration))
+    continuation.calc_new_power_injections()
+    continuation.error_specified_vs_calculated()
+    continuation.print_buses()
+    continuation.jacobian.create()
+    continuation.update_values()
+    continuation.print_matrices()
+    if continuation.diverging():
+        print("No convergence")
+        break
+
 
 
 continuation.initialize_predictor_phase()
