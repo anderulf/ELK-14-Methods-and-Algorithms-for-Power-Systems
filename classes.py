@@ -1,5 +1,6 @@
 ﻿import numpy as np
 import cmath as ma
+import copy
 from supporting_methods import polar_to_rectangular
 
 
@@ -217,10 +218,9 @@ class Load_Flow:
         self.x_new = self.x_old + self.x_diff
         for i in range(self.n):
             self.buses_dict[i + 1].delta = self.x_new[i, 0]
-            print("bus angle", self.buses_dict[i + 1].delta)
         for i in range(self.n_pq):
             self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
-            print("bus voltage", self.buses_dict[i + 1].voltage)
+
     def calculate_line_data(self):
         """
         Calculate the line data for all the line objects
@@ -593,8 +593,8 @@ class Continuation(Load_Flow):
         """
         self.max_voltage_step = max_voltage_step
         self.max_load_step = max_load_step
-        self.old_buses_dict = self.buses_dict # Stores the last step to be able to reverse
-        self.old_mismatch = self.mismatch
+        self.old_buses_dict = copy.deepcopy(self.buses_dict) # Stores the last step to be able to reverse
+        self.old_mismatch = copy.deepcopy(self.mismatch)
         self.continuation_parameter = None
         self.phase = None
         self.step = max_load_step
@@ -607,19 +607,18 @@ class Continuation(Load_Flow):
         expand jacobian matrix and mismatch vector
         """
         self.phase = "predictor"
-        print("Expanding jacobian")
         self.jacobian.continuation_expand("load", self.buses_dict)
         self.mismatch.continuation_expansion(self.phase)
         self.expand_other_vectors()
 
-    def initialize_corrector_phase(self, parameter):
+    def initialize_corrector_phase(self, parameter, constant_voltage_bus=None):
         """
         Set up the corrector phase
 
         input parameter should be "load" or "voltage"
         """
         self.phase = "corrector"
-        self.jacobian.continuation_expand(parameter, self.buses_dict)
+        self.jacobian.continuation_expand(parameter, self.buses_dict, constant_voltage_bus)
         self.mismatch.continuation_expansion(self.phase)
 
     def determine_continuation_parameter(self):
@@ -652,7 +651,7 @@ class Continuation(Load_Flow):
 
         return self.continuation_parameter
 
-    def increment_values(self, parameter = None):
+    def update_continuation_values(self, parameter = None):
         """
         Increase x and P,Q
         """
@@ -666,12 +665,15 @@ class Continuation(Load_Flow):
                     bus.p_spec -= self.step * bus.beta * self.S
                     bus.q_spec -= self.step * bus.alpha * self.S
                 if self.phase == "predictor":
-                    bus.delta +=  self.x_diff[bus.bus_number-1] * self.step
-                    #print("bus {} new angle is ".format(bus.bus_number), bus.delta)
-                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n] * self.step
+                    bus.delta +=  self.x_diff[bus.bus_number-1][0] * self.step
+                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n][0] * self.step
+                    self.x_new[bus.bus_number - 1] = bus.delta
+                    self.x_new[bus.bus_number -1 + self.n] = bus.voltage
                 else:
-                    bus.delta += self.x_diff[bus.bus_number - 1]
-                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n]
+                    bus.delta += self.x_diff[bus.bus_number - 1][0]
+                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n][0]
+                    self.x_new[bus.bus_number - 1] = bus.delta
+                    self.x_new[bus.bus_number - 1 + self.n] = bus.voltage
 
     def constant_voltage_bus(self):
         """
@@ -681,12 +683,13 @@ class Continuation(Load_Flow):
         """
         voltage_change_list = []
         max_voltage_bus_index = 0
+        max_voltage = 0
         index = 0
         for bus_number in self.buses_dict:
             if bus_number == self.slack_bus_number:
                 pass
             else:
-                max_voltage_temp = self.buses_dict[bus_number].voltage - self.old_buses_dict[bus_number].voltage
+                max_voltage_temp = self.old_buses_dict[bus_number].voltage - self.buses_dict[bus_number].voltage
                 if max_voltage_temp > max_voltage:
                     max_voltage = max_voltage_temp
                     max_voltage_bus_index = index;
@@ -698,10 +701,9 @@ class Continuation(Load_Flow):
     def store_values(self):
         """
         If a step was successful store the new values in the old variable
-        :return:
         """
-        self.old_buses_dict = self.buses_dict
-        self.old_mismatch = self.mismatch
+        self.old_buses_dict = copy.deepcopy(self.buses_dict)
+        self.old_mismatch = copy.deepcopy(self.mismatch)
         # some other values? mismatch etc.
 
     def reverse_step(self):
@@ -718,9 +720,12 @@ class Continuation(Load_Flow):
 
         Expands the load flow label vectors for the continuation power flow method.
         """
-        self.mismatch_vector_labels.append("S")
-        self.x_vector_labels.append("S")
-        self.correction_vector_labels.append("S")
-        self.x_old = np.vstack([self.x_old, 0])
-        self.x_new = np.vstack([self.x_new, 0])
-        self.x_diff = np.vstack([self.x_diff, 0])
+        if len(self.mismatch_vector_labels) > self.m:
+            return
+        else:
+            self.mismatch_vector_labels.append("S")
+            self.x_vector_labels.append("S")
+            self.correction_vector_labels.append("S")
+            self.x_old = np.vstack([self.x_old, 0])
+            self.x_new = np.vstack([self.x_new, 0])
+            self.x_diff = np.vstack([self.x_diff, 0])
