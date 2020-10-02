@@ -108,14 +108,11 @@ class Load_Flow:
             # Skip slack bus
             if i == self.slack_bus_number:
                 for j in buses:
-                    try:
-                        # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
-                        buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
-                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
-                        buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
-                            buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
-                    except Exception as e:
-                        print(e)
+                    # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                    buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
+                        buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+                    buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
+                        buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
                 self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
@@ -220,9 +217,10 @@ class Load_Flow:
         self.x_new = self.x_old + self.x_diff
         for i in range(self.n):
             self.buses_dict[i + 1].delta = self.x_new[i, 0]
+            print("bus angle", self.buses_dict[i + 1].delta)
         for i in range(self.n_pq):
             self.buses_dict[i + 1].voltage = self.x_new[i + self.n, 0]
-
+            print("bus voltage", self.buses_dict[i + 1].voltage)
     def calculate_line_data(self):
         """
         Calculate the line data for all the line objects
@@ -290,10 +288,12 @@ class Load_Flow:
                 self.mismatch_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "Q" + str(i))
 
                 self.correction_vector_labels.insert(i - 1, "\u0394\u03B4" + str(i))
-                self.correction_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
+                self.correction_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "\u0394V" + str(i))
 
                 self.x_vector_labels.insert(i-1, "\u03B4" + str(i))
                 self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
+
+
 
     def print_buses(self):
         """
@@ -320,7 +320,7 @@ class Load_Flow:
         print("\nMismatches")
         print(np.c_[self.mismatch_vector_labels, self.mismatch.vector])
         print("\nCorrection vector")
-        print(np.c_[self.correction_vector_labels, self.x_new-self.x_old])
+        print(np.c_[self.correction_vector_labels, self.x_diff])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
         print("P_total_losses {}".format(self.net_losses_p))
@@ -501,8 +501,6 @@ class Jacobian:
         buses is the buses dictionary from the load flow class
         """
         self.reset_original_matrix()
-        if parameter == "load":
-            return
         self.cols = self.m + 1
         self.rows = self.m + 1
         new_row = [0] * (self.m +1)
@@ -558,8 +556,6 @@ class Mismatch:
         inputs phase which is either "predictor" or "correction"
         """
         self.reset_original_vector()
-        if parameter == "load":
-            return
         self.rows = self.m + 1
         if phase == "predictor":
             self.vector = np.vstack([self.vector, 1])
@@ -611,8 +607,10 @@ class Continuation(Load_Flow):
         expand jacobian matrix and mismatch vector
         """
         self.phase = "predictor"
+        print("Expanding jacobian")
         self.jacobian.continuation_expand("load", self.buses_dict)
         self.mismatch.continuation_expansion(self.phase)
+        self.expand_other_vectors()
 
     def initialize_corrector_phase(self, parameter):
         """
@@ -654,7 +652,7 @@ class Continuation(Load_Flow):
 
         return self.continuation_parameter
 
-    def increment_values(self):
+    def increment_values(self, parameter = None):
         """
         Increase x and P,Q
         """
@@ -662,14 +660,18 @@ class Continuation(Load_Flow):
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                self.bus.p_spec -= self.step * self.bus.beta * self.S
-                self.bus.q_spec -= self.step * self.bus.alpha * self.S
-                if self.phase == "predictor":
-                    self.bus.delta +=  self.x_diff[bus.bus_number-1] * self.step
-                    self.bus.voltage += self.x_diff[bus.bus_number - 1 + self.n] * self.step
+                if parameter == "load":
+                    pass
                 else:
-                    self.bus.delta += self.x_diff[bus.bus_number - 1]
-                    self.bus.voltage += self.x_diff[bus.bus_number - 1 + self.n]
+                    bus.p_spec -= self.step * bus.beta * self.S
+                    bus.q_spec -= self.step * bus.alpha * self.S
+                if self.phase == "predictor":
+                    bus.delta +=  self.x_diff[bus.bus_number-1] * self.step
+                    #print("bus {} new angle is ".format(bus.bus_number), bus.delta)
+                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n] * self.step
+                else:
+                    bus.delta += self.x_diff[bus.bus_number - 1]
+                    bus.voltage += self.x_diff[bus.bus_number - 1 + self.n]
 
     def constant_voltage_bus(self):
         """
@@ -709,3 +711,16 @@ class Continuation(Load_Flow):
         self.buses_dict = self.old_buses_dict
         self.mismatch = self.old_mismatch
         # some other values? mismatch etc.
+
+    def expand_other_vectors(self):
+        """
+        Expands the x vectors (x_old and x_new) with one extra row
+
+        Expands the load flow label vectors for the continuation power flow method.
+        """
+        self.mismatch_vector_labels.append("S")
+        self.x_vector_labels.append("S")
+        self.correction_vector_labels.append("S")
+        self.x_old = np.vstack([self.x_old, 0])
+        self.x_new = np.vstack([self.x_new, 0])
+        self.x_diff = np.vstack([self.x_diff, 0])
