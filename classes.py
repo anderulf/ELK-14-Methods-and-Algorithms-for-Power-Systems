@@ -491,7 +491,7 @@ class Jacobian:
                     self.matrix[i + self.n, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) - self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
 
-    def continuation_expand(self, parameter, buses, constant_voltage_bus_number=None):
+    def continuation_expand(self, parameter, buses, constant_voltage_bus_index=None):
         """
         This method is used for Continium Power Flow where the jacobian matrix is expanded with one row and one column
 
@@ -517,7 +517,7 @@ class Jacobian:
         if parameter == "load":
             new_row[-1] = 1 # index -1 is the last element ie. the diagonal element
         elif parameter == "voltage":
-            new_row[constant_voltage_bus_number] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
+            new_row[constant_voltage_bus_index] = 1 # index -2 is the second last element ie. the last voltage value (in 3 bus system bus 2)
         else:
             print("Error: The parameter \"{}\" in Jacobian.continium_expand is not a valid input.".format(parameter))
             return
@@ -563,7 +563,7 @@ class Mismatch:
         self.rows = self.m + 1
         if phase == "predictor":
             self.vector = np.vstack([self.vector, 1])
-        elif phase == "correction":
+        elif phase == "corrector":
             self.vector = np.vstack([self.vector, 0])
         else:
             self.rows = self.m
@@ -673,17 +673,25 @@ class Continuation(Load_Flow):
 
     def constant_voltage_bus(self):
         """
-        Return the highest voltage change
+        Return the index in the jacobian matrix for the highest voltage change
+        The returned value is offset with the number of pq and pv buses corresponding to the number of angle elements before
+        the voltage elements in the jacobian matrix.
         """
         voltage_change_list = []
+        max_voltage_bus_index = 0
+        index = 0
         for bus_number in self.buses_dict:
-            max_voltage_temp = self.buses_dict[bus_number].voltage - self.old_buses_dict[bus_number].voltage
-            if max_voltage_temp > max_voltage:
-                max_voltage = max_voltage_temp
-                max_voltage_bus_number = bus_number;
-            else:
+            if bus_number == self.slack_bus_number:
                 pass
-        return max_voltage_bus_number
+            else:
+                max_voltage_temp = self.buses_dict[bus_number].voltage - self.old_buses_dict[bus_number].voltage
+                if max_voltage_temp > max_voltage:
+                    max_voltage = max_voltage_temp
+                    max_voltage_bus_index = index;
+                else:
+                    pass
+                index += 1
+        return self.n + max_voltage_bus_index
 
     def store_values(self):
         """
