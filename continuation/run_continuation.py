@@ -50,6 +50,7 @@ while continuation.power_error() > 0.0001:
     continuation.error_specified_vs_calculated()
     continuation.print_buses()
     continuation.jacobian.create()
+    continuation.find_x_diff()
     continuation.update_values()
     continuation.print_matrices()
     if continuation.diverging():
@@ -59,30 +60,47 @@ while continuation.power_error() > 0.0001:
 # Start predictions and corrections
 #2.
 print("2.")
+print("\n*--- Predictor phase ---*\n")
 continuation.initialize_predictor_phase()
 continuation.reset_values()
 continuation.find_x_diff()
-continuation.increment_values()
 continuation.print_matrices()
+
 
 #3.
 print("3.")
-continuation.step = 0.3;
-continuation.initialize_corrector_phase("load")
+continuation.step = 1;
+continuation.increment_values()
+continuation.update_values() # finished predictor phase
+continuation.print_matrices()
+
+print("\n*--- Corrector phase ---*\n")
+continuation.iteration = 0
+continuation_parameter = "load"
+continuation.initialize_corrector_phase(continuation_parameter)
+continuation.error_specified_vs_calculated()
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
     continuation.reset_values()
+    print("************Bus 1 voltage:", continuation.buses_dict[1].voltage)
     print("\nIteration: {}\n".format(continuation.iteration))
+    print("Current x vector:\n", continuation.x_new)
     continuation.calc_new_power_injections()
     continuation.error_specified_vs_calculated()
-    continuation.print_buses()
+    continuation.jacobian.reset_original_matrix()
     continuation.jacobian.create()
-    continuation.update_values()
+    continuation.jacobian.continuation_expand(continuation_parameter, continuation.buses_dict)
+    continuation.find_x_diff()
+
+    #continuation.increment_values(continuation_parameter)
+    #continuation.update_values()
     continuation.print_matrices()
     if continuation.diverging():
         print("No convergence")
         break
+continuation.print_matrices()
 
+"""
 #4.
 print("4.")
 continuation.initialize_predictor_phase()
@@ -107,3 +125,4 @@ while continuation.power_error() > 0.0001:
     if continuation.diverging():
         print("No convergence")
         break
+"""
