@@ -4,7 +4,7 @@ from classes import Bus, Line, Continuation, Load_Flow
 Continuation settings
 """
 max_voltage_step = 0.05
-max_load_step = 1
+max_load_step = 1 #0.3 = S? step er hvertfall alltid li 0.3 hos oss da vi forenkler beregning av step
 
 """
 Initial values
@@ -39,7 +39,7 @@ lines = [line_12, line_13, line_23]
 continuation = Continuation(buses, slack_bus_number, lines)
 continuation.initialize(max_voltage_step, max_load_step)
 
-# Calculate initial load flow (horizontal move)
+# Calculate initial load flow (Point A)
 
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
@@ -56,6 +56,7 @@ while continuation.power_error() > 0.0001:
         break
 
 # Start predictions and corrections
+
 
 continuation.initialize_predictor_phase()
 
