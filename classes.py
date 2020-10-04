@@ -120,6 +120,7 @@ class Load_Flow:
                 self.net_losses_p += round(buses[i].p_calc, 3)
                 self.net_losses_q += round(buses[i].q_calc,3)
 
+
             else:
                 for j in buses:
                     try:
@@ -323,10 +324,10 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, self.x_diff])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, self.x_new])
-        print("P_total_losses {}".format(self.net_losses_p))
-        print("Q_total_losses {}".format(self.net_losses_q))
-        print("P_total_losses_2nd_method {}".format(self.total_losses_p))
-        print("Q_total_losses_2nd_method {}".format(self.total_losses_q))
+       # print("P_total_losses {}".format(self.net_losses_p))
+       # print("Q_total_losses {}".format(self.net_losses_q))
+       # print("P_total_losses_2nd_method {}".format(self.total_losses_p))
+       # print("Q_total_losses_2nd_method {}".format(self.total_losses_q))
 
 class Bus:
     """
@@ -661,7 +662,7 @@ class Continuation(Load_Flow):
             else:
                 if parameter == "load":
                     pass
-                else:
+                else: #parameter = "voltage eller none og dermed predictor phase"
                     bus.p_spec -= self.step * bus.beta * self.S
                     bus.q_spec -= self.step * bus.alpha * self.S
                 if self.phase == "predictor":
@@ -669,7 +670,7 @@ class Continuation(Load_Flow):
                     bus.voltage += self.x_diff[bus.bus_number - 1 + self.n][0] * self.step
                     self.x_new[bus.bus_number - 1] = bus.delta
                     self.x_new[bus.bus_number -1 + self.n] = bus.voltage
-                else:
+                else: #phase = corrector
                     bus.delta += self.x_diff[bus.bus_number - 1][0]
                     bus.voltage += self.x_diff[bus.bus_number - 1 + self.n][0]
                     self.x_new[bus.bus_number - 1] = bus.delta
