@@ -115,7 +115,8 @@ print("Task 5.")
 print("\n*--- Corrector phase ---*\n")
 continuation.iteration = 0
 continuation_parameter = "voltage"
-continuation.initialize_corrector_phase(continuation_parameter, constant_bus_index) #denne er vel unødvendig da vi fikser på jacobian inni while?
+continuation.step = 1 # Increase correction step so that the iterations converges faster
+continuation.initialize_corrector_phase(continuation_parameter, constant_bus_index)
 continuation.error_specified_vs_calculated() #needs this one in order to rset the power_error
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
@@ -131,6 +132,6 @@ while continuation.power_error() > 0.0001:
     continuation.update_continuation_values()
     continuation.print_matrices()
     #if continuation.diverging():
-    if continuation.iteration > 100: #too large
+    if continuation.diverging():
         print("No convergence")
         break
