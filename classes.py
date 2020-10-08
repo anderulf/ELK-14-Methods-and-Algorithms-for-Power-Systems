@@ -430,7 +430,6 @@ class Jacobian:
         self.buses_dict = buses_dict
         self.matrix = np.zeros([m, m])
         self.y_bus = y_bus
-        self.create()
 
     def create(self, fast_decoupled=False):
         """
@@ -442,6 +441,8 @@ class Jacobian:
         The offset is set because a element in the matrix, ie. 0,0 should hold d P_2/d delta_2 if bus 1 is slack. Thus,
         in this example i and j must be offset with 1 because slack bus is bus 3.
 
+        fast_decoupled should be set to True if the fast decoupled power flow method is used. It skips J2 and J3 jacobi
+        submatrices.
         """
         buses = self.buses_dict
         #i_offset = 1
@@ -540,14 +541,6 @@ class Jacobian:
             self.rows = self.m
         else:
             return
-
-    def create_decoupled(self):
-        buses = self.buses_dict
-        for i in range(self.n):
-            self.matrix[i, i] = -buses[i + 1].q_calc - self.y_bus[i, i].imag * buses[i + 1].voltage * buses[
-                i + 1].voltage
-
-
 
 class Mismatch:
     """
@@ -740,3 +733,47 @@ class Continuation(Load_Flow):
             self.x_old = np.vstack([self.x_old, 0])
             self.x_new = np.vstack([self.x_new, 0])
             self.x_diff = np.vstack([self.x_diff, 0])
+
+class Fast_Decoupled(Load_Flow):
+    """
+    Subclass of Load Flow class
+
+    From the jobian matrix we define the following submatrices:
+    H = J1
+    N = J2
+    M = J3
+    L = J4
+    """
+    def set_up_matrices(self):
+        self.jacobian.create()
+        self.H = self.jacobian.matrix[0:self.n, 0:self.n]
+        self.N = self.jacobian.matrix[0:self.n:, self.n:]
+        self.M = self.jacobian.matrix[self.n:, 0:self.n]
+        self.L = self.jacobian.matrix[self.n:, self.n:]
+        H_inverted = np.invert(self.H)
+        L_inverted = np.invert(self.L)
+        self.H_eq = self.H - self.N * L_inverted * self.M
+        self.L_eq = self.L - self.M * H_inverted * self.N
+
+        self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
+
+    def create_correction_matrices(self):
+        # Extract first row of matrix
+        H_row = self.H[0,:] # 0 is the first row, and : gets all columns
+        N_row = self.N[0,:] # 0 is the first row, and : gets all columns
+        # Add first row to matrix
+        self.primal_correction_matrix = np.block([H_row, N_row])
+        # Add rows from H and N
+        for i in range(1,self.n):
+            H_row = self.H[i, :] # i'th row and all columns from H
+            N_row = self.N[i, :] # i'th row and all columns from N
+            temp_row = np.block(H_row, N_row)
+            # add new row with vstack
+            self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
+        for i in range(self.n_pq):
+            H_row = self.H[i, :]  # i'th row and all columns from H
+            N_row = self.N[i, :]  # i'th row and all columns from N
+            temp_row = np.block(H_row, N_row)
+            # add new row with vstack
+            self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
+
