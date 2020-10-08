@@ -432,7 +432,7 @@ class Jacobian:
         self.y_bus = y_bus
         self.create()
 
-    def create(self):
+    def create(self, fast_decoupled=False):
         """
         Calculate and return the jacobian matrix for the current iteration.
         The full matrix is constructed from the submatrix parts; J1, J2, J3, J4.
@@ -459,14 +459,15 @@ class Jacobian:
                     self.matrix[i, j] = abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (self.y_bus[i, j].real * np.sin(buses[i + 1].delta - buses[j + 1].delta) -self.y_bus[i, j].imag * np.cos(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             # J2 of Jacobian
-            for j in range(self.n_pq):
-                #if j == self.slack_bus_number-1:
-                #    j_offset = 2
-                if i == j:
-                    self.matrix[i, j + self.n] = buses[i + 1].p_calc / abs(buses[i + 1].voltage) + \
-                                                   self.y_bus[i, i].real * abs(buses[i + 1].voltage)
-                else:
-                    self.matrix[i, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
+            if not fast_decoupled:
+                for j in range(self.n_pq):
+                    #if j == self.slack_bus_number-1:
+                    #    j_offset = 2
+                    if i == j:
+                        self.matrix[i, j + self.n] = buses[i + 1].p_calc / abs(buses[i + 1].voltage) + \
+                                                       self.y_bus[i, i].real * abs(buses[i + 1].voltage)
+                    else:
+                        self.matrix[i, j + self.n] = abs(buses[i + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
         #i_offset = 1
         #j_offset = 1
@@ -474,13 +475,14 @@ class Jacobian:
             # J3 of Jacobian
             #if i == self.slack_bus_number-1:
             #    i_offset = 2
-            for j in range(self.n):
-                #if j == self.slack_bus_number-1:
-                #    j_offset = 2
-                if i == j:
-                    self.matrix[i + self.n, j] = buses[i + 1].p_calc - self.y_bus[i, i].real * buses[i + 1].voltage * buses[i + 1].voltage
-                else:
-                    self.matrix[i + self.n, j] = -abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
+            if not fast_decoupled:
+                for j in range(self.n):
+                    #if j == self.slack_bus_number-1:
+                    #    j_offset = 2
+                    if i == j:
+                        self.matrix[i + self.n, j] = buses[i + 1].p_calc - self.y_bus[i, i].real * buses[i + 1].voltage * buses[i + 1].voltage
+                    else:
+                        self.matrix[i + self.n, j] = -abs(buses[i + 1].voltage) * abs(buses[j + 1].voltage) * (self.y_bus[i, j].real * np.cos(buses[i + 1].delta - buses[j + 1].delta) + self.y_bus[i, j].imag * np.sin(buses[i + 1].delta - buses[j + 1].delta))
             #j_offset = 1
             for j in range(self.n_pq):
                 # J4 of Jacobian
@@ -538,6 +540,14 @@ class Jacobian:
             self.rows = self.m
         else:
             return
+
+    def create_decoupled(self):
+        buses = self.buses_dict
+        for i in range(self.n):
+            self.matrix[i, i] = -buses[i + 1].q_calc - self.y_bus[i, i].imag * buses[i + 1].voltage * buses[
+                i + 1].voltage
+
+
 
 class Mismatch:
     """
