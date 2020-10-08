@@ -754,6 +754,7 @@ class Fast_Decoupled(Load_Flow):
         L_inverted = np.invert(self.L)
         self.H_eq = self.H - self.N * L_inverted * self.M
         self.L_eq = self.L - self.M * H_inverted * self.N
+        self.M_zeros = np.zeros([self.n_pq,self.n])
 
         self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
 
@@ -771,8 +772,8 @@ class Fast_Decoupled(Load_Flow):
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
         for i in range(self.n_pq):
-            M_row = self.H[i, :]  # i'th row and all columns from H
-            L_row = self.N[i, :]  # i'th row and all columns from N
+            M_row = self.M_zeros[i, :]  # i'th row and all columns from H
+            L_row = self.L_eq[i, :]  # i'th row and all columns from N
             temp_row = np.block(H_row, N_row)
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
