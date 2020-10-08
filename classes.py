@@ -745,36 +745,75 @@ class Fast_Decoupled(Load_Flow):
     L = J4
     """
     def set_up_matrices(self):
+        self.jacobian.create(fast_decoupled=True)
+        # Create matrix used to approximate
+        self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
         self.jacobian.create()
+        # Store submatrices of jacobian
         self.H = self.jacobian.matrix[0:self.n, 0:self.n]
         self.N = self.jacobian.matrix[0:self.n:, self.n:]
         self.M = self.jacobian.matrix[self.n:, 0:self.n]
         self.L = self.jacobian.matrix[self.n:, self.n:]
-        H_inverted = np.invert(self.H)
-        L_inverted = np.invert(self.L)
+        H_inverted = np.linalg.inv(self.H)
+        L_inverted = np.linalg.inv(self.L)
+        # Create equivalent matrices
         self.H_eq = self.H - self.N * L_inverted * self.M
         self.L_eq = self.L - self.M * H_inverted * self.N
-        self.M_zeros = np.zeros([self.n_pq,self.n])
-
-        self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
+        # Create zero matrices for correction matrices building
+        self.N_zeros = np.zeros([self.n_pq, self.n_pq])
+        self.M_zeros = np.zeros([self.n_pq, self.n])
+        # Create matrices used to correct in primal and dual methods
+        self.create_correction_matrices()
 
     def create_correction_matrices(self):
+        """
+        Creates the correction matrices for primal and dual methods.
+
+        As submatrices cannot easily be used to create a bigger matrix some special tricks are used.
+        The rows of the submatrices are extracted and merged with the neighboring submatrix row ie. the first row from
+        J1 and J2 into an array. This array is then inserted in the correction matrix. These arrays are stacked
+        vertically under eachother using the vstack method of numpy.
+
+        In real applications this would not be done in one method as it is computationally unnecessary.
+        For this course they are both done to better illustrate the differences in the implementation.
+        """
+        ## Firstly create the primal matrix
         # Extract first row of matrix
         H_row = self.H[0,:] # 0 is the first row, and : gets all columns
         N_row = self.N[0,:] # 0 is the first row, and : gets all columns
-        # Add first row to matrix
+        # Add first row to matrix by joining H_row and N_row into an array
         self.primal_correction_matrix = np.block([H_row, N_row])
         # Add rows from H and N
         for i in range(1,self.n):
             H_row = self.H[i, :] # i'th row and all columns from H
             N_row = self.N[i, :] # i'th row and all columns from N
-            temp_row = np.block(H_row, N_row)
+            # Create a merged array from both rows
+            temp_row = np.block([H_row, N_row])
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
         for i in range(self.n_pq):
             M_row = self.M_zeros[i, :]  # i'th row and all columns from H
             L_row = self.L_eq[i, :]  # i'th row and all columns from N
-            temp_row = np.block(H_row, N_row)
+            temp_row = np.block([M_row, L_row])
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
 
+        ## Secondly create the dual matrix
+        # Extract first row of matrix
+        H_row = self.H[0, :]  # 0 is the first row, and : gets all columns
+        N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
+        # Add first row to matrix
+        self.dual_correction_matrix = np.block([H_row, N_row])
+        # Add rows from H and N
+        for i in range(1, self.n):
+            H_row = self.H_eq[i, :]  # i'th row and all columns from H
+            N_row = self.N_zeros[i, :]  # i'th row and all columns from N
+            temp_row = np.block([H_row, N_row])
+            # add new row with vstack
+            self.dual_correction_matrix = np.vstack([self.dual_correction_matrix, temp_row])
+        for i in range(self.n_pq):
+            M_row = self.M[i, :]  # i'th row and all columns from H
+            L_row = self.L[i, :]  # i'th row and all columns from N
+            temp_row = np.block([M_row, L_row])
+            # add new row with vstack
+            self.dual_correction_matrix = np.vstack([self.dual_correction_matrix, temp_row])
