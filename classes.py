@@ -771,8 +771,8 @@ class Fast_Decoupled(Load_Flow):
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
         for i in range(self.n_pq):
-            H_row = self.H[i, :]  # i'th row and all columns from H
-            N_row = self.N[i, :]  # i'th row and all columns from N
+            M_row = self.H[i, :]  # i'th row and all columns from H
+            L_row = self.N[i, :]  # i'th row and all columns from N
             temp_row = np.block(H_row, N_row)
             # add new row with vstack
             self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
