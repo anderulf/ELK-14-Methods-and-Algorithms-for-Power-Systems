@@ -744,10 +744,14 @@ class Fast_Decoupled(Load_Flow):
     M = J3
     L = J4
     """
+<<<<<<< HEAD
     def set_up_matrices(self):
         self.jacobian.create(fast_decoupled=True)
         # Create matrix used to approximate
         self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
+=======
+    def set_up_matrices(self, phase = None):
+>>>>>>> 66e955b... Har laget pseudokode for assignment 3. run_fast_decoupled og classes.py er skrevet i
         self.jacobian.create()
         # Store submatrices of jacobian
         self.H = self.jacobian.matrix[0:self.n, 0:self.n]
@@ -759,11 +763,43 @@ class Fast_Decoupled(Load_Flow):
         # Create equivalent matrices
         self.H_eq = self.H - self.N * L_inverted * self.M
         self.L_eq = self.L - self.M * H_inverted * self.N
+<<<<<<< HEAD
         # Create zero matrices for correction matrices building
         self.N_zeros = np.zeros([self.n_pq, self.n_pq])
         self.M_zeros = np.zeros([self.n_pq, self.n])
         # Create matrices used to correct in primal and dual methods
         self.create_correction_matrices()
+=======
+        self.M_zeros = np.zeros([self.n_pq,self.n])
+
+      #  if phase == "primal":
+        #      self.B_p = self.jacobian.matrix[0:self.n, 0:self.n]
+        #      self.B_dp = spør trude, trudes notater slide 25
+        #      self.N = nullere
+        #      self.M = nullere
+        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
+
+        #  if phase == "dual":
+        #      self.B_p = self.jacobian.matrix[self.n:, self.n:]
+        #      self.B_dp = spør trude, trudes notater slide 25
+        #      self.N = nullere
+        #      self.M = nullere
+        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
+
+        #  if phase == "standard":
+        #      self.B_p = spør trude, trudes notater slide 25 (1/x)
+        #      self.B_dp = spør trude, trudes notater slide 25 (1/x)
+        #      self.N = nullere
+        #      self.M = nullere
+        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
+
+
+
+
+
+
+        self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
+>>>>>>> 66e955b... Har laget pseudokode for assignment 3. run_fast_decoupled og classes.py er skrevet i
 
     def create_correction_matrices(self):
         """
