@@ -361,7 +361,7 @@ class Bus:
         elif self.p_spec and not self.q_spec:
             self.bus_type = "PV"
         else:
-            self.bus_type = "PD"
+            self.bus_type = "Slack"
 
     def update_values(self, p_spec, q_spec, voltage, delta):
         self.p_spec = p_spec
@@ -510,7 +510,7 @@ class Jacobian:
         new_row = [0] * (self.m +1)
         new_col = [0] * self.m
         for bus in buses.values():
-            if bus.bus_type == "PD":
+            if bus.bus_type == "Slack":
                 pass # skip slack bus
             else:
                 new_col[bus.bus_number-1] = [bus.beta]
@@ -745,51 +745,187 @@ class Fast_Decoupled(Load_Flow):
     L = J4
     """
     def set_up_matrices(self, phase = None):
-        self.jacobian.create(fast_decoupled=True)
+        self.jacobian.create()
         # Create matrix used to approximate
-        self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
+        #self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
         # Store submatrices of jacobian
         self.H = self.jacobian.matrix[0:self.n, 0:self.n]
-        self.N = self.jacobian.matrix[0:self.n:, self.n:]
-        self.M = self.jacobian.matrix[self.n:, 0:self.n]
+        #self.N = self.jacobian.matrix[0:self.n:, self.n:]
+        #self.M = self.jacobian.matrix[self.n:, 0:self.n]
         self.L = self.jacobian.matrix[self.n:, self.n:]
-        H_inverted = np.linalg.inv(self.H)
-        L_inverted = np.linalg.inv(self.L)
+        #H_inverted = np.linalg.inv(self.H)
+        #L_inverted = np.linalg.inv(self.L)
         # Create equivalent matrices
-        self.H_eq = self.H - self.N * L_inverted * self.M
-        self.L_eq = self.L - self.M * H_inverted * self.N
+        #self.H_eq = self.H - self.N * L_inverted * self.M
+        #self.L_eq = self.L - self.M * H_inverted * self.N
+        #self.N = np.zeros([self.n_pq, self.n_pq])
+        #self.M = np.zeros([self.n_pq, self.n])
         # Create zero matrices for correction matrices building
         self.N_zeros = np.zeros([self.n_pq, self.n_pq])
         self.M_zeros = np.zeros([self.n_pq, self.n])
         # Create matrices used to correct in primal and dual methods
-        self.create_correction_matrices()
-        self.M_zeros = np.zeros([self.n_pq,self.n])
+        #self.create_correction_matrices()
 
-      #  if phase == "primal":
-        #      self.B_p = self.jacobian.matrix[0:self.n, 0:self.n]
-        #      self.B_dp = spør trude, trudes notater slide 25
-        #      self.N = nullere
-        #      self.M = nullere
-        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
-
-        #  if phase == "dual":
-        #      self.B_p = self.jacobian.matrix[self.n:, self.n:]
-        #      self.B_dp = spør trude, trudes notater slide 25
-        #      self.N = nullere
-        #      self.M = nullere
-        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
-
-        #  if phase == "standard":
-        #      self.B_p = spør trude, trudes notater slide 25 (1/x)
-        #      self.B_dp = spør trude, trudes notater slide 25 (1/x)
-        #      self.N = nullere
-        #      self.M = nullere
-        #      sett alt sammen i en felle og konstant jacobian som ikke oppdateres
-
+        if phase == "Primal":
+            self.B_p = self.H
+        elif phase == "Dual":
+            self.B_dp = self.L
+        self.create_modified_jacobians(phase)
         #self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
+
+    def create_x_matrices(self):
+        """
+        for bus in self.buses_dict.values():
+            if bus.bus_type == "Slack":
+                pass
+            else:
+                for line in self.lines:
+                    if line.to_bus == bus.bus_number or line.from_bus == bus.bus_number:
+                        pass
+        """
+        self.primal_Q_jacobian = np.zeros([self.n_pq, self.n_pq], dtype=float)
+        for line in self.lines:
+            self.primal_Q_jacobian[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+            self.primal_Q_jacobian[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.primal_Q_jacobian[
+                line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+        # Get the sum of the rows
+        diagonal_elements = np.sum(self.primal_Q_jacobian, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+        for i, Y_ii in enumerate(diagonal_elements):
+            self.primal_Q_jacobian[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+
+
+
+
+    def create_modified_jacobians(self, phase):
+        if phase == "Primal":
+            ## First part of matrix (P jacobian)
+            # Extract first row of matrix
+            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
+            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
+            # Add first row to matrix by joining H_row and N_row into an array
+            self.primal_P_jacobian = np.block([B_p_row, N_row])
+            # Add rows from H and N
+            for i in range(1, self.n):
+                B_p_row = self.B_p[i, :]  # i'th row and all columns from H
+                N_row = self.N_zeros[i, :]  # i'th row and all columns from N
+                # Create a merged array from both rows
+                temp_row = np.block([B_p_row, N_row])
+                # add new row with vstack
+                self.primal_P_jacobian = np.vstack([self.primal_P_jacobian, temp_row])
+            ## B_dp
+            self.B_dp = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
+            for line in self.lines:
+                self.B_dp[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+                self.B_dp[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_dp[
+                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+            # Get the sum of the rows
+            diagonal_elements = np.sum(self.B_dp, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+            for i, Y_ii in enumerate(diagonal_elements):
+                self.B_dp[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+            # Remove row and column of slack bus
+            self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=0)
+            self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=1)
+            ## Second part of matrix (Q jacobian)
+            # Extract first row of matrix
+            M_row = self.M_zeros[0, :]  # 0 is the first row, and : gets all columns
+            B_dp_row = self.B_dp[0, :]  # 0 is the first row, and : gets all columns
+            # Add first row to matrix by joining H_row and N_row into an array
+            self.primal_Q_jacobian = np.block([M_row, B_dp_row])
+            # Add rows from H and N
+            for i in range(1, self.n):
+                M_row = self.M_zeros[i, :]  # i'th row and all columns from H
+                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from N
+                # Create a merged array from both rows
+                temp_row = np.block([M_row, B_dp_row])
+                # add new row with vstack
+                self.primal_Q_jacobian = np.vstack([self.primal_Q_jacobian, temp_row])
+        elif phase == "Dual":
+            ## B_p
+            self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
+            for line in self.lines:
+                self.B_p[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+                self.B_p[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_p[
+                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+            # Get the sum of the rows
+            diagonal_elements = np.sum(self.B_p, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+            for i, Y_ii in enumerate(diagonal_elements):
+                self.B_p[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+            # Remove row and column of slack bus
+            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
+            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+            ## First part of jacobian matrix (P jacobian)
+            # Extract first row of matrix
+            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
+            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
+            # Add first row to matrix by joining H_row and N_row into an array
+            self.dual_P_jacobian = np.block([B_p_row, N_row])
+            # Add rows from H and N
+            for i in range(1, self.n):
+                B_p_row = self.B_p[i, :]  # i'th row and all columns from N
+                N_row = self.N_zeros[i, :]  # i'th row and all columns from H
+                # Create a merged array from both rows
+                temp_row = np.block([B_p_row, N_row])
+                # add new row with vstack
+                self.dual_P_jacobian = np.vstack([self.dual_P_jacobian, temp_row])
+            ## Second part of matrix (Q jacobian)
+            # Extract first row of matrix
+            M_row = self.M_zeros[0, :]  # 0 is the first row, and : gets all columns
+            B_dp_row = self.B_dp[0, :]  # 0 is the first row, and : gets all columns
+            # Add first row to matrix by joining H_row and N_row into an array
+            self.dual_Q_jacobian = np.block([M_row, B_dp_row])
+            # Add rows from H and N
+            for i in range(1, self.n):
+                M_row = self.N_zeros[i, :]  # i'th row and all columns from N
+                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from H
+                # Create a merged array from both rows
+                temp_row = np.block([M_row, B_dp_row])
+                # add new row with vstack
+                self.dual_Q_jacobian = np.vstack([self.dual_Q_jacobian, temp_row])
+        elif phase == "Standard":
+            ## B_p
+            self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
+            for line in self.lines:
+                self.B_p[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+                self.B_p[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_p[
+                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+            # Get the sum of the rows
+            diagonal_elements = np.sum(self.B_p, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+            for i, Y_ii in enumerate(diagonal_elements):
+                self.B_p[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+            # Remove row and column of slack bus
+            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
+            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+            self.B_dp = self.B_p
+
+            ## Create the first part of the jacobian
+            # Extract first row of matrix
+            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
+            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
+            # Add first row to matrix by joining H_row and N_row into an array
+            self.standard_jacobian = np.block([B_p_row, N_row])
+            # Add rows from H and N
+            for i in range(1, self.n):
+                B_p_row = self.B_p[i, :]  # i'th row and all columns from N
+                N_row = self.N_zeros[i, :]  # i'th row and all columns from H
+                # Create a merged array from both rows
+                temp_row = np.block([B_p_row, N_row])
+                # add new row with vstack
+                self.standard_jacobian = np.vstack([self.standard_jacobian, temp_row])
+            ## Second part of jacobian
+            # Add rows from M and dp
+            for i in range(0, self.n):
+                M_row = self.M_zeros[i, :]  # i'th row and all columns from H
+                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from N
+                # Create a merged array from both rows
+                temp_row = np.block([M_row, B_dp_row])
+                # add new row with vstack
+                self.standard_jacobian = np.vstack([self.standard_jacobian, temp_row])
+        else:
+            print("Error: phase {} does not exist".format(phase))
 
     def create_correction_matrices(self):
         """
+
         Creates the correction matrices for primal and dual methods.
 
         As submatrices cannot easily be used to create a bigger matrix some special tricks are used.

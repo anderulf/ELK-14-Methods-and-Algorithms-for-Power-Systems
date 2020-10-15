@@ -1,11 +1,5 @@
-from classes import Bus, Line, Continuation, Load_Flow
+from classes import Bus, Line, Fast_Decoupled
 import numpy as np
-"""
-Continuation settings
-"""
-max_voltage_step = 0.05
-max_load_step = 1 #0.3 = S? step er hvertfall alltid li 0.3 hos oss da vi forenkler beregning av step
-
 """
 Initial values
 """
@@ -34,39 +28,44 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 lines = [line_12, line_13, line_23]
 
 #Husk å oppdater continuation til run_fast_decoupled!!!
-continuation = Continuation(buses, slack_bus_number, lines)
-continuation.initialize(max_voltage_step, max_load_step)
+fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+fast_dec.set_up_matrices()
 
 # Calculate initial load flow (Point A)
 print("")
 print("Task 1.")
-while continuation.power_error() > 0.0001:
-    continuation.iteration += 1
-    continuation.reset_values()
+while fast_dec.power_error() > 0.0001:
+    fast_dec.iteration += 1
+    fast_dec.reset_values()
 #    print("\nIteration: {}\n".format(continuation.iteration))
-    continuation.calc_new_power_injections()
-    continuation.error_specified_vs_calculated()
-    continuation.jacobian.create()
-    continuation.find_x_diff()
-    continuation.update_values()
-    if continuation.diverging():
+    fast_dec.calc_new_power_injections()
+    fast_dec.error_specified_vs_calculated()
+    fast_dec.jacobian.create()
+    fast_dec.find_x_diff()
+    fast_dec.update_values()
+    if fast_dec.diverging():
         print("No convergence")
         break
 print("")
 print("Base case condition assuming a flat start")
-continuation.print_matrices()
+fast_dec.print_matrices()
 
 #2. #Viktig at vi deler opp, oppdaterer P_calc og Q_calc underveis med oppdatert theta og v.
 # Ikke løs samtidig (for store system er det mye mindre effektivt å løse samtidig)
 print("")
 print("Task 2.")
 print("Primal Fast Decoupled Power Flow")
+
 #Reset X-vector til flat start
+for bus_number in V:
+    buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 
-#phase = "Primal"
+phase = "Primal"
 #Initialize primal jacobian (phase)
+fast_dec.set_up_matrices(phase)
 
-while continuation.power_error() > 0.0001:
+while fast_dec.power_error() > 0.0001:
     #p_calc
     #theta correction = B_p.invers*P_mismatch(v, theta)
     #update theta i X-vector, theta_new = theta_correction + theta_old
@@ -75,7 +74,7 @@ while continuation.power_error() > 0.0001:
     #voltage_correction = B_dp.invers*Q_mismatch(v, theta_updated)
     #update voltage i X-vector, V_new = V_correction + v_old
 
-    if continuation.diverging():
+    if fast_dec.diverging():
         print("No convergence")
         break
 
@@ -85,7 +84,7 @@ print("Dual Fast Decoupled Power Flow")
 # phase = "Dual"
 # Initialize primal jacobian (phase)
 
-while continuation.power_error() > 0.0001:
+while fast_dec.power_error() > 0.0001:
 
     # Q_calc(basert på forrige iterasjon oppdaterte x-verdier)
     # voltage_correction = B_dp.invers*Q_mismatch(v, theta)
@@ -95,7 +94,7 @@ while continuation.power_error() > 0.0001:
     # theta correction = B_p.invers*P_mismatch(v_updated, theta)
     # update theta i X-vector, theta_new = theta_correction + theta_old
 
-    if continuation.diverging():
+    if fast_dec.diverging():
         print("No convergence")
         break
 
@@ -105,7 +104,7 @@ print("Standard Decoupled Power Flow") #Standard er lik primal med en enklere ja
 # phase = "Standard"
 # Initialize primal jacobian (phase)
 
-while continuation.power_error() > 0.0001:
+while fast_dec.power_error() > 0.0001:
     # p_calc
     # theta correction = B_p.invers*P_mismatch(v, theta)
     # update theta i X-vector, theta_new = theta_correction + theta_old
@@ -114,7 +113,7 @@ while continuation.power_error() > 0.0001:
     # voltage_correction = B_dp.invers*Q_mismatch(v, theta_updated)
     # update voltage i X-vector, V_new = V_correction + v_old
 
-    if continuation.diverging():
+    if fast_dec.diverging():
         print("No convergence")
         break
 #3.
