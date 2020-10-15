@@ -36,7 +36,7 @@ class Load_Flow:
         self.create_y_bus()
         self.n_pq = 0
         self.n_pv = 0
-        self.n_pd = 0
+        self.n_slack = 0
         self.n = 0
         self.m = 0
         self.calculate_n_values()
@@ -48,9 +48,9 @@ class Load_Flow:
         self.x_diff = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
         self.x_vector_labels = []
-        self.mismatch = Mismatch(self.m)
+        self.mismatch = Mismatch(self.m, self.n)
         self.mismatch_vector_labels = []
-        self.net_injections_vector = np.zeros([2*self.n_pq + 2*self.n_pv + 2*self.n_pd, 1]) #Adding 2 for each bus (Pi, Qi)
+        self.net_injections_vector = np.zeros([2 * self.n_pq + 2 * self.n_pv + 2 * self.n_slack, 1]) #Adding 2 for each bus (Pi, Qi)
         self.net_injections_vector_labels = []
         self.correction_vector_labels = []
         self.create_label_vectors()
@@ -62,6 +62,9 @@ class Load_Flow:
         self.max_load_step = None
         self.old_buses_dict = None
         self.continuation_parameter = None
+        # Variables for fast decoupled power flow
+        self.P_mismatches = np.zeros([self.n, 1])
+        self.Q_mismatches = np.zeros([self.n_pq, 1])
 
     def calculate_n_values(self):
         """
@@ -73,9 +76,9 @@ class Load_Flow:
             elif self.buses_dict[bus_number].bus_type == "PV":
                 self.n_pv += 1
             else:
-                self.n_pd += 1
-        if self.n_pd > 1 or self.n_pd == 0:
-            print("WARNING INVALID SYSTEM: system has {} slack buses".format(self.n_pd))
+                self.n_slack += 1
+        if self.n_slack > 1 or self.n_slack == 0:
+            print("WARNING INVALID SYSTEM: system has {} slack buses".format(self.n_slack))
         else:
             self.m = 2 * self.n_pq + self.n_pv
             self.n = self.n_pq + self.n_pv
@@ -151,7 +154,7 @@ class Load_Flow:
                 self.buses_dict[lim_bus].q_spec = None
             self.n_pq = 0
             self.n_pv = 0
-            self.n_pd = 0
+            self.n_slack = 0
             self.calculate_n_values()
 
     def error_specified_vs_calculated(self):
@@ -276,7 +279,7 @@ class Load_Flow:
     def create_label_vectors(self):
         for i in self.buses_dict:
             self.net_injections_vector_labels.insert(i-1, "P" + str(i))
-            self.net_injections_vector_labels.insert(i - 1 + self.n_pq + self.n_pv + self.n_pd, "Q" + str(i))
+            self.net_injections_vector_labels.insert(i - 1 + self.n_pq + self.n_pv + self.n_slack, "Q" + str(i))
 
             if i == self.slack_bus_number:
                 pass
@@ -302,7 +305,7 @@ class Load_Flow:
         """
         print(
             "System has {0} slack bus, {1} PQ-bus(es) and {2} PV-bus(es). The jacobian matrix has dimension: {3}x{3}".format(
-                self.n_pd, self.n_pq, self.n_pv, self.m))
+                self.n_slack, self.n_pq, self.n_pv, self.m))
         for bus_number in self.buses_dict:
             self.buses_dict[bus_number].print_data(self.slack_bus_number)
 
@@ -546,10 +549,13 @@ class Mismatch:
     """
     A class for the mismatch vector in load flow methods.
 
-    The class has continium method extensions which makes for a cleaner implementation
+    The class has continuation method extensions which makes for a cleaner implementation
+
+    Also supports extracting only active or reactive parts for decoupled power flow implemenations
     """
-    def __init__(self, m):
+    def __init__(self, m, n):
         self.m = m
+        self.n = n
         self.rows = m
         self.vector = np.zeros([self.m, 1])
 
@@ -578,6 +584,18 @@ class Mismatch:
             self.vector = np.delete(self.vector, obj=-1, axis=0)  # obj=-1 is the last element, axis=0 means row
             self.rows = self.m
         else: return
+
+    def get_P(self):
+        """
+        The active mismatches only for fast decoupled power flow
+        """
+        return self.vector[:self.n]
+
+    def get_Q(self):
+        """
+        The active mismatches only for fast decoupled power flow
+        """
+        return self.vector[self.n:]
 
 class Continuation(Load_Flow):
     """
@@ -745,21 +763,15 @@ class Fast_Decoupled(Load_Flow):
     L = J4
     """
     def set_up_matrices(self, phase = None):
-        self.jacobian.create()
+        """
+        Set up matrices needed for fast decoupled power flow with inputed phase
+        """
+        self.jacobian.create(fast_decoupled=True)
         # Create matrix used to approximate
         #self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
         # Store submatrices of jacobian
         self.H = self.jacobian.matrix[0:self.n, 0:self.n]
-        #self.N = self.jacobian.matrix[0:self.n:, self.n:]
-        #self.M = self.jacobian.matrix[self.n:, 0:self.n]
         self.L = self.jacobian.matrix[self.n:, self.n:]
-        #H_inverted = np.linalg.inv(self.H)
-        #L_inverted = np.linalg.inv(self.L)
-        # Create equivalent matrices
-        #self.H_eq = self.H - self.N * L_inverted * self.M
-        #self.L_eq = self.L - self.M * H_inverted * self.N
-        #self.N = np.zeros([self.n_pq, self.n_pq])
-        #self.M = np.zeros([self.n_pq, self.n])
         # Create zero matrices for correction matrices building
         self.N_zeros = np.zeros([self.n_pq, self.n_pq])
         self.M_zeros = np.zeros([self.n_pq, self.n])
@@ -772,29 +784,6 @@ class Fast_Decoupled(Load_Flow):
             self.B_dp = self.L
         self.create_modified_jacobians(phase)
         #self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
-
-    def create_x_matrices(self):
-        """
-        for bus in self.buses_dict.values():
-            if bus.bus_type == "Slack":
-                pass
-            else:
-                for line in self.lines:
-                    if line.to_bus == bus.bus_number or line.from_bus == bus.bus_number:
-                        pass
-        """
-        self.primal_Q_jacobian = np.zeros([self.n_pq, self.n_pq], dtype=float)
-        for line in self.lines:
-            self.primal_Q_jacobian[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
-            self.primal_Q_jacobian[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.primal_Q_jacobian[
-                line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
-        # Get the sum of the rows
-        diagonal_elements = np.sum(self.primal_Q_jacobian, axis=1)  # axis 1 meaning the we sum each colomn along the rows
-        for i, Y_ii in enumerate(diagonal_elements):
-            self.primal_Q_jacobian[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
-
-
-
 
     def create_modified_jacobians(self, phase):
         if phase == "Primal":
@@ -853,6 +842,7 @@ class Fast_Decoupled(Load_Flow):
             # Remove row and column of slack bus
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+
             ## First part of jacobian matrix (P jacobian)
             # Extract first row of matrix
             B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
@@ -867,6 +857,7 @@ class Fast_Decoupled(Load_Flow):
                 temp_row = np.block([B_p_row, N_row])
                 # add new row with vstack
                 self.dual_P_jacobian = np.vstack([self.dual_P_jacobian, temp_row])
+
             ## Second part of matrix (Q jacobian)
             # Extract first row of matrix
             M_row = self.M_zeros[0, :]  # 0 is the first row, and : gets all columns
@@ -911,6 +902,7 @@ class Fast_Decoupled(Load_Flow):
                 temp_row = np.block([B_p_row, N_row])
                 # add new row with vstack
                 self.standard_jacobian = np.vstack([self.standard_jacobian, temp_row])
+
             ## Second part of jacobian
             # Add rows from M and dp
             for i in range(0, self.n):
@@ -923,56 +915,47 @@ class Fast_Decoupled(Load_Flow):
         else:
             print("Error: phase {} does not exist".format(phase))
 
-    def create_correction_matrices(self):
+    def calculate_P_injections(self):
         """
-
-        Creates the correction matrices for primal and dual methods.
-
-        As submatrices cannot easily be used to create a bigger matrix some special tricks are used.
-        The rows of the submatrices are extracted and merged with the neighboring submatrix row ie. the first row from
-        J1 and J2 into an array. This array is then inserted in the correction matrix. These arrays are stacked
-        vertically under eachother using the vstack method of numpy.
-
-        In real applications this would not be done in one method as it is computationally unnecessary.
-        For this course they are both done to better illustrate the differences in the implementation.
+        Calculates the new active power injections based on previous voltage and angles
         """
-        ## Firstly create the primal matrix
-        # Extract first row of matrix
-        H_row = self.H[0,:] # 0 is the first row, and : gets all columns
-        N_row = self.N[0,:] # 0 is the first row, and : gets all columns
-        # Add first row to matrix by joining H_row and N_row into an array
-        self.primal_correction_matrix = np.block([H_row, N_row])
-        # Add rows from H and N
-        for i in range(1,self.n):
-            H_row = self.H[i, :] # i'th row and all columns from H
-            N_row = self.N[i, :] # i'th row and all columns from N
-            # Create a merged array from both rows
-            temp_row = np.block([H_row, N_row])
-            # add new row with vstack
-            self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
-        for i in range(self.n_pq):
-            M_row = self.M_zeros[i, :]  # i'th row and all columns from H
-            L_row = self.L_eq[i, :]  # i'th row and all columns from N
-            temp_row = np.block([M_row, L_row])
-            # add new row with vstack
-            self.primal_correction_matrix = np.vstack([self.primal_correction_matrix, temp_row])
+        buses = self.buses_dict
+        for number, i in enumerate(buses):
+            buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
+            buses[i].q_calc = 0
+            # Skip slack bus
+            if i == self.slack_bus_number:
+                pass
+            else:
+                for j in buses:
+                    # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                    buses[i].p_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.cos(
+                        buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
 
-        ## Secondly create the dual matrix
-        # Extract first row of matrix
-        H_row = self.H[0, :]  # 0 is the first row, and : gets all columns
-        N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
-        # Add first row to matrix
-        self.dual_correction_matrix = np.block([H_row, N_row])
-        # Add rows from H and N
-        for i in range(1, self.n):
-            H_row = self.H_eq[i, :]  # i'th row and all columns from H
-            N_row = self.N_zeros[i, :]  # i'th row and all columns from N
-            temp_row = np.block([H_row, N_row])
-            # add new row with vstack
-            self.dual_correction_matrix = np.vstack([self.dual_correction_matrix, temp_row])
+    def calculate_Q_injections(self):
+        """
+        Calculates the new reactive power injections based on previous voltage and angles
+        """
+        buses = self.buses_dict
+        for number, i in enumerate(buses):
+            buses[i].p_calc = 0  # Resets the value of p_calc/q_calc so the loop works
+            buses[i].q_calc = 0
+            # Skip slack bus
+            if i == self.slack_bus_number:
+                pass
+            else:
+                for j in buses:
+                    # Adding the Q's from the lines. Note that Ybus is offset with -1 because Python uses 0-indexing and the buses are indexed from 1
+                    buses[i].q_calc += abs(self.y_bus[i - 1, j - 1]) * buses[i].voltage * buses[j].voltage * np.sin(
+                        buses[i].delta - buses[j].delta - ma.phase(self.y_bus[i - 1, j - 1]))
+
+    def calculate_fast_decoupled_mismatches(self):
+        """
+        Calculate the mismatches and store in mismatch vector
+        """
+        for i in range(self.n):
+            self.buses_dict[i+1].delta_p = self.buses_dict[i+1].p_spec - self.buses_dict[i+1].p_calc
+            self.mismatch.vector[i, 0] = self.buses_dict[i + 1].delta_p
         for i in range(self.n_pq):
-            M_row = self.M[i, :]  # i'th row and all columns from H
-            L_row = self.L[i, :]  # i'th row and all columns from N
-            temp_row = np.block([M_row, L_row])
-            # add new row with vstack
-            self.dual_correction_matrix = np.vstack([self.dual_correction_matrix, temp_row])
+            self.buses_dict[i+1].delta_q = self.buses_dict[i+1].q_spec - self.buses_dict[i+1].q_calc
+            self.mismatch.vector[i + self.n, 0] = self.buses_dict[i + 1].delta_q

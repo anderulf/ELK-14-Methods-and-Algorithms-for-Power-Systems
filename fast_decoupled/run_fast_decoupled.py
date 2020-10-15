@@ -19,7 +19,7 @@ x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
 # Create buses
 buses = {}
 for bus_number in V:
-    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number], beta[bus_number], alpha[bus_number])
+    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 # Add lines
 line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
 line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
@@ -56,22 +56,28 @@ print("")
 print("Task 2.")
 print("Primal Fast Decoupled Power Flow")
 
-#Reset X-vector til flat start
+#Reset X-vector to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 
 phase = "Primal"
-#Initialize primal jacobian (phase)
+#Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
 
-while fast_dec.power_error() > 0.0001:
-    #p_calc
-    #theta correction = B_p.invers*P_mismatch(v, theta)
+while fast_dec.power_error() > 0.001:
+    # Calculate active power injections
+    fast_dec.calculate_P_injections()
+    # Calculate the mismatches
+    fast_dec.calculate_fast_decoupled_mismatches()
+    # Calculate the corrections for angles
+    theta_correction = np.linalg.solve(fast_dec.B_p, fast_dec.mismatch.get_P())
+    # Update the angles based on the corrections
     #update theta i X-vector, theta_new = theta_correction + theta_old
 
-    #Q_calc(basert på oppdatert theta og forrige spenning)
-    #voltage_correction = B_dp.invers*Q_mismatch(v, theta_updated)
+    # Calculate reactive power injections based on new angles
+
+    #voltage_correction = B_dp.invers*Q_mismatch(v, theta_updated) (samme som over)
     #update voltage i X-vector, V_new = V_correction + v_old
 
     if fast_dec.diverging():
@@ -80,12 +86,16 @@ while fast_dec.power_error() > 0.0001:
 
 print("Dual Fast Decoupled Power Flow")
 # Reset X-vector til flat start
+for bus_number in V:
+    buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 
-# phase = "Dual"
+phase = "Dual"
 # Initialize primal jacobian (phase)
+fast_dec.set_up_matrices(phase)
 
 while fast_dec.power_error() > 0.0001:
-
+    # Samme som primal men motsatt retning
     # Q_calc(basert på forrige iterasjon oppdaterte x-verdier)
     # voltage_correction = B_dp.invers*Q_mismatch(v, theta)
     # update voltage i X-vector, V_new = V_correction + v_old
@@ -100,9 +110,13 @@ while fast_dec.power_error() > 0.0001:
 
 print("Standard Decoupled Power Flow") #Standard er lik primal med en enklere jacobian (helt uavhengig av r_ij)
 # Reset X-vector til flat start
+for bus_number in V:
+    buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 
-# phase = "Standard"
+phase = "Standard"
 # Initialize primal jacobian (phase)
+fast_dec.set_up_matrices(phase)
 
 while fast_dec.power_error() > 0.0001:
     # p_calc
