@@ -47,6 +47,8 @@ while fast_dec.power_error() > 0.0001:
     if fast_dec.diverging():
         print("No convergence")
         break
+
+NR_iterations = fast_dec.iteration
 print("")
 print("Base case condition assuming a flat start")
 fast_dec.print_matrices()
@@ -65,7 +67,7 @@ fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 phase = "Primal"
 #Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
-run_primal_method(fast_dec, printing=True)
+primal_iterations = run_primal_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
 print("\n", 100*"*")
@@ -79,7 +81,7 @@ phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
 iteration = 1
-run_dual_method(fast_dec, printing=True)
+dual_iterations = run_dual_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
 print("\n", 100*"*")
@@ -92,5 +94,9 @@ fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 phase = "Standard"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
-run_standard_method(fast_dec, printing=True)
+standard_iterations = run_standard_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
+print("\nNewton raphson iterations: ", NR_iterations)
+print("Primal iterations: ", primal_iterations)
+print("Dual iterations: ", dual_iterations)
+print("Standard iterations: ", standard_iterations)
