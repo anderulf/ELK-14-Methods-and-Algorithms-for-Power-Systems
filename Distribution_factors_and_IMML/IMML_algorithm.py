@@ -17,9 +17,9 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
         H[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = H[
             line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
     # Get the sum of the rows
-    diagonal_elements = np.sum(H, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+    diagonal_elements = np.sum(H, axis=1)  # axis 1 meaning the we sum each column along the rows
     for i, Y_ii in enumerate(diagonal_elements):
-        H[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+        H[i, i] = -Y_ii  # subtracting because the off diagonal elements are negative (--=+)
     # Remove slack bus
     H = np.delete(H, slack_bus_number - 1, axis=0)
     H = np.delete(H, slack_bus_number - 1, axis=1)
@@ -41,8 +41,9 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
     delta_0 = np.linalg.solve(H, P_array)
     temp_correction_2 = np.matmul(np.transpose(M), delta_0)[0][0] # Is a scalar value
     c_inverse = 1/delta_h + np.linalg.inv(H)[from_bus-1, from_bus-1] - np.linalg.inv(H)[from_bus-1, to_bus-1] # Is generally a scalar value
-    # Utilizing scalar values is a lot more efficiency compared to using matrix multiplication for larger systems
     c = 1/c_inverse
+    # Utilizing scalar values is a lot more efficiency compared to using matrix multiplication for larger systems
+    #Special Case occurs when running several modifaction in the systems simustaneously
     delta_correction_temp_1 = c * temp_correction_2
     delta_correction = -x * delta_correction_temp_1
     delta = delta_0 + delta_correction

@@ -26,7 +26,7 @@ P_change1 = a[0,0]*(P_1-0.5)+a[1,0]*P_2+a[2,0]*P_3
 P_change2 = a[0,0]*(P_1-0.5)+a[1,0]*(P_2+0.3)+a[2,0]*P_3
 print('-----Line 1-2 ----')
 print("b:",b)
-print("alpha:",a)
+print("a:",a)
 print("P_12:",P)
 print('When increasing the load at bus one with 0.5pu')
 print("The loadflow 1-2 is canged by:",P_change1-P)
@@ -41,7 +41,7 @@ P_change1 = a[0,0]*(P_1-0.5)+a[1,0]*P_2+a[2,0]*P_3
 P_change2 = a[0,0]*(P_1-0.5)+a[1,0]*(P_2+0.3)+a[2,0]*P_3
 print('-----Line 1-3 ------')
 print("b:",b)
-print("alpha:",a)
+print("a:",a)
 print("P_13:",P)
 print('When increasing the load at bus one with 0.5pu')
 print("The loadflow 1-3 is canged by:",P_change1-P)
@@ -58,7 +58,7 @@ P_change1 = a[0,0]*(P_1-0.5)+a[1,0]*P_2+a[2,0]*P_3
 P_change2 = a[0,0]*(P_1-0.5)+a[1,0]*(P_2+0.3)+a[2,0]*P_3
 print('------Line 2-3 -------')
 print("b:",b)
-print("alpha:",a)
+print("a:",a)
 print("P_23:",P)
 print('When increasing the load at bus one with 0.5pu')
 print("The loadflow 2-3 is canged by:",P_change1-P)
@@ -75,15 +75,17 @@ P_change1 = a[0,0]*(P_1-0.5)+a[1,0]*P_2+a[2,0]*P_3
 P_change2 = a[0,0]*(P_1-0.5)+a[1,0]*(P_2+0.3)+a[2,0]*P_3
 print('-----Line 3-4------ ')
 print("b:",b)
-print("alpha:",a)
+print("a:",a)
 print("P_34:",P)
 
 
 print('The consept of distribution factors is to avoid calculating the angles')
-print('look above to see the distribution factor for each line (alpha)')
+print('look above to see the distribution factor for each line (a)')
 print('When increasing the load at bus one with 0.5pu')
-print("The loadflow 3-4 is canged by:",P_change1-P)
+print("The loadflow 3-4 is changed by:",P_change1-P)
 print('When increasing the load at bus one with 0.5pu, and decreased by 0.3 at bus 2')
-print("The loadflow 3-4 is canged by:",P_change2-P)
+print("The loadflow 3-4 is changed by:",P_change2-P)
 
 print(' ')
+
+print("\n Task 1")
