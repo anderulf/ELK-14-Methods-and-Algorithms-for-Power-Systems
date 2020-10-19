@@ -4,7 +4,7 @@ from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
 """
 Settings
 """
-outage_task_2 = "2-3"
+outage_task_2 = "1-2"
 outage_task_3 = "1-3"
 """
 Input values
@@ -18,8 +18,9 @@ Q = {"1": 0, "2": 0, "3": 0, "4": None}
 P = {"1": -1.25, "2": -0.4, "3": -0.6, "4": None}
 # line data
 r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
-x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.25, "3-4": 0.25}# Create buses
+x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.25, "3-4": 0.25}
 
+# Create buses
 buses = {}
 for bus_number in V:
     buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number] )
