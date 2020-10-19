@@ -1,0 +1,163 @@
+from classes import Load_Flow, Bus, Line
+import numpy as np
+"""
+Input values
+"""
+slack_bus_number = 4
+V = {"1": 1, "2": 1, "3": 1, "4": 1 }
+delta = {"1": 0, "2": 0, "3": 0, "4": 0}
+# Q values from assignment
+Q = {"1": 0, "2": 0, "3": 0, "4": None}
+# P values from project
+P = {"1": -1, "2": -0.5, "3": -0.5, "4": None}
+# line data
+r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
+x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.25, "3-4": 0.25}# Create buses
+
+buses = {}
+for bus_number in V:
+    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number] )
+# Add lines
+line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
+line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
+line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
+line_34 =Line(buses[3], buses[4], r["3-4"], x["3-4"])
+
+lines = [line_12, line_13, line_23, line_34]
+
+"""
+Program
+"""
+#Part 2
+print("\nTask 1.")
+print("\nIMML is a fast and general technique for simulating impacts of modifying a network topolgy, such as outages and compensations. "
+      "The method is based on creating three sub-matrices, H, delta_h and M, which will be constant during the entire process. "
+      "H describes the original network topology, delta_h reflects what to me manipulated and M reflects which lines/buses to be affected by the "
+      "manipulation. The results/solutions after applying an IMML are the state of the new voltage angles as well as the new power flow for the given modification\n")
+
+print("\nTask 2.")
+#Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
+
+
+H = np.zeros([len(buses), len(buses)], dtype=float)
+for line in lines:
+    H[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+    H[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = H[
+        line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+# Get the sum of the rows
+diagonal_elements = np.sum(H, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+for i, Y_ii in enumerate(diagonal_elements):
+    H[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+# Remove slack bus
+H = np.delete(H, slack_bus_number - 1, axis=0)
+H = np.delete(H, slack_bus_number - 1, axis=1)
+print("\n", H)
+outage = "2-3"
+from_bus, to_bus = outage.split("-")
+from_bus = int(from_bus)
+to_bus = int(to_bus)
+delta_h = H[from_bus-1, to_bus-1]
+M = np.zeros([len(buses)-1, 1])
+M[from_bus-1] = 1
+M[to_bus-1] = -1
+P_array = np.zeros([len(buses)-1, 1])
+for bus in P:
+    if int(bus) == slack_bus_number:
+        pass
+    else:
+        P_array[int(bus)-1] = P[bus]
+print("\n", P_array)
+delta_0 = np.linalg.solve(H, P_array)
+#temp = np.linalg.inv(H)
+#delta_0 = np.matmul(temp, P_array)
+print("\nDelta_0:\n ", delta_0)
+temp_correction_1 = np.linalg.solve(H, M)
+temp_correction_2 = delta_0[from_bus-1][0] - delta_0[to_bus-1][0]
+c_inverse = 1/delta_h + np.linalg.inv(H)[from_bus-1, from_bus-1] - np.linalg.inv(H)[from_bus-1, to_bus-1]
+c = 1/c_inverse
+print("\nTemp correction 1: \n", temp_correction_1)
+print("\nTemp correction 2: \n", temp_correction_2)
+print("\nc_inverse: \n", c_inverse)
+print("\nc: \n", c)
+delta_correction_temp_1 = c * temp_correction_2
+delta_correction = -temp_correction_1 * delta_correction_temp_1
+print("\n", delta_correction)
+delta = delta_0 + delta_correction
+index = 0
+for bus in buses.values():
+    if bus.bus_number == slack_bus_number :
+        pass
+    else:
+        bus.delta = delta[index]
+        index += 1
+
+print("\nNew angles: \n", delta)
+for line in lines:
+    if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
+        pass
+    else:
+        print("P on", line.name, ":", (line.from_bus.delta - line.to_bus.delta)/line.reactance)
+
+
+print("\nTask 3.")
+
+H = np.zeros([len(buses), len(buses)], dtype=float)
+for line in lines:
+    H[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
+    H[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = H[
+        line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
+# Get the sum of the rows
+diagonal_elements = np.sum(H, axis=1)  # axis 1 meaning the we sum each colomn along the rows
+for i, Y_ii in enumerate(diagonal_elements):
+    H[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+# Remove slack bus
+H = np.delete(H, slack_bus_number - 1, axis=0)
+H = np.delete(H, slack_bus_number - 1, axis=1)
+print("\nH-matrix: \n", H)
+outage = "1-3"
+from_bus, to_bus = outage.split("-")
+from_bus = int(from_bus)
+to_bus = int(to_bus)
+delta_h = H[from_bus-1, to_bus-1]/2
+print("\ndelta_h: ", delta_h)
+M = np.zeros([len(buses)-1, 1])
+M[from_bus-1] = 1
+M[to_bus-1] = -1
+print("\nM:\n", M)
+P_array = np.zeros([len(buses)-1, 1])
+for bus in P:
+    if int(bus) == slack_bus_number:
+        pass
+    else:
+        P_array[int(bus)-1] = P[bus]
+print("\nP_array: \n", P_array)
+delta_0 = np.linalg.solve(H, P_array)
+#temp = np.linalg.inv(H)
+#delta_0 = np.matmul(temp, P_array)
+print("\nDelta_0:\n ", delta_0)
+temp_correction_1 = np.linalg.solve(H, M)
+temp_correction_2 = delta_0[from_bus-1][0] - delta_0[to_bus-1][0]
+c_inverse = 1/delta_h + np.linalg.inv(H)[from_bus-1, from_bus-1] - np.linalg.inv(H)[from_bus-1, to_bus-1]
+c = 1/c_inverse
+print("\nTemp correction 1: \n", temp_correction_1)
+print("\nTemp correction 2: \n", temp_correction_2)
+print("\nc_inverse: \n", c_inverse)
+print("\nc: \n", c)
+delta_correction_temp_1 = c * temp_correction_2
+delta_correction = -temp_correction_1 * delta_correction_temp_1
+print("\ndelta_corrections: \n", delta_correction)
+delta = delta_0 + delta_correction
+index = 0
+for bus in buses.values():
+    if bus.bus_number == slack_bus_number :
+        pass
+    else:
+        bus.delta = delta[index][0]
+        index += 1
+print("\nNew angles: \n", delta, "\n")
+# Removal of one line means the equivalent impedance on the remaining line is doubled
+line_13.reactance *= 2
+for line in lines:
+    print("P on", line.name, ":", (line.from_bus.delta - line.to_bus.delta)/line.reactance)
+
+
