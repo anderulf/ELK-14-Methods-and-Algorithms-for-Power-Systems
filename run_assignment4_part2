@@ -79,7 +79,7 @@ print("\nP-vector: ", P_array)
 delta_0 = np.linalg.solve(H, P_array)
 print("\nDelta_0:\n ", delta_0)
 #temp_correction_2 = delta_0[from_bus-1][0] - delta_0[to_bus-1][0]
-temp_correction_2 = np.matmul(np.transpose(M), delta_0)
+temp_correction_2 = np.matmul(np.transpose(M), delta_0)[0]
 c_inverse = 1/delta_h + x[from_bus-1] - x[to_bus-1]
 c = 1/c_inverse[0]
 print("\nx-vector: \n", x)
@@ -99,7 +99,7 @@ for bus in buses.values():
         bus.delta = delta[index][0]
         index += 1
 
-print("\nNew angles: \n", delta)
+print("\nNew angles: \n", delta, "\n")
 for line in lines:
     if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
         pass
@@ -143,7 +143,7 @@ for bus in P:
 print("\nP_array: \n", P_array)
 delta_0 = np.linalg.solve(H, P_array)
 print("\nDelta_0:\n ", delta_0)
-temp_correction_2 = delta_0[from_bus-1][0] - delta_0[to_bus-1][0]
+temp_correction_2 = np.matmul(np.transpose(M), delta_0)  
 c_inverse = 1/delta_h + np.linalg.inv(H)[from_bus-1, from_bus-1] - np.linalg.inv(H)[from_bus-1, to_bus-1]
 c = 1/c_inverse
 print("\nX-vector: \n", x)
