@@ -10,7 +10,7 @@ Second project: Continuation Power Flow
 
 Third project: Fast Decoupled Power Flow
 
-Fourth project: -
+Fourth project: Distribution Factors and Inverse Matrix Modification Lemma
 
-Fifth project: -
+Fifth project: Benders Decomposition - Optimal DC Power Flow
 
