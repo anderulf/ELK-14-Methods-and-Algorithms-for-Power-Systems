@@ -1,5 +1,6 @@
 from classes import Bus, Line
 from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
+import numpy as np
 
 """
 Settings
@@ -58,5 +59,22 @@ from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_tas
 line_13.reactance *= 2
 for line in lines:
     print("P on", line.name, ":", (line.from_bus.delta - line.to_bus.delta)/line.reactance)
+
+P_array_new = np.zeros([len(buses) - 1, 1])
+for line in lines:
+    if line.from_bus.bus_number == slack_bus_number:
+        pass
+    else:
+        P_array_new[line.from_bus.bus_number-1][0] += (line.from_bus.delta - line.to_bus.delta)/line.reactance
+        print("line:", line.name)
+        print("\nline_reactance: \n", line.reactance, "\n")
+
+    if line.to_bus.bus_number != slack_bus_number:
+        P_array_new[line.to_bus.bus_number - 1][0] += -(line.from_bus.delta - line.to_bus.delta) / line.reactance
+    else:
+        pass
+
+print("\nP_array_new: \n", P_array_new, "\n")
+
 
 

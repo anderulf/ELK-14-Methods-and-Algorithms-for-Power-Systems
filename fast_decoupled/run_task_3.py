@@ -12,7 +12,7 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 # P values from project
 P = {"1": -1, "2": -0.5, "3": None}
 # line data
-x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
+x = {"1-2": 0.2, "1-3": 0.2 , "2-3": 0.15}
 # 3
 # Set Rij = Xij
 r = x
@@ -72,4 +72,4 @@ fast_dec.set_up_matrices(phase)
 dual_iterations = run_dual_method(fast_dec, printing=True)
 print("\nPrimal method iterations: ", primal_iterations)
 print("Dual method iterations: ", dual_iterations)
-print("\nDual method converges faster for Rij = Xij in bigger systems. In this small 3 bus system the difference is minor")
+print("\nDual method converges faster for Rij = Xij in larger systems. In this small 3 bus system the difference is minor")
