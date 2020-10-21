@@ -34,6 +34,9 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 lines = [line_12, line_13, line_23]
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+#reset calc values
+fast_dec.calc_new_power_injections()
+
 fast_dec.set_up_matrices()
 
 #4.

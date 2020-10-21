@@ -14,8 +14,8 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 P = {"1": -1, "2": -0.5, "3": None}
 
 # line data
-r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
-x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
+r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
+x = {"1-2": 0.2, "1-3": 0.2 , "2-3": 0.15}
 
 # Create buses
 buses = {}
@@ -44,6 +44,7 @@ while fast_dec.power_error() > 0.0001:
     fast_dec.jacobian.create()
     fast_dec.find_x_diff()
     fast_dec.update_values()
+    fast_dec.print_matrices()
     if fast_dec.diverging():
         print("No convergence")
         break
@@ -62,11 +63,15 @@ print("Primal Fast Decoupled Power Flow")
 #Reset X-vector to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+#reset calc values
+fast_dec.calc_new_power_injections()
 
 phase = "Primal"
 #Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
+fast_dec.print_matrices()
 primal_iterations = run_primal_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
@@ -76,10 +81,13 @@ print("Dual Fast Decoupled Power Flow")
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+#reset calc values
+fast_dec.calc_new_power_injections()
 
 phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
+fast_dec.print_matrices()
 iteration = 1
 dual_iterations = run_dual_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
@@ -90,6 +98,8 @@ print("Standard Decoupled Power Flow")
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+#reset calc values
+fast_dec.calc_new_power_injections()
 
 phase = "Standard"
 # Initialize primal jacobian (phase)

@@ -29,33 +29,19 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 lines = [line_12, line_13, line_23]
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
-fast_dec.set_up_matrices()
-
+#set initial calc values
+#fast_dec.calc_new_power_injections()
 
 #3.
 print("\n", 150*"#")
 print("Task 3.")
 
-# Reset buses
-# Create buses
-buses = {}
-for bus_number in V:
-    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
-
-# # Create lines with new data
-line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
-line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
-line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
-
-lines = [line_12, line_13, line_23]
-
-# Recreate object
-fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 print("Primal Fast Decoupled Power Flow with R = X")
 phase = "Primal"
 
 #Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
+fast_dec.print_matrices()
 primal_iterations = run_primal_method(fast_dec, printing=True)
 
 print("\n", 100*"*")
@@ -63,11 +49,15 @@ print("Dual Fast Decoupled Power Flow with R = X")
 # Reset to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
+#reset calc values
+fast_dec.calc_new_power_injections()
 
 phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
+fast_dec.print_matrices()
 
 dual_iterations = run_dual_method(fast_dec, printing=True)
 print("\nPrimal method iterations: ", primal_iterations)

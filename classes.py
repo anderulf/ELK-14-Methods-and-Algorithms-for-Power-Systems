@@ -377,6 +377,8 @@ class Bus:
         self.delta = delta
         self.delta_p = 1
         self.delta_q = 1
+        #self.p_calc = 0
+        #self.calc = 0
 
     def print_data(self, slack_bus_number):
         """
@@ -798,8 +800,10 @@ class Fast_Decoupled(Load_Flow):
 
         if phase == "Primal":
             self.B_p = self.H
+            print("Jacobian_B_p:\n", self.B_p)
         elif phase == "Dual":
             self.B_dp = self.L
+            print("Jacobian_B_dp:\n", self.B_dp)
         self.create_modified_jacobians(phase)
         #self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
 
@@ -830,10 +834,11 @@ class Fast_Decoupled(Load_Flow):
             # Get the sum of the rows
             diagonal_elements = np.sum(self.B_dp, axis=1)  # axis 1 meaning the we sum each colomn along the rows
             for i, Y_ii in enumerate(diagonal_elements):
-                self.B_dp[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
+                self.B_dp[i, i] = -Y_ii  # subtracting because the off diagonal elements are negative (--=+)
             # Remove row and column of slack bus
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=0)
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=1)
+            print("Jacobian_B_dp:\n", self.B_dp)
             """
             ## Second part of matrix (Q jacobian)
             # Extract first row of matrix
@@ -864,6 +869,7 @@ class Fast_Decoupled(Load_Flow):
             # Remove row and column of slack bus
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+            print("Jacobian_B_p:\n", self.B_p)
             """
             ## First part of jacobian matrix (P jacobian)
             # Extract first row of matrix
@@ -910,6 +916,8 @@ class Fast_Decoupled(Load_Flow):
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
             self.B_dp = self.B_p
+            print("Jacobian_B_p:\n", self.B_p)
+            print("Jacobian_B_dp:\n", self.B_dp)
             """
             ## Create the first part of the jacobian
             # Extract first row of matrix
@@ -1010,13 +1018,13 @@ class Fast_Decoupled(Load_Flow):
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("P{} = {}".format(bus.bus_number, bus.p_spec))
+                print("P{} = {}".format(bus.bus_number, bus.p_calc))
         print("\nQ injections:")
         for bus in self.buses_dict.values():
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("Q{} = {}".format(bus.bus_number, bus.q_spec))
+                print("Q{} = {}".format(bus.bus_number, bus.q_calc))
         print("\nP Mismatches:")
         print(np.c_[self.mismatch.get_P_label(), self.mismatch.get_P()])
         print("\nQ Mismatches:")
