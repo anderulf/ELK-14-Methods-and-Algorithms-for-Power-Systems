@@ -1,6 +1,6 @@
 from classes import Bus, Line, Fast_Decoupled
 from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method, run_standard_method
-import numpy as np
+from supporting_methods import print_title1, print_title2
 """
 Initial values
 """
@@ -33,8 +33,7 @@ fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 fast_dec.set_up_matrices()
 
 # Calculate initial load flow (Point A)
-print("")
-print("Task 1.")
+print_title1("Task 1")
 while fast_dec.power_error() > 0.0001:
     fast_dec.iteration += 1
     fast_dec.reset_values()
@@ -55,9 +54,8 @@ print("Base case condition assuming a flat start")
 fast_dec.print_matrices()
 
 #2.
-print("\n",150*"#")
-print("Task 2.")
-print("Primal Fast Decoupled Power Flow")
+print_title1("Task 2")
+print_title2("Primal Fast Decoupled Power Flow")
 
 #Reset X-vector to flat start
 for bus_number in V:
@@ -74,8 +72,7 @@ fast_dec.print_matrices()
 primal_iterations = run_primal_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
-print("\n", 100*"*")
-print("Dual Fast Decoupled Power Flow")
+print_title2("Dual Fast Decoupled Power Flow")
 # Reset to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
@@ -87,12 +84,10 @@ phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
 fast_dec.print_matrices()
-iteration = 1
 dual_iterations = run_dual_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
-print("\n", 100*"*")
-print("Standard Decoupled Power Flow")
+print_title2("Standard Decoupled Power Flow")
 # Reset to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])

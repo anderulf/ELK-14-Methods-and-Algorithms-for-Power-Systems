@@ -1,4 +1,5 @@
 import numpy as np
+from supporting_methods import print_title3
 
 def run_primal_method(fast_dec, printing=False):
     """
@@ -24,7 +25,7 @@ def run_primal_method(fast_dec, printing=False):
         # Update voltage i X-vector, V_new = V_correction + v_old
         fast_dec.update_fast_decoupled_voltage_or_angle(voltages=voltage_correction)
         if printing:
-            print("\n", 25 * "-", "Iteration: {}".format(fast_dec.iteration), 25 * "-")
+            print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
@@ -56,7 +57,7 @@ def run_dual_method(fast_dec, printing=False):
         # Update theta in X-vector, theta_new = theta_correction + theta_old
         fast_dec.update_fast_decoupled_voltage_or_angle(angles=theta_correction)
         if printing:
-            print("\n", 25 * "-", "Iteration: {}".format(fast_dec.iteration), 25 * "-")
+            print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
@@ -87,7 +88,7 @@ def run_standard_method(fast_dec, printing=False):
         # Update voltage i X-vector, V_new = V_correction + v_old
         fast_dec.update_fast_decoupled_voltage_or_angle(voltages=voltage_correction)
         if printing:
-            print("\n", 25* "-", "Iteration: {}".format(fast_dec.iteration), 25 * "-")
+            print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
