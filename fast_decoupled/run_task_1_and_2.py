@@ -35,21 +35,6 @@ fast_dec.set_up_matrices()
 # Calculate initial load flow (Point A)
 print_title1("Task 1")
 run_newton_raphson(fast_dec, printing=False)
-"""
-while fast_dec.power_error() > 0.0001:
-    fast_dec.iteration += 1
-    fast_dec.reset_values()
-    #print("\nIteration: {}\n".format(continuation.iteration))
-    fast_dec.calc_new_power_injections()
-    fast_dec.error_specified_vs_calculated()
-    fast_dec.jacobian.create()
-    fast_dec.find_x_diff()
-    fast_dec.update_values()
-    fast_dec.print_matrices()
-    if fast_dec.diverging():
-        print("No convergence")
-        break
-"""
 NR_iterations = fast_dec.iteration
 print("")
 print("Base case condition assuming a flat start calculated with regular newton raphson method:")
@@ -70,7 +55,6 @@ fast_dec.calc_new_power_injections()
 phase = "Primal"
 #Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
-fast_dec.print_matrices()
 primal_iterations = run_primal_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
@@ -85,7 +69,6 @@ fast_dec.calc_new_power_injections()
 phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
-fast_dec.print_matrices()
 dual_iterations = run_dual_method(fast_dec, printing=True)
 fast_dec.print_final_solution(phase)
 
