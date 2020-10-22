@@ -13,7 +13,7 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 P = {"1": -1, "2": -0.5, "3": None}
 # line data
 x = {"1-2": 0.2, "1-3": 0.2 , "2-3": 0.15}
-# 3
+# Task 3
 # Set Rij = Xij
 r = x
 
@@ -29,10 +29,7 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 lines = [line_12, line_13, line_23]
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
-#set initial calc values
-#fast_dec.calc_new_power_injections()
 
-#3.
 print("\n", 150*"#")
 print("Task 3.")
 
@@ -51,15 +48,16 @@ for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
-#reset calc values
+# Reset calculated injections
 fast_dec.calc_new_power_injections()
 
 phase = "Dual"
-# Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
 fast_dec.print_matrices()
 
 dual_iterations = run_dual_method(fast_dec, printing=True)
+
 print("\nPrimal method iterations: ", primal_iterations)
 print("Dual method iterations: ", dual_iterations)
 print("\nDual method converges faster for Rij = Xij in larger systems. In this small 3 bus system the difference is minor")
+print("When Xij>Rij the fast decoupled power flow method converges significantly faster")

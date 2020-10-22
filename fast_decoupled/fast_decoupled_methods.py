@@ -5,9 +5,9 @@ def run_primal_method(fast_dec, printing=False):
     Inputs a Fast_Decoupled object fast_dec
     returns the number of iterations
     """
-    iteration = 0
+    fast_dec.iteration = 0
     while fast_dec.power_error() > 0.0001:
-        iteration += 1
+        fast_dec.iteration += 1
         # Calculate active power injections
         fast_dec.calculate_P_injections()
         # Calculate the mismatches
@@ -24,21 +24,21 @@ def run_primal_method(fast_dec, printing=False):
         # Update voltage i X-vector, V_new = V_correction + v_old
         fast_dec.update_fast_decoupled_voltage_or_angle(voltages=voltage_correction)
         if printing:
-            print("\nIteriation ", iteration)
+            print("\nIteriation ", fast_dec.iteration)
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
             break
-    return iteration
+    return fast_dec.iteration
 
 def run_dual_method(fast_dec, printing=False):
     """
     Inputs a Fast_Decoupled object fast_dec
     Returns the number of iterations
     """
-    iteration = 0
+    fast_dec.iteration = 0
     while fast_dec.power_error() > 0.0001:
-        iteration += 1
+        fast_dec.iteration += 1
         # Calculate reactive power injections
         fast_dec.calculate_Q_injections()
         fast_dec.calculate_fast_decoupled_mismatches("Q")
@@ -56,17 +56,21 @@ def run_dual_method(fast_dec, printing=False):
         # Update theta in X-vector, theta_new = theta_correction + theta_old
         fast_dec.update_fast_decoupled_voltage_or_angle(angles=theta_correction)
         if printing:
-            print("\nIteriation ", iteration)
+            print("\nIteriation ", fast_dec.iteration)
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
             break
-    return iteration
+    return fast_dec.iteration
 
 def run_standard_method(fast_dec, printing=False):
-    iteration = 0
+    """
+    Implements the standard fast decoupled method.
+    This method utilizes a very simple jacobian
+    """
+    fast_dec.iteration = 0
     while fast_dec.power_error() > 0.0001:
-        iteration += 1
+        fast_dec.iteration += 1
         # Calculate active power injections
         fast_dec.calculate_P_injections()
         # Calculate the mismatches
@@ -83,9 +87,9 @@ def run_standard_method(fast_dec, printing=False):
         # Update voltage i X-vector, V_new = V_correction + v_old
         fast_dec.update_fast_decoupled_voltage_or_angle(voltages=voltage_correction)
         if printing:
-            print("\nIteration ", iteration)
+            print("\nIteration ", fast_dec.iteration)
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
             print("No convergence")
             break
-    return iteration
+    return fast_dec.iteration

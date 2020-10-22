@@ -79,12 +79,12 @@ print("a:",a)
 print("P_34:",P)
 
 
-print('The consept of distribution factors is to avoid calculating the angles')
+print('\nThe consept of distribution factors is to avoid calculating the angles')
 print('look above to see the distribution factor for each line (a)')
 print('When increasing the load at bus one with 0.5pu')
-print("The loadflow 3-4 is changed by:",P_change1-P)
-print('When increasing the load at bus one with 0.5pu, and decreased by 0.3 at bus 2')
-print("The loadflow 3-4 is changed by:",P_change2-P)
+print("The loadflow on line 3-4 is changed by: {}pu".format(round(P_change1-P, 3)) )
+print('When increasing the load at bus one with 0.5pu, and decreasing by 0.3pu at bus 2')
+print("The loadflow on line 3-4 is changed by: {}pu".format(round(P_change2-P, 3)))
 
 print(' ')
 
