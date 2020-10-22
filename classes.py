@@ -2,7 +2,8 @@
 import cmath as ma
 import copy
 from supporting_methods import polar_to_rectangular
-np.set_printoptions(suppress=True)
+# Numpy printing options
+np.set_printoptions(suppress=True)  # suppress scientific notations
 
 class Load_Flow:
     def __init__(self, buses, slack_bus_number, lines):
@@ -19,8 +20,6 @@ class Load_Flow:
         self.buses_dict: dictionary holding key: bus number value: bus object
             Dictionary type is used because it gives better control over indexing. Now indexing can be done per bus number (key), and not from
             the position in the list
-
-        The limit flag is used to know if the reactive power limit has been reached
 
         The line objects in lines contains bus objects, which means that changing the buses will also change the lines.
         Hence updating the lines is not necessary if the buses are updated.
@@ -43,7 +42,6 @@ class Load_Flow:
         self.jacobian = Jacobian(self.n_pq, self.n, self.m, buses, self.y_bus)
         self.total_losses_p = 0
         self.total_losses_q = 0
-        self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
         self.x_diff = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
@@ -140,23 +138,6 @@ class Load_Flow:
                 self.net_losses_p += round(buses[i].p_calc, 3)
                 self.net_losses_q += round(buses[i].q_calc, 3)
 
-
-    def check_limit(self, q_limit, lim_bus, lim_size):
-        """
-        Check if a certain bus has reached the q_limit, and change the bus if it has
-        """
-        if q_limit:
-            if self.buses_dict[lim_bus].q_calc > lim_size and not self.limit_flag:
-                self.limit_flag = 1
-                self.buses_dict[lim_bus].q_spec = lim_size
-            if self.buses_dict[lim_bus].q_calc < lim_size and self.limit_flag:
-                self.limit_flag = 0
-                self.buses_dict[lim_bus].q_spec = None
-            self.n_pq = 0
-            self.n_pv = 0
-            self.n_slack = 0
-            self.calculate_n_values()
-
     def error_specified_vs_calculated(self):
         """
         Finds all the error terms and store in object
@@ -171,7 +152,6 @@ class Load_Flow:
                 if self.buses_dict[bus].q_spec:
                     self.buses_dict[bus].delta_q = self.buses_dict[bus].q_spec - self.buses_dict[bus].q_calc
 
-
     def power_error(self):
         """
         Adds all the error terms to a list and returns the maximum value of the list
@@ -181,12 +161,9 @@ class Load_Flow:
         buses = self.buses_dict
         for i in buses:
             # Ignore all buses which doesn't have a specified value (value == None)
-            #print("\nBus: ", buses[i].bus_number)
             if not buses[i].p_spec == None:
-                #print("\nDelta_p:", abs(buses[i].delta_p))
                 error_list.append(abs(buses[i].delta_p))
             if not buses[i].q_spec == None:
-                #print("\nDelta_q:", abs(buses[i].delta_q))
                 error_list.append(abs(buses[i].delta_q))
         self.error_history.append(max(error_list))
         return max(error_list)
@@ -301,8 +278,6 @@ class Load_Flow:
                 self.x_vector_labels.insert(i-1, "\u03B4" + str(i))
                 self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
 
-
-
     def print_buses(self):
         """
         Prints the data for all the bus. Mostly needed for debugging
@@ -331,10 +306,6 @@ class Load_Flow:
         print(np.c_[self.correction_vector_labels, np.round(self.x_diff, 4)])
         print("\nNew x vector")
         print(np.c_[self.x_vector_labels, np.round(self.x_new, 4)])
-       # print("P_total_losses {}".format(self.net_losses_p))
-       # print("Q_total_losses {}".format(self.net_losses_q))
-       # print("P_total_losses_2nd_method {}".format(self.total_losses_p))
-       # print("Q_total_losses_2nd_method {}".format(self.total_losses_q))
 
 class Bus:
     """
@@ -377,8 +348,6 @@ class Bus:
         self.delta = delta
         self.delta_p = 1
         self.delta_q = 1
-        #self.p_calc = 0
-        #self.calc = 0
 
     def print_data(self, slack_bus_number):
         """
@@ -397,9 +366,9 @@ class Bus:
         else:
             q_spec = None
         print(
-            "Bus {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
+            "Bus {}: P_spec = {}pu, Q_spec = {}pu, voltage = {}pu, delta = {}\u00B0, P_calc = {}pu, Q_calc = {}pu, deltaP = {}pu, deltaQ = {}pu".format(
                 self.bus_number, p_spec, q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
-                round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
+                f"{self.p_calc:.4f}", f"{self.q_calc:.4f}", f"{self.delta_p:.4f}", f"{self.delta_q:.4f}") + s)
 
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):

@@ -54,8 +54,7 @@ print("")
 print("Base case condition assuming a flat start")
 fast_dec.print_matrices()
 
-#2. #Viktig at vi deler opp, oppdaterer P_calc og Q_calc underveis med oppdatert theta og v.
-# Ikke løs samtidig (for store system er det mye mindre effektivt å løse samtidig)
+#2.
 print("\n",150*"#")
 print("Task 2.")
 print("Primal Fast Decoupled Power Flow")
