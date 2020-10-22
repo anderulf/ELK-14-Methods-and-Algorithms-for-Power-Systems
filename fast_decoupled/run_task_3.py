@@ -1,5 +1,6 @@
 from classes import Bus, Line, Fast_Decoupled
 from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method
+from supporting_methods import print_title1, print_title2
 """
 Initial values
 """
@@ -30,10 +31,9 @@ lines = [line_12, line_13, line_23]
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 
-print("\n", 150*"#")
-print("Task 3.")
+print_title1("Task 3")
 
-print("Primal Fast Decoupled Power Flow with R = X")
+print_title2("Primal Fast Decoupled Power Flow with R = X")
 phase = "Primal"
 
 #Initialize primal jacobian
@@ -41,8 +41,7 @@ fast_dec.set_up_matrices(phase)
 fast_dec.print_matrices()
 primal_iterations = run_primal_method(fast_dec, printing=True)
 
-print("\n", 100*"*")
-print("Dual Fast Decoupled Power Flow with R = X")
+print_title2("Dual Fast Decoupled Power Flow with R = X")
 # Reset to flat start
 for bus_number in V:
     buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])

@@ -1,8 +1,9 @@
 ﻿import numpy as np
 import cmath as ma
 import copy
-from supporting_methods import polar_to_rectangular
-
+from supporting_methods import polar_to_rectangular, run_newton_raphson
+# Numpy printing options
+np.set_printoptions(suppress=True)  # suppress scientific notations
 
 class Load_Flow:
     def __init__(self, buses, slack_bus_number, lines):
@@ -19,8 +20,6 @@ class Load_Flow:
         self.buses_dict: dictionary holding key: bus number value: bus object
             Dictionary type is used because it gives better control over indexing. Now indexing can be done per bus number (key), and not from
             the position in the list
-
-        The limit flag is used to know if the reactive power limit has been reached
 
         The line objects in lines contains bus objects, which means that changing the buses will also change the lines.
         Hence updating the lines is not necessary if the buses are updated.
@@ -43,7 +42,6 @@ class Load_Flow:
         self.jacobian = Jacobian(self.n_pq, self.n, self.m, buses, self.y_bus)
         self.total_losses_p = 0
         self.total_losses_q = 0
-        self.limit_flag = 0
         self.x_new = np.zeros([self.m, 1])
         self.x_diff = np.zeros([self.m, 1])
         self.x_old = np.zeros([self.m, 1])
@@ -140,23 +138,6 @@ class Load_Flow:
                 self.net_losses_p += round(buses[i].p_calc, 3)
                 self.net_losses_q += round(buses[i].q_calc, 3)
 
-
-    def check_limit(self, q_limit, lim_bus, lim_size):
-        """
-        Check if a certain bus has reached the q_limit, and change the bus if it has
-        """
-        if q_limit:
-            if self.buses_dict[lim_bus].q_calc > lim_size and not self.limit_flag:
-                self.limit_flag = 1
-                self.buses_dict[lim_bus].q_spec = lim_size
-            if self.buses_dict[lim_bus].q_calc < lim_size and self.limit_flag:
-                self.limit_flag = 0
-                self.buses_dict[lim_bus].q_spec = None
-            self.n_pq = 0
-            self.n_pv = 0
-            self.n_slack = 0
-            self.calculate_n_values()
-
     def error_specified_vs_calculated(self):
         """
         Finds all the error terms and store in object
@@ -171,7 +152,6 @@ class Load_Flow:
                 if self.buses_dict[bus].q_spec:
                     self.buses_dict[bus].delta_q = self.buses_dict[bus].q_spec - self.buses_dict[bus].q_calc
 
-
     def power_error(self):
         """
         Adds all the error terms to a list and returns the maximum value of the list
@@ -181,12 +161,9 @@ class Load_Flow:
         buses = self.buses_dict
         for i in buses:
             # Ignore all buses which doesn't have a specified value (value == None)
-            #print("\nBus: ", buses[i].bus_number)
             if not buses[i].p_spec == None:
-                #print("\nDelta_p:", abs(buses[i].delta_p))
                 error_list.append(abs(buses[i].delta_p))
             if not buses[i].q_spec == None:
-                #print("\nDelta_q:", abs(buses[i].delta_q))
                 error_list.append(abs(buses[i].delta_q))
         self.error_history.append(max(error_list))
         return max(error_list)
@@ -301,8 +278,6 @@ class Load_Flow:
                 self.x_vector_labels.insert(i-1, "\u03B4" + str(i))
                 self.x_vector_labels.insert(i -1 + self.n_pq + self.n_pv, "V" + str(i))
 
-
-
     def print_buses(self):
         """
         Prints the data for all the bus. Mostly needed for debugging
@@ -322,19 +297,15 @@ class Load_Flow:
 
     def print_matrices(self):
         print("\nJacobi matrix:")
-        print(self.jacobian.matrix)
+        print(np.round(self.jacobian.matrix, 4))
         print("\nNet injections")
-        print(np.c_[self.net_injections_vector_labels, self.net_injections_vector])
+        print(np.c_[self.net_injections_vector_labels, np.round(self.net_injections_vector, 4)])
         print("\nMismatches")
-        print(np.c_[self.mismatch_vector_labels, self.mismatch.vector])
+        print(np.c_[self.mismatch_vector_labels, np.round(self.mismatch.vector, 4)])
         print("\nCorrection vector")
-        print(np.c_[self.correction_vector_labels, self.x_diff])
+        print(np.c_[self.correction_vector_labels, np.round(self.x_diff, 4)])
         print("\nNew x vector")
-        print(np.c_[self.x_vector_labels, self.x_new])
-       # print("P_total_losses {}".format(self.net_losses_p))
-       # print("Q_total_losses {}".format(self.net_losses_q))
-       # print("P_total_losses_2nd_method {}".format(self.total_losses_p))
-       # print("Q_total_losses_2nd_method {}".format(self.total_losses_q))
+        print(np.c_[self.x_vector_labels, np.round(self.x_new, 4)])
 
 class Bus:
     """
@@ -377,8 +348,6 @@ class Bus:
         self.delta = delta
         self.delta_p = 1
         self.delta_q = 1
-        #self.p_calc = 0
-        #self.calc = 0
 
     def print_data(self, slack_bus_number):
         """
@@ -388,10 +357,18 @@ class Bus:
             s = " **** SLACK BUS ****"
         else:
             s = ""
+        if self.p_spec:
+            p_spec = round(self.p_spec, 4)
+        else:
+            p_spec = None
+        if self.q_spec:
+            q_spec = round(self.q_spec, 4)
+        else:
+            q_spec = None
         print(
-            "Bus {}: P_spec = {}, Q_spec = {}, voltage = {}, delta = {} deg, P_calc = {}, Q_calc = {}, deltaP = {}, deltaQ = {}".format(
-                self.bus_number, self.p_spec, self.q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
-                round(self.p_calc, 4), round(self.q_calc, 4), round(self.delta_p, 6), round(self.delta_q, 6)) + s)
+            "Bus {}: P_spec = {}pu, Q_spec = {}pu, voltage = {}pu, delta = {}\u00B0, P_calc = {}pu, Q_calc = {}pu, deltaP = {}pu, deltaQ = {}pu".format(
+                self.bus_number, p_spec, q_spec, round(self.voltage, 4), round(self.delta * 180 / np.pi, 4),
+                f"{self.p_calc:.4f}", f"{self.q_calc:.4f}", f"{self.delta_p:.4f}", f"{self.delta_q:.4f}") + s)
 
 class Line:
     def __init__(self, from_bus, to_bus, resistance, reactance):
@@ -670,17 +647,7 @@ class Continuation(Load_Flow):
         """
         self.jacobian.reset_original_matrix()
         self.mismatch.reset_original_vector()
-        convergence = True
-        while self.power_error() > 0.0001:
-            self.iteration += 1
-            self.reset_values()
-            self.calc_new_power_injections()
-            self.error_specified_vs_calculated()
-            self.jacobian.create()
-            self.update_values()
-            if self.diverging():
-                convergence = False
-                break
+        convergence = run_newton_raphson(N_R=self, printing=False, convergence=True)
         if convergence:
             self.continuation_parameter = "load"
             # It converged so save the new solution to avoid doing this step again
@@ -689,7 +656,6 @@ class Continuation(Load_Flow):
             self.continuation_flag = "voltage"
             # It did not converge, so don't save the new solution
             self.reverse_step()
-
         return self.continuation_parameter
 
     def update_continuation_values(self, parameter = None):
@@ -722,7 +688,6 @@ class Continuation(Load_Flow):
         The returned value is offset with the number of pq and pv buses corresponding to the number of angle elements before
         the voltage elements in the jacobian matrix.
         """
-        voltage_change_list = []
         max_voltage_bus_index = 0
         max_voltage = 0
         index = 0
@@ -786,25 +751,17 @@ class Fast_Decoupled(Load_Flow):
         Set up matrices needed for fast decoupled power flow with inputed phase
         """
         self.jacobian.create(fast_decoupled=True)
-        # Create matrix used to approximate
-        #self.approximation_matrix = copy.deepcopy(self.jacobian.matrix) # must be deepcopied or it will be changed by jacobian.create()
         # Store submatrices of jacobian
         self.H = self.jacobian.matrix[0:self.n, 0:self.n]
         self.L = self.jacobian.matrix[self.n:, self.n:]
         # Create zero matrices for correction matrices building
         self.N_zeros = np.zeros([self.n_pq, self.n_pq])
         self.M_zeros = np.zeros([self.n_pq, self.n])
-        # Create matrices used to correct in primal and dual methods
-        #self.create_correction_matrices()
-
         if phase == "Primal":
             self.B_p = self.H
-            print("Jacobian_B_p:\n", self.B_p)
         elif phase == "Dual":
             self.B_dp = self.L
-            print("Jacobian_B_dp:\n", self.B_dp)
         self.create_modified_jacobians(phase)
-        #self.approximation_matrix = self.jacobian.create(fast_decoupled=True)
 
     def create_modified_jacobians(self, phase):
         if phase == "Primal":
@@ -821,7 +778,6 @@ class Fast_Decoupled(Load_Flow):
             # Remove row and column of slack bus
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=0)
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=1)
-            print("Jacobian_B_dp:\n", self.B_dp)
         elif phase == "Dual":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
@@ -836,7 +792,6 @@ class Fast_Decoupled(Load_Flow):
             # Remove row and column of slack bus
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
-            print("Jacobian_B_p:\n", self.B_p)
         elif phase == "Standard":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
@@ -852,8 +807,6 @@ class Fast_Decoupled(Load_Flow):
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
             self.B_dp = self.B_p
-            print("Jacobian_B_p:\n", self.B_p)
-            print("Jacobian_B_dp:\n", self.B_dp)
 
     def calculate_P_injections(self):
         """
@@ -940,26 +893,28 @@ class Fast_Decoupled(Load_Flow):
         """
         Overwritten from Load Flow class to match the interesting parts of the fast decoupled power flow
         """
+        print("\nJacobian: B':\n", np.round(self.B_p, 4))
+        print("\nJacobian: B\":\n", np.round(self.B_dp, 4))
         print("\nP injections:")
         for bus in self.buses_dict.values():
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("P{} = {}".format(bus.bus_number, bus.p_calc))
+                print("P{} = {}".format(bus.bus_number, round(bus.p_calc, 3)))
         print("\nQ injections:")
         for bus in self.buses_dict.values():
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("Q{} = {}".format(bus.bus_number, bus.q_calc))
+                print("Q{} = {}".format(bus.bus_number, round(bus.q_calc, 3)))
         print("\nP Mismatches:")
-        print(np.c_[self.mismatch.get_P_label(), self.mismatch.get_P()])
+        print(np.c_[self.mismatch.get_P_label(), np.round(self.mismatch.get_P(), 4)])
         print("\nQ Mismatches:")
-        print(np.c_[self.mismatch.get_Q_label(), self.mismatch.get_Q()])
+        print(np.c_[self.mismatch.get_Q_label(), np.round(self.mismatch.get_Q(), 4)])
         print("\nAngle corrections:")
-        print(np.c_[self.correction_vector_labels[:self.n], theta_correction])
+        print(np.c_[self.correction_vector_labels[:self.n], np.round(theta_correction, 4)])
         print("\nVoltage corrections:")
-        print(np.c_[self.correction_vector_labels[self.n:], voltage_correction])
+        print(np.c_[self.correction_vector_labels[self.n:], np.round(voltage_correction, 4)])
 
     def print_final_solution(self, phase):
         """
