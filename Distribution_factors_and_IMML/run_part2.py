@@ -1,6 +1,7 @@
 from classes import Bus, Line
 from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
 import numpy as np
+from supporting_methods import print_title1, print_title2
 
 """
 Settings
@@ -37,15 +38,13 @@ lines = [line_12, line_13, line_23, line_34]
 Program
 """
 #Part 2
-print("\n",150*"#")
-print("\nTask 1.")
-print("\nIMML is a fast and general technique for simulating impacts of modifying a network topolgy, such as outages and compensations. "
-      "The method is based on creating three sub-matrices, H, delta_h and M, which will be constant during the entire process. "
-      "H describes the original network topology, delta_h reflects what to me manipulated and M reflects which lines/buses to be affected by the "
-      "manipulation. The results/solutions after applying an IMML are the state of the new voltage angles as well as the new power flow for the given modification\n")
-
-print("\n",150*"#")
-print("\nTask 2.")
+print_title1("Task 1")
+print("\nIMML is a fast and general technique for simulating impacts of modifying a network topolgy, such as outages\n"
+      "and compensations. The method is based on creating three sub-matrices, H, delta_h and M, which will be constant\n"
+      "during the entire process. H describes the original network topology, delta_h reflects what to me manipulated\n"
+      "and M reflects which lines/buses to be affected by the manipulation. The results after applying an IMML are\n"
+      "the state of the new voltage angles as well as the new power flow for the given modification\n")
+print_title1("Task 2")
 #Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
 from_bus, to_bus = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_2)
 for line in lines:
@@ -54,8 +53,7 @@ for line in lines:
     else:
         print("P on", line.name, ":", round((line.from_bus.delta - line.to_bus.delta)/line.reactance, 3))
 
-print("\n",150*"#")
-print("\nTask 3.")
+print_title1("Task 3")
 
 from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_3, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
@@ -71,14 +69,13 @@ for line in lines:
     else:
         P_array_new[line.from_bus.bus_number-1][0] += (line.from_bus.delta - line.to_bus.delta)/line.reactance
         print("{} reactance: {}pu".format(line.name, line.reactance))
-        #print("\n", line.name, ": reactance:", "{}pu".format(line.reactance))
 
     if line.to_bus.bus_number != slack_bus_number:
         P_array_new[line.to_bus.bus_number - 1][0] += -(line.from_bus.delta - line.to_bus.delta) / line.reactance
     else:
         pass
 
-print("\nP_array_new: \n", P_array_new, "\n")
+print("\nP_array_new: \n", np.round(P_array_new, 4), "\n")
 
-print("\n",150*"#")
+print_title1()
 

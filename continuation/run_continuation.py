@@ -1,10 +1,11 @@
-from classes import Bus, Line, Continuation, Load_Flow
+from classes import Bus, Line, Continuation
 import numpy as np
+from supporting_methods import print_title1, print_title2, print_title3, run_newton_raphson
 """
 Continuation settings
 """
 max_voltage_step = 0.05
-max_load_step = 1 #0.3 = S? step er hvertfall alltid li 0.3 hos oss da vi forenkler beregning av step
+max_load_step = 1
 
 """
 Initial values
@@ -40,43 +41,27 @@ continuation = Continuation(buses, slack_bus_number, lines)
 continuation.initialize(max_voltage_step, max_load_step)
 
 # Calculate initial load flow (Point A)
-print("")
-print("Task 1.")
-while continuation.power_error() > 0.0001:
-    continuation.iteration += 1
-    continuation.reset_values()
-#    print("\nIteration: {}\n".format(continuation.iteration))
-    continuation.calc_new_power_injections()
-    continuation.error_specified_vs_calculated()
-    continuation.jacobian.create()
-    continuation.find_x_diff()
-    continuation.update_values()
-    if continuation.diverging():
-        print("No convergence")
-        break
-print("")
-print("Base case condition assuming a flat start")
+print_title1("Task 1")
+run_newton_raphson(continuation, printing=False)
+print_title2("Base case condition assuming a flat start")
 continuation.print_matrices()
 # Start predictions and corrections
 #2.
-print("")
-print("Task 2.")
-print("\n*--- Predictor phase ---*\n")
+print_title1("Task 2")
+print_title2("Predictor phase")
 continuation.initialize_predictor_phase()
 continuation.reset_values()
 continuation.find_x_diff()
-#Her må vi huske å printe x_diff = prediction vector = correction vector:
 print("\nSensitivities/Prediction vector:")
-print(np.c_[continuation.correction_vector_labels, continuation.x_diff])
+print(np.c_[continuation.correction_vector_labels, np.round(continuation.x_diff, 4)])
 
 #3.
-print("")
-print("Task 3.")
+print_title1("Task 3")
 continuation.step = 0.3; #1 hos Fosso
 continuation.update_continuation_values()
 continuation.print_matrices()
 
-print("\n*--- Corrector phase ---*\n")
+print_title2("Corrector phase")
 continuation.iteration = 0
 continuation_parameter = "load"
 continuation.initialize_corrector_phase(continuation_parameter)
@@ -84,7 +69,7 @@ continuation.error_specified_vs_calculated() #needs this one in order to reset t
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
     continuation.reset_values()
-    print("\nIteration: {}\n".format(continuation.iteration))
+    print_title3("Iteration: {}".format(continuation.iteration))
     continuation.calc_new_power_injections()
     continuation.error_specified_vs_calculated()
     continuation.jacobian.reset_original_matrix()
@@ -94,13 +79,13 @@ while continuation.power_error() > 0.0001:
     continuation.update_values()
     continuation.print_matrices()
     if continuation.diverging():
-        print("No convergence")
+        print_title3("No convergence")
         break
 continuation.print_matrices()
 #4.
 print("")
-print("Task 4.")
-print("\n*--- Predictor phase ---*\n")
+print_title1("Task 4")
+print_title2("Predictor phase")
 continuation.store_values()
 continuation.initialize_predictor_phase()
 continuation.reset_values()
@@ -110,9 +95,8 @@ continuation.print_matrices()
 constant_bus_index = continuation.constant_voltage_bus()
 
 #5.
-print("")
-print("Task 5.")
-print("\n*--- Corrector phase ---*\n")
+print_title1("Task 5")
+print_title2("Corrector phase")
 continuation.iteration = 0
 continuation_parameter = "voltage"
 continuation.step = 1 # Increase correction step so that the iterations converges faster
@@ -121,7 +105,7 @@ continuation.error_specified_vs_calculated() #needs this one in order to rset th
 while continuation.power_error() > 0.0001:
     continuation.iteration += 1
     continuation.reset_values()
-    print("\nIteration: {}\n".format(continuation.iteration))
+    print_title3("Iteration: {}".format(continuation.iteration))
     continuation.calc_new_power_injections()
     continuation.error_specified_vs_calculated()
     continuation.jacobian.reset_original_matrix()
@@ -133,5 +117,5 @@ while continuation.power_error() > 0.0001:
     continuation.print_matrices()
     #if continuation.diverging():
     if continuation.diverging():
-        print("No convergence")
+        print_title3("No convergence")
         break
