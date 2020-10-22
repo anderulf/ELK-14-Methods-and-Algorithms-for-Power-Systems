@@ -945,21 +945,21 @@ class Fast_Decoupled(Load_Flow):
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("P{} = {}".format(bus.bus_number, bus.p_calc))
+                print("P{} = {}".format(bus.bus_number, round(bus.p_calc, 3)))
         print("\nQ injections:")
         for bus in self.buses_dict.values():
             if bus.bus_number == self.slack_bus_number:
                 pass
             else:
-                print("Q{} = {}".format(bus.bus_number, bus.q_calc))
+                print("Q{} = {}".format(bus.bus_number, round(bus.q_calc, 3)))
         print("\nP Mismatches:")
-        print(np.c_[self.mismatch.get_P_label(), self.mismatch.get_P()])
+        print(np.c_[self.mismatch.get_P_label(), np.round(self.mismatch.get_P(), 4)])
         print("\nQ Mismatches:")
-        print(np.c_[self.mismatch.get_Q_label(), self.mismatch.get_Q()])
+        print(np.c_[self.mismatch.get_Q_label(), np.round(self.mismatch.get_Q(), 4)])
         print("\nAngle corrections:")
-        print(np.c_[self.correction_vector_labels[:self.n], theta_correction])
+        print(np.c_[self.correction_vector_labels[:self.n], np.round(theta_correction, 4)])
         print("\nVoltage corrections:")
-        print(np.c_[self.correction_vector_labels[self.n:], voltage_correction])
+        print(np.c_[self.correction_vector_labels[self.n:], np.round(voltage_correction, 4)])
 
     def print_final_solution(self, phase):
         """
