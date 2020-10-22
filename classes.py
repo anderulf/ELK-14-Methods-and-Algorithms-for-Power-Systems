@@ -616,7 +616,6 @@ class Mismatch:
         """
         return self.labels[self.n:]
 
-
 class Continuation(Load_Flow):
     """
     The continuation class is a subclass of the Load_Flow class which means Load_Flow (it's super) is
@@ -809,22 +808,6 @@ class Fast_Decoupled(Load_Flow):
 
     def create_modified_jacobians(self, phase):
         if phase == "Primal":
-            """
-            ## First part of matrix (P jacobian)
-            # Extract first row of matrix
-            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
-            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
-            # Add first row to matrix by joining H_row and N_row into an array
-            self.primal_P_jacobian = np.block([B_p_row, N_row])
-            # Add rows from H and N
-            for i in range(1, self.n):
-                B_p_row = self.B_p[i, :]  # i'th row and all columns from H
-                N_row = self.N_zeros[i, :]  # i'th row and all columns from N
-                # Create a merged array from both rows
-                temp_row = np.block([B_p_row, N_row])
-                # add new row with vstack
-                self.primal_P_jacobian = np.vstack([self.primal_P_jacobian, temp_row])
-            """
             ## B_dp
             self.B_dp = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
             for line in self.lines:
@@ -839,22 +822,6 @@ class Fast_Decoupled(Load_Flow):
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=0)
             self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=1)
             print("Jacobian_B_dp:\n", self.B_dp)
-            """
-            ## Second part of matrix (Q jacobian)
-            # Extract first row of matrix
-            M_row = self.M_zeros[0, :]  # 0 is the first row, and : gets all columns
-            B_dp_row = self.B_dp[0, :]  # 0 is the first row, and : gets all columns
-            # Add first row to matrix by joining H_row and N_row into an array
-            self.primal_Q_jacobian = np.block([M_row, B_dp_row])
-            # Add rows from H and N
-            for i in range(1, self.n):
-                M_row = self.M_zeros[i, :]  # i'th row and all columns from H
-                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from N
-                # Create a merged array from both rows
-                temp_row = np.block([M_row, B_dp_row])
-                # add new row with vstack
-                self.primal_Q_jacobian = np.vstack([self.primal_Q_jacobian, temp_row])
-            """
         elif phase == "Dual":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
@@ -870,37 +837,6 @@ class Fast_Decoupled(Load_Flow):
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
             self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
             print("Jacobian_B_p:\n", self.B_p)
-            """
-            ## First part of jacobian matrix (P jacobian)
-            # Extract first row of matrix
-            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
-            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
-            # Add first row to matrix by joining H_row and N_row into an array
-            self.dual_P_jacobian = np.block([B_p_row, N_row])
-            # Add rows from H and N
-            for i in range(1, self.n):
-                B_p_row = self.B_p[i, :]  # i'th row and all columns from N
-                N_row = self.N_zeros[i, :]  # i'th row and all columns from H
-                # Create a merged array from both rows
-                temp_row = np.block([B_p_row, N_row])
-                # add new row with vstack
-                self.dual_P_jacobian = np.vstack([self.dual_P_jacobian, temp_row])
-
-            ## Second part of matrix (Q jacobian)
-            # Extract first row of matrix
-            M_row = self.M_zeros[0, :]  # 0 is the first row, and : gets all columns
-            B_dp_row = self.B_dp[0, :]  # 0 is the first row, and : gets all columns
-            # Add first row to matrix by joining H_row and N_row into an array
-            self.dual_Q_jacobian = np.block([M_row, B_dp_row])
-            # Add rows from H and N
-            for i in range(1, self.n):
-                M_row = self.N_zeros[i, :]  # i'th row and all columns from N
-                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from H
-                # Create a merged array from both rows
-                temp_row = np.block([M_row, B_dp_row])
-                # add new row with vstack
-                self.dual_Q_jacobian = np.vstack([self.dual_Q_jacobian, temp_row])
-            """
         elif phase == "Standard":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
@@ -918,34 +854,6 @@ class Fast_Decoupled(Load_Flow):
             self.B_dp = self.B_p
             print("Jacobian_B_p:\n", self.B_p)
             print("Jacobian_B_dp:\n", self.B_dp)
-            """
-            ## Create the first part of the jacobian
-            # Extract first row of matrix
-            B_p_row = self.B_p[0, :]  # 0 is the first row, and : gets all columns
-            N_row = self.N_zeros[0, :]  # 0 is the first row, and : gets all columns
-            # Add first row to matrix by joining H_row and N_row into an array
-            self.standard_jacobian = np.block([B_p_row, N_row])
-            # Add rows from H and N
-            for i in range(1, self.n):
-                B_p_row = self.B_p[i, :]  # i'th row and all columns from N
-                N_row = self.N_zeros[i, :]  # i'th row and all columns from H
-                # Create a merged array from both rows
-                temp_row = np.block([B_p_row, N_row])
-                # add new row with vstack
-                self.standard_jacobian = np.vstack([self.standard_jacobian, temp_row])
-
-            ## Second part of jacobian
-            # Add rows from M and dp
-            for i in range(0, self.n):
-                M_row = self.M_zeros[i, :]  # i'th row and all columns from H
-                B_dp_row = self.B_dp[i, :]  # i'th row and all columns from N
-                # Create a merged array from both rows
-                temp_row = np.block([M_row, B_dp_row])
-                # add new row with vstack
-                self.standard_jacobian = np.vstack([self.standard_jacobian, temp_row])
-        else:
-            print("Error: phase {} does not exist".format(phase))
-        """
 
     def calculate_P_injections(self):
         """
@@ -984,13 +892,15 @@ class Fast_Decoupled(Load_Flow):
         Calculate the mismatches and store in mismatch vector for either P or Q
         """
         if parameter == "P":
-            for i in range(self.n):
-                self.buses_dict[i+1].delta_p = self.buses_dict[i+1].p_spec - self.buses_dict[i+1].p_calc
-                self.mismatch.vector[i, 0] = self.buses_dict[i + 1].delta_p
+            for i in range(len(self.buses_dict)):
+                if self.buses_dict[i + 1].bus_type == "PQ" or self.buses_dict[i + 1].bus_type == "PV":
+                    self.buses_dict[i + 1].delta_p = self.buses_dict[i+1].p_spec - self.buses_dict[i + 1].p_calc
+                    self.mismatch.vector[i, 0] = self.buses_dict[i + 1].delta_p
         if parameter == "Q":
-            for i in range(self.n_pq):
-                self.buses_dict[i+1].delta_q = self.buses_dict[i+1].q_spec - self.buses_dict[i+1].q_calc
-                self.mismatch.vector[i + self.n, 0] = self.buses_dict[i + 1].delta_q
+            for i in range(len(self.buses_dict)):
+                if self.buses_dict[i + 1].bus_type == "PQ":
+                    self.buses_dict[i + 1].delta_q = self.buses_dict[i+1].q_spec - self.buses_dict[i + 1].q_calc
+                    self.mismatch.vector[i + self.n, 0] = self.buses_dict[i + 1].delta_q
 
     def update_fast_decoupled_voltage_or_angle(self, voltages=None, angles=None):
         """
