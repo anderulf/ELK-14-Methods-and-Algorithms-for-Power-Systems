@@ -24,3 +24,35 @@ def complex_angle(complex_number):
 def complex_radius(complex_number):
     r, angle = rectangular_to_polar(complex_number)
     return r
+
+def print_title1(input_string=None):
+    """
+    Prints a main title generally for a new task
+    """
+    symbol_count = 100
+    symbol = "#"
+    if input_string:
+        print("\n", int(symbol_count / 2) * symbol, input_string, int(symbol_count / 2) * symbol)
+    else:
+        print("\n", symbol_count * symbol)
+
+def print_title2(input_string=None):
+    """
+    Prints a undertitle generally for a new problem
+    """
+    symbol_count = 80
+    symbol = "*"
+    if input_string:
+        print("\n", int(symbol_count / 2) * symbol, input_string, int(symbol_count / 2) * symbol)
+    else:
+        print("\n", symbol_count * symbol)
+def print_title3(input_string=None):
+    """
+    Prints a sub undertitle generally for a new iteration
+    """
+    symbol_count = 50
+    symbol = "-"
+    if input_string:
+        print("\n", int(symbol_count / 2) * symbol, input_string, int(symbol_count / 2) * symbol)
+    else:
+        print("\n", symbol_count * symbol)
