@@ -41,9 +41,9 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
     delta_0 = np.linalg.solve(H, P_array)
     temp_correction_2 = np.matmul(np.transpose(M), delta_0)[0][0] # Is a scalar value
     c_inverse = 1/delta_h + np.linalg.inv(H)[from_bus-1, from_bus-1] - np.linalg.inv(H)[from_bus-1, to_bus-1] # Is generally a scalar value
-    c = 1/c_inverse
     # Utilizing scalar values is a lot more efficiency compared to using matrix multiplication for larger systems
-    #Special Case occurs when running several modifaction in the systems simustaneously
+    # Special Case occurs when running several modifaction in the systems simustaneously
+    c = 1/c_inverse
     delta_correction_temp_1 = c * temp_correction_2
     delta_correction = -x * delta_correction_temp_1
     delta = delta_0 + delta_correction
@@ -54,9 +54,6 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
         else:
             bus.delta = delta[index][0]
             index += 1
-
-
-
     if printing:
         print("\nH-matrix: \n", H)
         print("\ndelta_h: ", delta_h)
