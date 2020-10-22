@@ -28,7 +28,7 @@ def run_primal_method(fast_dec, printing=False):
             print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
-            print("No convergence")
+            print_title3("No convergence")
             break
     return fast_dec.iteration
 
@@ -60,7 +60,7 @@ def run_dual_method(fast_dec, printing=False):
             print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
-            print("No convergence")
+            print_title3("No convergence")
             break
     return fast_dec.iteration
 
@@ -91,6 +91,6 @@ def run_standard_method(fast_dec, printing=False):
             print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
         if fast_dec.diverging():
-            print("No convergence")
+            print_title3("No convergence")
             break
     return fast_dec.iteration

@@ -1,4 +1,5 @@
 ﻿from classes import Load_Flow, Bus, Line
+from supporting_methods import print_title1, print_title2, print_title3
 """
 Input values
 """
@@ -17,7 +18,7 @@ x = {"1-2": 0.2, "1-3": 0.25, "2-3": 0.15}
 """
 Program
 """
-print("\n*--- Newton Raphson method iteration ---*\n")
+print_title1("Newton Raphson method iteration")
 
 # Create buses
 buses = {}
@@ -49,7 +50,7 @@ while N_R.power_error() > 0.0001:
         print("No convergence")
         break
 
-print("*--- ITERATION COMPLETED ---*")
+print_title2("Iteration completed")
 print("Iterations: {}".format(N_R.iteration))
 # Get post analysis results
 N_R.calculate_line_data()

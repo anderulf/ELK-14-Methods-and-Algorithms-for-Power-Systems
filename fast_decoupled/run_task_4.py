@@ -1,5 +1,6 @@
 from classes import Bus, Line, Fast_Decoupled
 from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method
+from supporting_methods import print_title1, print_title2
 """
 Settings
 """
@@ -40,13 +41,12 @@ fast_dec.calc_new_power_injections()
 fast_dec.set_up_matrices()
 
 #4.
-print("\n", 150*"#")
-print("Task 4.")
+print_title1("Task 4")
 
 # Reset resistances back to their initial value
 r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
 
-print("Primal Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
+print_title2("Primal Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
 
 for bus_number in V:
     buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
@@ -65,8 +65,7 @@ fast_dec.set_up_matrices(phase)
 
 primal_iterations = run_primal_method(fast_dec, printing=True)
 
-print("\n", 100*"*")
-print("Dual Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
+print_title2("Dual Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
 
 # Reset to flat start
 for bus_number in V:
