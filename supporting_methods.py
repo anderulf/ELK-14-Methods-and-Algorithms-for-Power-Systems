@@ -57,3 +57,25 @@ def print_title3(input_string=None):
         print("\n", int(symbol_count / 2) * symbol, input_string, int(symbol_count / 2) * symbol)
     else:
         print("\n", symbol_count * symbol)
+
+def run_newton_raphson(N_R, printing=True):
+    """
+    Runs the general newton raphson method
+    :param N_R: Load_Flow, Contination or Fast_Decoupled object
+    """
+    while N_R.power_error() > 0.0001:
+        N_R.iteration += 1
+        N_R.reset_values()
+        N_R.calc_new_power_injections()
+        N_R.error_specified_vs_calculated()
+        N_R.print_buses()
+        N_R.jacobian.create()
+        N_R.find_x_diff()
+        N_R.update_values()
+        if printing:
+            print_title3("Iteration: {}".format(N_R.iteration))
+            N_R.print_matrices()
+        if N_R.diverging():
+            if printing:
+                print_title2("No convergence")
+            break
