@@ -1,7 +1,7 @@
 ﻿import numpy as np
 import cmath as ma
 import copy
-from supporting_methods import polar_to_rectangular
+from supporting_methods import polar_to_rectangular, run_newton_raphson
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations
 
@@ -647,18 +647,7 @@ class Continuation(Load_Flow):
         """
         self.jacobian.reset_original_matrix()
         self.mismatch.reset_original_vector()
-        convergence = True
-        while self.power_error() > 0.0001:
-            self.iteration += 1
-            self.reset_values()
-            self.calc_new_power_injections()
-            self.error_specified_vs_calculated()
-            self.jacobian.create()
-            self.find_x_diff()
-            self.update_values()
-            if self.diverging():
-                convergence = False
-                break
+        convergence = run_newton_raphson(N_R=self, printing=False, convergence=True)
         if convergence:
             self.continuation_parameter = "load"
             # It converged so save the new solution to avoid doing this step again
@@ -667,7 +656,6 @@ class Continuation(Load_Flow):
             self.continuation_flag = "voltage"
             # It did not converge, so don't save the new solution
             self.reverse_step()
-
         return self.continuation_parameter
 
     def update_continuation_values(self, parameter = None):
