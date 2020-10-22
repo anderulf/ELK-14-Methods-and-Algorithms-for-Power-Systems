@@ -1,7 +1,7 @@
 ﻿import numpy as np
 import cmath as ma
 import copy
-from supporting_methods import polar_to_rectangular, run_newton_raphson
+from supporting_methods import polar_to_rectangular, run_newton_raphson, create_simplified_y_bus
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations
 
@@ -767,45 +767,15 @@ class Fast_Decoupled(Load_Flow):
         if phase == "Primal":
             ## B_dp
             self.B_dp = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
-            for line in self.lines:
-                self.B_dp[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
-                self.B_dp[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_dp[
-                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
-            # Get the sum of the rows
-            diagonal_elements = np.sum(self.B_dp, axis=1)  # axis 1 meaning the we sum each colomn along the rows
-            for i, Y_ii in enumerate(diagonal_elements):
-                self.B_dp[i, i] = -Y_ii  # subtracting because the off diagonal elements are negative (--=+)
-            # Remove row and column of slack bus
-            self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=0)
-            self.B_dp = np.delete(self.B_dp, self.slack_bus_number-1, axis=1)
+            self.B_dp = create_simplified_y_bus(self.B_dp, self.lines, self.slack_bus_number)
         elif phase == "Dual":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
-            for line in self.lines:
-                self.B_p[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
-                self.B_p[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_p[
-                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
-            # Get the sum of the rows
-            diagonal_elements = np.sum(self.B_p, axis=1)  # axis 1 meaning the we sum each colomn along the rows
-            for i, Y_ii in enumerate(diagonal_elements):
-                self.B_p[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
-            # Remove row and column of slack bus
-            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
-            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+            self.B_p = create_simplified_y_bus(self.B_p, self.lines, self.slack_bus_number)
         elif phase == "Standard":
             ## B_p
             self.B_p = np.zeros([len(self.buses_dict), len(self.buses_dict)], dtype=float)
-            for line in self.lines:
-                self.B_p[line.from_bus.bus_number - 1, line.to_bus.bus_number - 1] = -1 / line.reactance
-                self.B_p[line.to_bus.bus_number - 1, line.from_bus.bus_number - 1] = self.B_p[
-                    line.from_bus.bus_number - 1, line.to_bus.bus_number - 1]
-            # Get the sum of the rows
-            diagonal_elements = np.sum(self.B_p, axis=1)  # axis 1 meaning the we sum each colomn along the rows
-            for i, Y_ii in enumerate(diagonal_elements):
-                self.B_p[i, i] = -Y_ii  # subracting because the off diagonal elements are negative (--=+)
-            # Remove row and column of slack bus
-            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=0)
-            self.B_p = np.delete(self.B_p, self.slack_bus_number - 1, axis=1)
+            self.B_p = create_simplified_y_bus(self.B_p, self.lines, self.slack_bus_number)
             self.B_dp = self.B_p
 
     def calculate_P_injections(self):
