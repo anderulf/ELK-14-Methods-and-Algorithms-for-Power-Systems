@@ -1,5 +1,5 @@
 ﻿from classes import Load_Flow, Bus, Line
-from supporting_methods import print_title1, print_title2, print_title3
+from supporting_methods import print_title1, print_title2, print_title3, run_newton_raphson
 """
 Input values
 """
@@ -35,20 +35,7 @@ lines = [line_12, line_13, line_23]
 N_R = Load_Flow(buses, slack_bus_number, lines)
 
 # Iterate NR
-while N_R.power_error() > 0.0001:
-    N_R.iteration += 1
-    N_R.reset_values()
-    print("\nIteration: {}\n".format(N_R.iteration))
-    N_R.calc_new_power_injections()
-    N_R.error_specified_vs_calculated()
-    N_R.print_buses()
-    N_R.jacobian.create()
-    N_R.find_x_diff()
-    N_R.update_values()
-    N_R.print_matrices()
-    if N_R.diverging():
-        print("No convergence")
-        break
+run_newton_raphson(N_R)
 
 print_title2("Iteration completed")
 print("Iterations: {}".format(N_R.iteration))

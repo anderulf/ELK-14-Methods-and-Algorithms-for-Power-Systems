@@ -1,6 +1,6 @@
 from classes import Bus, Line, Fast_Decoupled
 from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method, run_standard_method
-from supporting_methods import print_title1, print_title2
+from supporting_methods import print_title1, print_title2, run_newton_raphson
 """
 Initial values
 """
@@ -34,10 +34,12 @@ fast_dec.set_up_matrices()
 
 # Calculate initial load flow (Point A)
 print_title1("Task 1")
+run_newton_raphson(fast_dec, printing=False)
+"""
 while fast_dec.power_error() > 0.0001:
     fast_dec.iteration += 1
     fast_dec.reset_values()
-#    print("\nIteration: {}\n".format(continuation.iteration))
+    #print("\nIteration: {}\n".format(continuation.iteration))
     fast_dec.calc_new_power_injections()
     fast_dec.error_specified_vs_calculated()
     fast_dec.jacobian.create()
@@ -47,10 +49,10 @@ while fast_dec.power_error() > 0.0001:
     if fast_dec.diverging():
         print("No convergence")
         break
-
+"""
 NR_iterations = fast_dec.iteration
 print("")
-print("Base case condition assuming a flat start")
+print("Base case condition assuming a flat start calculated with regular newton raphson method:")
 fast_dec.print_matrices()
 
 #2.

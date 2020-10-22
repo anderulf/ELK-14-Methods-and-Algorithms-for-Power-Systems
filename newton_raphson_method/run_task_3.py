@@ -1,5 +1,6 @@
 from classes import Load_Flow, Bus, Line
 import matplotlib.pyplot as plt
+from supporting_methods import run_newton_raphson, print_title1, print_title2
 """
 Settings:
     flat_start can be True or False
@@ -26,7 +27,7 @@ x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
 """
 Program
 """
-print("\n*--- Newton Raphson method iteration with load increases ---*\n")
+print_title1("Newton Raphson method iteration with load increases and flat start = {}".format(flat_start))
 
 # Create buses
 buses = {}
@@ -71,24 +72,10 @@ while convergence:
         buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
     N_R = Load_Flow(buses, slack_bus_number, lines)
     # Iterate NS
-    while N_R.power_error() > 0.0001:
-        N_R.iteration += 1
-        total_iterations += 1
-        print("\nIteration: {}\n".format(N_R.iteration))
-        N_R.calc_new_power_injections()
-        N_R.error_specified_vs_calculated()
-        N_R.print_buses()
-        N_R.jacobian.create()
-        N_R.find_x_diff()
-        N_R.update_values()
-        N_R.print_matrices()
-        if N_R.diverging():
-            print("No convergence")
-            convergence = 0
-            break
+    total_iterations, convergence = run_newton_raphson(N_R, total_iterations=total_iterations, convergence=True)
 
-    print("*--- ITERATION COMPLETED ---*")
-    print("Iterations: {}".format(N_R.iteration))
+    print_title2("Iteration completed")
+    print("\nIterations: {}".format(N_R.iteration))
     # Get post analysis results
     N_R.calculate_line_data()
     N_R.print_line_data()
