@@ -1009,6 +1009,23 @@ class Fast_Decoupled(Load_Flow):
             else: # slack
                 pass
 
+    def diverging(self):
+        """
+        Determines if the load flow is diverging by looking at the last three errors. If they are increasing or not
+        changing the method determines that the system is diverging. Does not compare before the third iteration
+        """
+        if len(self.error_history) < 3:
+            # Continue if less than three iterations has been run
+            return False
+        else:
+            # Check if error increased or was unchanged the last two iterations
+            if (self.error_history[-1] >= self.error_history[-2]) and (self.error_history[-2] >= self.error_history[-3]):
+                return True
+            elif self.iteration >= 30:
+                # Stop if too many iterations were run
+                return True
+            else: return False
+
     def print_data(self, theta_correction, voltage_correction):
         """
         Overwritten from Load Flow class to match the interesting parts of the fast decoupled power flow
