@@ -37,12 +37,14 @@ lines = [line_12, line_13, line_23, line_34]
 Program
 """
 #Part 2
+print("\n",150*"#")
 print("\nTask 1.")
 print("\nIMML is a fast and general technique for simulating impacts of modifying a network topolgy, such as outages and compensations. "
       "The method is based on creating three sub-matrices, H, delta_h and M, which will be constant during the entire process. "
       "H describes the original network topology, delta_h reflects what to me manipulated and M reflects which lines/buses to be affected by the "
       "manipulation. The results/solutions after applying an IMML are the state of the new voltage angles as well as the new power flow for the given modification\n")
 
+print("\n",150*"#")
 print("\nTask 2.")
 #Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
 from_bus, to_bus = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_2)
@@ -50,24 +52,26 @@ for line in lines:
     if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
         pass
     else:
-        print("P on", line.name, ":", (line.from_bus.delta - line.to_bus.delta)/line.reactance)
+        print("P on", line.name, ":", round((line.from_bus.delta - line.to_bus.delta)/line.reactance, 3))
 
+print("\n",150*"#")
 print("\nTask 3.")
 
 from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_3, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_13.reactance *= 2
 for line in lines:
-    print("P on", line.name, ":", (line.from_bus.delta - line.to_bus.delta)/line.reactance)
+    print("P on", line.name, ":", round((line.from_bus.delta - line.to_bus.delta)/line.reactance, 3))
 
+print("")
 P_array_new = np.zeros([len(buses) - 1, 1])
 for line in lines:
     if line.from_bus.bus_number == slack_bus_number:
         pass
     else:
         P_array_new[line.from_bus.bus_number-1][0] += (line.from_bus.delta - line.to_bus.delta)/line.reactance
-        print("line:", line.name)
-        print("\nline_reactance: \n", line.reactance, "\n")
+        print("{} reactance: {}pu".format(line.name, line.reactance))
+        #print("\n", line.name, ": reactance:", "{}pu".format(line.reactance))
 
     if line.to_bus.bus_number != slack_bus_number:
         P_array_new[line.to_bus.bus_number - 1][0] += -(line.from_bus.delta - line.to_bus.delta) / line.reactance
@@ -76,5 +80,5 @@ for line in lines:
 
 print("\nP_array_new: \n", P_array_new, "\n")
 
-
+print("\n",150*"#")
 
