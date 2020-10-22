@@ -88,5 +88,7 @@ def run_newton_raphson(N_R, printing=True, total_iterations=None, convergence=Fa
             break
     if total_iterations and convergence:
         return total_iterations, converging
+    elif convergence and not total_iterations:
+        return converging
     elif total_iterations and not convergence:
         return  total_iterations

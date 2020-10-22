@@ -654,6 +654,7 @@ class Continuation(Load_Flow):
             self.calc_new_power_injections()
             self.error_specified_vs_calculated()
             self.jacobian.create()
+            self.find_x_diff()
             self.update_values()
             if self.diverging():
                 convergence = False
@@ -699,7 +700,6 @@ class Continuation(Load_Flow):
         The returned value is offset with the number of pq and pv buses corresponding to the number of angle elements before
         the voltage elements in the jacobian matrix.
         """
-        voltage_change_list = []
         max_voltage_bus_index = 0
         max_voltage = 0
         index = 0
