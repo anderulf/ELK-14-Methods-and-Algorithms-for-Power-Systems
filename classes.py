@@ -329,6 +329,8 @@ class Bus:
         self.classify_bus_type()
         self.beta = beta
         self.alpha = alpha
+        # Variable for benders decomposition
+        self.p_gen = None
 
     def classify_bus_type(self):
         """
@@ -387,6 +389,7 @@ class Line:
         self.from_current = 0
         self.p_power_flow = 0
         self.q_power_flow = 0
+        self.transfer_capacity = None
 
 
     def __str__(self):
