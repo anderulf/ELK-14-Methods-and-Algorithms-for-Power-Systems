@@ -5,7 +5,7 @@ import copy
 """
 Settings
 """
-avoid_line = "Line 2-3"
+avoid_line = "Line 2-3x"
 """
 Input values
 """
@@ -78,12 +78,11 @@ right_hand_side_dict, a_dict = calculate_distribution_factors(B_p, P_array, buse
 lines_from_task3 = copy.deepcopy(lines)
 
 print_title1("Task 4")
+bus_to_be_changed_task4 = "1"
 p_diff_task4 = 0.5
-P["1"] -= p_diff_task4
-print_title2("Load on bus 1 increased with {}pu".format(p_diff_task4))
-for index, p_spec in enumerate(P.values()):
-    if p_spec:
-        P_array[index] = p_spec
+P[bus_to_be_changed_task4] -= p_diff_task4
+print_title2("Load on bus {} increased with {}pu".format(bus_to_be_changed_task4, p_diff_task4))
+P_array[int(bus_to_be_changed_task4)-1] = P[bus_to_be_changed_task4]
 
 for index, line in enumerate(lines):
     print_title3(line.name)
@@ -92,15 +91,16 @@ for index, line in enumerate(lines):
     print("\nPower flow on line:".format(line.name), "{}pu".format(round(line.p_power_flow[0][0], 4)) )
     print("Change from Basecase: {}pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
 
+print("\nWe can observe that the flow from the slack bus (bus 4) to bus 3 is equal to the increase in load on bus {}.\n"
+      "This means the slack bus has to cover the change in load.".format(bus_to_be_changed_task4))
 lines_from_task4 = lines
 
 print_title1("Task 5")
+bus_to_be_changed_task5 = "2"
 p_diff_task5 = 0.3
-P["2"] += p_diff_task5
-print_title2("Load on bus 1 increased with {}pu and load on bus 2 decreased with {}pu".format(p_diff_task4, p_diff_task5))
-for index, p_spec in enumerate(P.values()):
-    if p_spec:
-        P_array[index] = p_spec
+P[bus_to_be_changed_task5] += p_diff_task5
+print_title2("Load on bus {} increased with {}pu and load on bus {} decreased with {}pu".format(bus_to_be_changed_task4,p_diff_task4, bus_to_be_changed_task5, p_diff_task5))
+P_array[int(bus_to_be_changed_task5)-1] = P[bus_to_be_changed_task5]
 
 for index, line in enumerate(lines):
     print_title3(line.name)
@@ -108,3 +108,6 @@ for index, line in enumerate(lines):
     line.p_power_flow = np.matmul(np.transpose(a_dict[line.name]), P_array)
     print("\nPower flow on line:".format(line.name), "{}pu".format(round(line.p_power_flow[0][0], 4)) )
     print("Change from Basecase: {}pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
+
+print("\nLike in task 4 the slack bus covers the net increase in the load in the system which is {}pu. Additionally..."
+      " ".format(p_diff_task4-p_diff_task5))
