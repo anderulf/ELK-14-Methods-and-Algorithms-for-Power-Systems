@@ -61,9 +61,9 @@ continuation.step = 0.3; #1 hos Fosso
 continuation.update_continuation_values()
 continuation.print_matrices()
 
-print_title2("Corrector phase")
 continuation.iteration = 0
 continuation_parameter = "load"
+print_title2("Corrector phase for {} continuation parameter".format(continuation_parameter))
 continuation.initialize_corrector_phase(continuation_parameter)
 continuation.error_specified_vs_calculated() #needs this one in order to reset the power_error
 while continuation.power_error() > 0.0001:
@@ -96,9 +96,9 @@ constant_bus_index = continuation.constant_voltage_bus()
 
 #5.
 print_title1("Task 5")
-print_title2("Corrector phase")
 continuation.iteration = 0
 continuation_parameter = "voltage"
+print_title2("Corrector phase for {} continuation parameter".format(continuation_parameter))
 continuation.step = 1 # Increase correction step so that the iterations converges faster
 continuation.initialize_corrector_phase(continuation_parameter, constant_bus_index)
 continuation.error_specified_vs_calculated() #needs this one in order to rset the power_error
