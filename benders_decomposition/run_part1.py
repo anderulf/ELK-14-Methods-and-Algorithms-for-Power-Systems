@@ -1,5 +1,5 @@
 from classes import Bus, Line
-from supporting_methods import print_title1, create_simplified_y_bus, calculate_distribution_factors
+from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
 import numpy as np
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
@@ -17,9 +17,9 @@ delta = {"1": 0, "2": 0, "3": 0, "4": 0}
 # Q values from assignment
 Q = {"1": 0, "2": 0, "3": 0, "4": None}
 # P values from project
-#P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
+P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
 # From LTsolve
-P = {"1": -0.8, "2": -0.9, "3": 0.7, "4": 0}
+#P = {"1": -0.8, "2": -0.9, "3": 0.7, "4": 0}
 # line data
 r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
 x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.2, "3-4": 0.25}
@@ -59,9 +59,11 @@ _, a_dict = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus
 # Congestion check
 congested = False
 congested_lines = []
+print_title3("Power flow on lines")
 for line in lines:
     line.p_power_flow = np.matmul(np.transpose(a_dict[line.name]), P_array)[0][0]
-    print("\n{} power flow:".format(line.name), round(line.p_power_flow, 4))
+    print("\n{} power flow: {}pu".format(line.name, round(line.p_power_flow, 4)))
+    print("Transfer capacity {}pu".format(line.transfer_capacity))
     if line.transfer_capacity <= (abs(line.p_power_flow) - error):
         congested = True
         congested_lines.append(line.name)
@@ -69,7 +71,8 @@ for line in lines:
 if congested:
     print("\nCongested line(s):\n", congested_lines)
     print("\nSince one ore more lines are congested, linear programming is required.")
-
+else:
+    print("\nNo lines are congested.")
 
 # The set for optimization
 bus_set = []
