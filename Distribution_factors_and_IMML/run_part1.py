@@ -72,7 +72,10 @@ print_title1("Task 3")
 print("\nBy utilizing distribution factors there is no need to calculate the voltage angles directly like in task 2.\n"
       "In addition, fewer constraints are needed in time demanding parts of the OPF. The line violations in the OPF are\n"
       "checked iteratively and only the violated lines are considered in the next iterations. Uneccesarry calculations\n"
-      "is avoided. Therefore the use of distribution factors is very effective in OPF calculations.")
+      "is avoided. Therefore the use of distribution factors is very effective in OPF calculations. \n\n"
+      "Distribution factors functions as sensitivities with respect to lines which in congestion cases can be used as \n"
+      "an indication to understand at which buses the power injections should be changed in order to uncongest the \n"
+      "corresponding line. ")
 
 right_hand_side_dict, a_dict = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, avoid_line)
 lines_from_task3 = copy.deepcopy(lines)
