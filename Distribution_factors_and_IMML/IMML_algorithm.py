@@ -37,7 +37,6 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
 
     #z = M_transpose * x = M_transpose *H_invers*M
     z = x[from_bus-1] - x[to_bus -1]
-    print("z = ", z)
 
     P_array = np.zeros([len(buses)-1, 1])
     for bus in specified_active_powers:
@@ -73,8 +72,8 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
         print("\nP_array: \n", P_array)
         print("\nDelta_0:\n ", np.round(delta_0, 4))
         print("\nX-vector: \n", np.round(x, 4))
-        print("\nTemp correction 2: \n", np.round(angle_diff, 4))
-        print("\nc_inverse: \n", np.round(c_inverse, 4))
+        #print("\nTemp correction 2: \n", np.round(angle_diff, 4))
+        #print("\nc_inverse: \n", np.round(c_inverse, 4))
         print("\nc: \n", np.round(c, 4))
         print("\ndelta_corrections: \n", np.round(delta_correction, 4))
         print("\nNew angles: \n", np.round(delta, 4), "\n")
