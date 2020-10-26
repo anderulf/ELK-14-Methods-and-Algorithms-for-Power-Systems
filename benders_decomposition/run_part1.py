@@ -1,8 +1,8 @@
 from classes import Bus, Line
 from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
 import numpy as np
-import pyomo.environ as pyo
-from pyomo.opt import SolverFactory
+#import pyomo.environ as pyo
+#from pyomo.opt import SolverFactory
 import copy
 """
 Settings
@@ -70,21 +70,28 @@ for line in lines:
 
 if congested:
     print("\nCongested line(s):\n", congested_lines)
-    print("\nSince one ore more lines are congested, linear programming is required.")
+    print("\nSince one or more lines are congested, linear programming is required.")
 else:
     print("\nNo lines are congested.")
 
+print("Only the constraints corresponding to the congested lines are included in the OPF using LPsolve.")
+
 # Calculated values from LP-solve for part 1 task 1
 dispatch = [0.8, 0, 1.3, 1]
+k = 9.1
 dispatch_duals   = [0, 0, 0, 0] # Dual values for dispatch limits set to prod > 0
 for index, bus in enumerate(buses.values()):
     bus.gen_cost = gen_cost["Bus {}".format(bus.bus_number)]
     bus.p_gen = dispatch[index]
     bus.marginal_cost = dispatch_duals[index]
 
+print("\nOptimal objective function value, from LPsolve:", k)
+for index in range(len(dispatch)):
+    print("Dispatch for bus {} : {} pu".format(index+1, dispatch[index]))
 
-
-
+print_title1("Task 2")
+#Task 2
+#Check the marginal costs (reduced cost, dual variables) and check these against the operating cost at each bus.
 
 
 
