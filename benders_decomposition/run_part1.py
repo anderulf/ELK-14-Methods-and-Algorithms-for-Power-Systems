@@ -74,6 +74,25 @@ if congested:
 else:
     print("\nNo lines are congested.")
 
+# Calculated values from LP-solve for part 1 task 1
+dispatch = [0.8, 0, 1.3, 1]
+dispatch_duals   = [0, 0, 0, 0] # Dual values for dispatch limits set to prod > 0
+for index, bus in enumerate(buses.values()):
+    bus.gen_cost = gen_cost["Bus {}".format(bus.bus_number)]
+    bus.p_gen = dispatch[index]
+    bus.marginal_cost = dispatch_duals[index]
+
+
+
+
+
+
+
+"""
+#The optimization part with Pyomo (Ignored because LTsolve is used)
+
+print_title1("Optimization part")
+
 # The set for optimization
 bus_set = []
 line_set = []
@@ -84,29 +103,28 @@ for bus in buses.values():
 for line in lines:
     line_set.append(line.name)
 
-print_title1("Optimization part")
-# The optimization part
-
 # We declare the model (ie. creating a pyo object called model)
 model = pyo.ConcreteModel()
 
 """
+"""
 Sets:
     - Buses
     - Lines
+"""
 """
 
 # We declare the set for buses
 model.Bus = pyo.Set(ordered=True, initialize=bus_set)
 model.Line = pyo.Set(ordered=True, initialize=line_set)
 
-"""
+""""""
 Parameters:
     - distribution factors
     - loads
     - generation costs
     - transfer capacities
-"""
+""""""
 
 dist_factors = {}
 line_a = {}
@@ -125,10 +143,10 @@ model.gen_cost = pyo.Param(model.Bus, initialize=gen_cost, within=pyo.Reals)
 
 model.trans_cap = pyo.Param(model.Line, initialize=trans_cap, within=pyo.Reals)
 
-"""
+""""""
 Variables:
     - Variable for generation at a bus
-"""
+""""""
 
 # Declare the variable for generation at a bus
 model.generation = pyo.Var(model.Bus, within=pyo.NonNegativeReals)
@@ -142,13 +160,13 @@ def Objective(model):
 
 model.OBJ = pyo.Objective(rule=Objective, sense=pyo.minimize)
 
-"""
+""""""
 Constraints:
     production cannot be more than inflow and stored capacity
     reservoir cannot hold more than inflow minus reservoir capacity (rest is spillage)
 
-"""
-"""
+""""""
+
 # Constraint for power balance
 
 # Constraint for power balance during the first period. Production is equal to inflow - stored for next period - spilled water
@@ -167,10 +185,8 @@ def line_upper_limit(model, line):
         if index != slack_bus_number - 1:
             flow += model.a[line][bus] * (model.generation[bus] - model.loads[bus])
     return flow <= model.trans_cap[line]
-    #return (sum(model.a[line][bus] * (model.generation[bus] - model.loads[bus]) for bus in model.Bus[:-1]) <= model.trans_cap[line])
 
-
-model.line_upper_limit = pyo.Constraint(rule=line_upper_limit)
+model.line_upper_limit = pyo.Constraint(model.Line, rule=line_upper_limit)
 
 def line_lower_limit(model, line):
     flow = 0
@@ -181,7 +197,7 @@ def line_lower_limit(model, line):
     #return (sum(model.a[line][bus] * (model.generation[bus] - model.loads[bus]) for bus in model.Bus[:-1]) >= -model.trans_cap[line])
 
 
-model.line_lower_limit = pyo.Constraint(rule=line_lower_limit)
+model.line_lower_limit = pyo.Constraint(model.Line, rule=line_lower_limit)
 
 
 # Solver used (since quadratic term in objective function, gurobi must be used)
@@ -202,9 +218,6 @@ print("Displaying dual results:")
 model.dual.display()
 
 """
-
-
-
 
 
 
