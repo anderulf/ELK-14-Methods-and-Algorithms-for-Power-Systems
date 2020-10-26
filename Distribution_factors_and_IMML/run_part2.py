@@ -1,5 +1,5 @@
 from classes import Bus, Line
-from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
+from IMML_algorithm import IMML_algorithm
 import numpy as np
 from supporting_methods import print_title1, print_title3
 
@@ -76,7 +76,7 @@ line_13.reactance *= 2
 for index, line in enumerate(lines):
     line.p_power_flow = (line.from_bus.delta - line.to_bus.delta)/line.reactance
     print_title3(line.name)
-    print("\nActive power flow on line:", round(line.p_power_flow, 3))
+    print("\nActive power flow on line: {} pu".format(round(line.p_power_flow, 3)))
     print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
 print("\nBecause one of the lines are disconnected, the net reactance on line 1-3 doubles to {}pu. The flow from bus 3\n"
