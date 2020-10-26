@@ -7,9 +7,10 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
 
     Printing is set to True by default
 
-    h_modification is a float or integer used to modify a line in the network. Defaulted to 1 if everything is normal
-    Set h_modification to 0.5 if a line is removed
-    or h_modification to 2 if a line is added
+    h_modification is a float or integer used to modify a line in the network.
+    Default input h_modification = 1 is used if a single line is removed
+    Set h_modification to 0.5 if one of a double line is removed
+    Set h_modification to 2 if a new line is added where it already exists a single line
     """
     H = np.zeros([len(buses), len(buses)], dtype=float)
     for line in lines:
