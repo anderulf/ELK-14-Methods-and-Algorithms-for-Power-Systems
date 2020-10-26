@@ -331,6 +331,8 @@ class Bus:
         self.alpha = alpha
         # Variable for benders decomposition
         self.p_gen = None
+        self.gen_cost = None
+        self.marginal_cost = None
 
     def classify_bus_type(self):
         """
