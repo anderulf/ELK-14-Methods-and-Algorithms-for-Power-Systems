@@ -112,5 +112,10 @@ for index, line in enumerate(lines):
     print("\nPower flow on line:".format(line.name), "{}pu".format(round(line.p_power_flow[0][0], 4)) )
     print("Change from Basecase: {}pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
 
-print("\nLike in task 4 the slack bus covers the net increase in the load in the system which is {}pu. Additionally..."
-      " ".format(p_diff_task4-p_diff_task5))
+print("\nLike in task 4 the slack bus covers the net increase in the load in the system which is {}pu. The trend is \n"
+      "that power flows from left to right, like in the basecase. The distribution factors explains how the change in \n"
+      "loads, cause changes in the power flow on the lines. For example line 1-2 can be used as an example: \n"
+      "increased load at bus 1 and decreased load at bus 2 causes an increased flow from bus 2 to bus 1, and decreased\n"
+      "load at bus 2 causes. Furthermore a change at bus 3 does not contribute to the flow on line 1-2. Also, because \n"
+      "the distribution factor a_12,2 has a higher absolute value than a_12,1, a change in the load at \n"
+      "bus 2 will contribute more to the change in flow on line 1-2, compared to bus 1.".format(p_diff_task4-p_diff_task5))
