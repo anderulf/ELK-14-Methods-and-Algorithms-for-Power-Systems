@@ -64,9 +64,9 @@ for index, line in enumerate(lines):
         print("\nActive power flow on line:", round(line.p_power_flow, 3))
         print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
-print("\nWhen line {} is disconnected the flow which originally was flowing between bus 1 and 2 is flowing on line 1-3\n"
+print("\nWhen line {} is disconnected the flow which originally was flowing between bus 1 and 2 is now flowing on line 1-3\n"
       "instead. Hence the change on line 1-3 and line 2-3 is opposite. Less power flows from bus 3 to bus 2 because it\n"
-      "cannot flow over to bus 1.".format(outage_task_2))
+      "cannot flow further to bus 1.".format(outage_task_2))
 
 print_title1("Task 3")
 
@@ -79,7 +79,7 @@ for index, line in enumerate(lines):
     print("\nActive power flow on line:", round(line.p_power_flow, 3))
     print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
-print("\nBecause one of the lines are disconnected, the net reactance doubles to {} on line 1-3. The flow from bus 3\n"
+print("\nBecause one of the lines are disconnected, the net reactance on line 1-3 doubles to {}pu. The flow from bus 3\n"
       "to bus 1 has decreased because of this increase in reactance. Because of this, more power flows from bus 3 to \n"
       "bus 1 via bus 2. The flow on line 3-4 has not changed because the total load in the system is unchanged."
       "".format(line_13.reactance))
@@ -99,7 +99,7 @@ print("\nNote that the above P_array is equal to the specified in the input. Thi
       "IMML is an alternative method to calculate the same result as by using the distribution factors. Task 2 and 3 \n"
       "shows that topology changes are easily calculated using the IMML method which is beneficial for contingency \n"
       "analysis. This is because there is no need to change the topology matrix H (B'). Only the M-matrix and \u0394h\n"
-      "is changed which is a very fast modification.")
+      "is changed which is a very easy modification.")
 
 print_title1()
 
