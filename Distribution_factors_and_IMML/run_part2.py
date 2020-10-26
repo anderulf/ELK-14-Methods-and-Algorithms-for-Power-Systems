@@ -1,13 +1,19 @@
 from classes import Bus, Line
 from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
 import numpy as np
-from supporting_methods import print_title1, print_title2
+from supporting_methods import print_title1, print_title3
 
 """
 Settings
 """
 outage_task_2 = "1-2"
 outage_task_3 = "1-3"
+
+line_12_flow_from_part1 = -0.0455
+line_13_flow_from_part1 = -1.2045
+line_23_flow_from_part1 = -0.4455
+line_34_flow_from_part1 = -2.25
+lines_from_part1 = [line_12_flow_from_part1, line_13_flow_from_part1, line_23_flow_from_part1, line_34_flow_from_part1]
 """
 Input values
 """
@@ -44,38 +50,56 @@ print("\nIMML is a fast and general technique for simulating impacts of modifyin
       "during the entire process. H describes the original network topology, delta_h reflects what to me manipulated\n"
       "and M reflects which lines/buses to be affected by the manipulation. The results after applying an IMML are\n"
       "the state of the new voltage angles as well as the new power flow for the given modification\n")
+
 print_title1("Task 2")
 #Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
 from_bus, to_bus = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_2)
-for line in lines:
+# from_bus and to_bus is the line which is not considered
+for index, line in enumerate(lines):
     if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
         pass
     else:
-        print("P on", line.name, ":", round((line.from_bus.delta - line.to_bus.delta)/line.reactance, 3))
+        line.p_power_flow =  (line.from_bus.delta - line.to_bus.delta)/line.reactance
+        print_title3(line.name)
+        print("\nActive power flow on line:", round(line.p_power_flow, 3))
+        print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
+
+print("\nWhen line {} is disconnected the flow which originally was flowing between bus 1 and 2 is flowing on line 1-3\n"
+      "instead. Hence the change on line 1-3 and line 2-3 is opposite. Less power flows from bus 3 to bus 2 because it\n"
+      "cannot flow over to bus 1.".format(outage_task_2))
 
 print_title1("Task 3")
 
 from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_3, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_13.reactance *= 2
-for line in lines:
-    print("P on", line.name, ":", round((line.from_bus.delta - line.to_bus.delta)/line.reactance, 3))
+for index, line in enumerate(lines):
+    line.p_power_flow = (line.from_bus.delta - line.to_bus.delta)/line.reactance
+    print_title3(line.name)
+    print("\nActive power flow on line:", round(line.p_power_flow, 3))
+    print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
-print("")
+print("\nBecause one of the lines are disconnected, the net reactance doubles to {} on line 1-3. The flow from bus 3\n"
+      "to bus 1 has decreased because of this increase in reactance. Because of this, more power flows from bus 3 to \n"
+      "bus 1 via bus 2. The flow on line 3-4 has not changed because the total load in the system is unchanged."
+      "".format(line_13.reactance))
 P_array_new = np.zeros([len(buses) - 1, 1])
 for line in lines:
     if line.from_bus.bus_number == slack_bus_number:
         pass
     else:
         P_array_new[line.from_bus.bus_number-1][0] += (line.from_bus.delta - line.to_bus.delta)/line.reactance
-        print("{} reactance: {}pu".format(line.name, line.reactance))
-
     if line.to_bus.bus_number != slack_bus_number:
         P_array_new[line.to_bus.bus_number - 1][0] += -(line.from_bus.delta - line.to_bus.delta) / line.reactance
     else:
         pass
 
-print("\nP_array_new: \n", np.round(P_array_new, 4), "\n")
+print("\nP_array calculated from flow on lines: \n", np.round(P_array_new, 4))
+print("\nNote that the above P_array is equal to the specified in the input. This verifies the line flows and that the\n"
+      "IMML is an alternative method to calculate the same result as by using the distribution factors. Task 2 and 3 \n"
+      "shows that topology changes are easily calculated using the IMML method which is beneficial for contingency \n"
+      "analysis. This is because there is no need to change the topology matrix H (B'). Only the M-matrix and \u0394h\n"
+      "is changed which is a very fast modification.")
 
 print_title1()
 
