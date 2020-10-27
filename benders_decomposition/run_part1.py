@@ -23,7 +23,7 @@ P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
 # line data
 r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
 x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.2, "3-4": 0.25}
-gen_cost = {"Bus 1": 4, "Bus 2": 5, "Bus 3": 3, "Bus 4": 2}
+gen_cost = {"1": 4, "2": 5, "3": 3, "4": 2}
 trans_cap = {"Line 1-2": 1, "Line 1-3": 1, "Line 2-3": 1.5, "Line 3-4": 1}
 
 
@@ -77,17 +77,17 @@ else:
 print("Only the constraints corresponding to the congested lines are included in the OPF using LPsolve.")
 
 # Calculated values from LP-solve for part 1 task 1
-dispatch = [0.8, 0, 1.3, 1]
+dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}
 k = 9.1
-dispatch_duals   = [0, 0, 0, 0] # Dual values for dispatch limits set to prod > 0
+dispatch_duals   = {"1": 0, "2": 0, "3": 0, "4": 0} # Dual values for dispatch limits set to prod > 0
 for index, bus in enumerate(buses.values()):
-    bus.gen_cost = gen_cost["Bus {}".format(bus.bus_number)]
-    bus.p_gen = dispatch[index]
-    bus.marginal_cost = dispatch_duals[index]
+    bus.gen_cost = gen_cost["{}".format(bus.bus_number)]
+    bus.p_gen = dispatch["{}".format(bus.bus_number)]
+    bus.marginal_cost = dispatch_duals["{}".format(bus.bus_number)]
 
 print("\nOptimal objective function value, from LPsolve:", k)
-for index in range(len(dispatch)):
-    print("Dispatch for bus {} : {} pu".format(index+1, dispatch[index]))
+for bus_number in dispatch.keys():
+    print("Dispatch for bus {} : {} pu".format(int(bus_number)+1, dispatch[bus_number]))
 
 print_title1("Task 2")
 #Task 2
