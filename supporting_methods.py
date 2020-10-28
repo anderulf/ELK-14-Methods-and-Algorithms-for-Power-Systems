@@ -1,5 +1,10 @@
+from typing import Dict, Any
+
 import numpy as np
 from copy import deepcopy
+
+from numpy.core._multiarray_umath import ndarray
+
 
 def rectangular_to_polar(complex_number):
     r = np.sqrt(complex_number.real*complex_number.real+complex_number.imag*complex_number.imag).real
@@ -58,41 +63,6 @@ def print_title3(input_string=None):
         print("\n", int(symbol_count / 2) * symbol, input_string, int(symbol_count / 2) * symbol)
     else:
         print("\n", symbol_count * symbol)
-
-def run_newton_raphson(N_R, printing=True, total_iterations=None, convergence=False):
-    """
-    Runs the general newton raphson method
-    N_R: Load_Flow, Contination or Fast_Decoupled object
-    set printing=False to suppress printing
-    Set input total_iterations if external iterations should be counted
-    Set convergence=True to track convergence
-    """
-    if convergence:
-        converging = True
-    while N_R.power_error() > 0.0001:
-        N_R.iteration += 1
-        if total_iterations:
-            total_iterations += 1
-        N_R.reset_values()
-        N_R.calc_new_power_injections()
-        N_R.error_specified_vs_calculated()
-        N_R.jacobian.create()
-        N_R.find_x_diff()
-        N_R.update_values()
-        if printing:
-            print_title3("Iteration: {}".format(N_R.iteration))
-            N_R.print_matrices()
-        if N_R.diverging():
-            if printing:
-                print_title3("No convergence")
-                converging = False
-            break
-    if total_iterations and convergence:
-        return total_iterations, converging
-    elif convergence and not total_iterations:
-        return converging
-    elif total_iterations and not convergence:
-        return  total_iterations
 
 def create_simplified_y_bus(B, lines, slack_bus_number):
     """
