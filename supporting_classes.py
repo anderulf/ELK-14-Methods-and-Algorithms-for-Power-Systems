@@ -25,6 +25,7 @@ class Bus:
         self.beta = beta
         self.alpha = alpha
         # Variable for benders decomposition
+        self.dispatch = None
         self.p_gen = None
         self.gen_cost = None
         self.marginal_cost = None
