@@ -90,6 +90,9 @@ print("\nOptimal objective function value, from LPsolve:", k)
 for bus_number in dispatch.keys():
     print("Dispatch for bus {} : {} pu".format(int(bus_number)+1, dispatch[bus_number]))
 
+
+
+
 print_title1("Task 2")
 #Task 2
 #Check the marginal costs (reduced cost, dual variables) and check these against the operating cost at each bus.
