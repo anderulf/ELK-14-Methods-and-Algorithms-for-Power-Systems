@@ -1,13 +1,18 @@
-from classes import Load_Flow, Bus, Line
 import matplotlib.pyplot as plt
-from supporting_methods import run_newton_raphson, print_title1, print_title2
+from classes import Bus, Line
+from supporting_methods import print_title1, print_title2
+from newton_raphson_method.newton_raphson_support import run_newton_raphson, Load_Flow
 """
 Settings:
-    flat_start can be True or False
-        True: For load increases the load flow starts from the input values
-        False: For load increases the load flow starts from the previous load flow
+
+flat_start can be True or False
+    True: For load increases the load flow starts from the input values
+    False: For load increases the load flow starts from the previous load flow
 """
 flat_start = False
+# Additional reactive load 0.2pu 30% at Bus 1, and 70% at Bus 2.
+bus_1_load_increase = 0.06
+bus_2_load_increase = 0.14
 
 """
 Input values
@@ -22,12 +27,13 @@ Q = {"1": -0.5, "2": -0.5, "3": None}
 P = {"1": -0.8, "2": -0.4, "3": None}
 # line data
 r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
-x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
+x = {"1-2": 0.2, "1-3": 0.25, "2-3": 0.15}
 
 """
 Program
 """
-print_title1("Newton Raphson method iteration with load increases and flat start = {}".format(flat_start))
+print_title1("Task 3")
+print_title2("NR iteration with reactive load increases. Flat start={}".format(flat_start))
 
 # Create buses
 buses = {}
@@ -50,30 +56,28 @@ Q_increase = []
 V_vector_bus1 = []
 V_vector_bus2 = []
 
-# Initialize a system object (stores information about the grid)
 convergence = True
-updating_values = True
 
 if flat_start:
-    updating_values = False
-    start = 1
+    start = True
     V_vector_bus1.append(V["1"])
     V_vector_bus2.append(V["2"])
     Q_increase.append(-(Q["1"]+Q["2"]))
-    Q["1"] -= 0.06
-    Q["2"] -= 0.14
+    Q["1"] -= bus_1_load_increase
+    Q["2"] -= bus_2_load_increase
 else:
-    start = 0
+    start = False
 # start is used to get the correct order of the list which are used to make plot
 # If flat start, then the first elements are initialized earlier in the code.
 while convergence:
     # Recreate Bus-objects
     for bus_number in V:
         buses[int(bus_number)].update_values(P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+    print_title2("Current reactive load: Bus 1 = {} pu, bus 2 = {} pu".format(round(Q["1"], 3), round(Q["2"], 3)))
+    # Initialize a Load_Flow object (stores information about the grid)
     N_R = Load_Flow(buses, slack_bus_number, lines)
-    # Iterate NS
+    # Iterate NR
     total_iterations, convergence = run_newton_raphson(N_R, total_iterations=total_iterations, convergence=True)
-
     print_title2("Iteration completed")
     print("\nIterations: {}".format(N_R.iteration))
     # Get post analysis results
@@ -83,7 +87,7 @@ while convergence:
     N_R.print_buses()
     print("Total losses: P={}pu, Q={}pu".format(round(N_R.total_losses_p, 5), round(N_R.total_losses_q, 5)))
 
-    if updating_values:
+    if not flat_start:
         V["1"] = N_R.buses_dict[1].voltage
         V["2"] = N_R.buses_dict[2].voltage
         delta["1"] = N_R.buses_dict[1].delta
@@ -98,18 +102,21 @@ while convergence:
         V_vector_bus1.append(N_R.buses_dict[1].voltage)
         V_vector_bus2.append(N_R.buses_dict[2].voltage)
         Q_increase.append(-(Q["1"]+Q["2"]))
-        Q["1"] -= 0.06
-        Q["2"] -= 0.14
+        Q["1"] -= bus_1_load_increase
+        Q["2"] -= bus_2_load_increase
 
     # initializing for next iteration (while loop)
 
     N_R.iteration = 1
-    start = 1
+    start = True
 
-print("Total iterations: ", total_iterations)
+# After divergence
+print_title2("Analysis completed")
+print("\nTotal iterations: ", total_iterations)
+print("Setting for analysis: flat start = {}".format(flat_start))
 plt.plot(Q_increase,V_vector_bus1,label='V_Bus_1')
 plt.plot(Q_increase,V_vector_bus2, label='V_Bus_2')
-plt.xlabel('Total Reactive power drawn from the system')
+plt.xlabel('Total load power drawn from the system')
 plt.ylabel('Voltage [pu]')
 plt.legend()
 plt.show()

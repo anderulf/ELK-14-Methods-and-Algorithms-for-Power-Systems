@@ -1,17 +1,17 @@
-﻿from classes import Load_Flow, Bus, Line
-from supporting_methods import print_title1, print_title2, print_title3, run_newton_raphson
+﻿from classes import Bus, Line
+from supporting_methods import print_title1, print_title2
+from newton_raphson_method.newton_raphson_support import run_newton_raphson, Load_Flow
 """
 Input values
 """
-#  Voltages for 1,2 and the delta are guessed initial values
 slack_bus_number = 3
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
-# Q values from project
-Q = {"1": -0.5, "2": -0.5, "3": None}
-# P values from project
+# Specified active load data
 P = {"1": -1, "2": -0.5, "3": None}
-# line data
+# Specified reactive load data
+Q = {"1": -0.5, "2": -0.5, "3": None}
+# Line data
 r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.25, "2-3": 0.15}
 
