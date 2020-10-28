@@ -1,4 +1,4 @@
-# ELK-14: Methods and Algorithms for Power-Systems
+# ELK-14: Methods and Algorithms for Power Systems
 
 Specialization course for electric power engineering program at NTNU
 
