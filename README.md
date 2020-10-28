@@ -22,6 +22,6 @@ Methods and classes for each assignment are provided in the support.py files in 
 
 General methods and classes are supplied in supporting_methods.py and supporting_classes.py
 
-Bus, Line, Jacobian, and Mismatch classes are used in most of the assignments so they are located in the supporting_classes.py
+Bus, Line, Jacobian, and Mismatch classes are used in most of the assignments so they are located in the supporting_classes.py.
 The Load Flow class for newton raphson is located under the newton raphson folder. Contination and Fast_Decoupled uses the Load Flow class as a parent
 
