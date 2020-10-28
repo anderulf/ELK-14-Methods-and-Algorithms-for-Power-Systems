@@ -82,6 +82,7 @@ dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}
 k = 9.1
 dispatch_duals   = {"1": 0, "2": 0, "3": 0, "4": 0} # Dual values for dispatch limits set to prod > 0
 for index, bus in enumerate(buses.values()):
+    bus.dispatch = dispatch["{}".format(bus.bus_number)]
     bus.gen_cost = gen_cost["{}".format(bus.bus_number)]
     bus.p_gen = dispatch["{}".format(bus.bus_number)]
     bus.marginal_cost = dispatch_duals["{}".format(bus.bus_number)]
@@ -90,6 +91,15 @@ print("\nOptimal objective function value, from LPsolve:", k)
 for bus_number in dispatch.keys():
     print("Dispatch for bus {} : {} pu".format(int(bus_number)+1, dispatch[bus_number]))
 
+# New flow on line after optimization
+print_title3("New flow on lines after optimization")
+for line in lines:
+    # Reset current power flow
+    line.p_power_flow = 0
+    for bus in buses.values():
+        if bus.bus_number != slack_bus_number:
+            line.p_power_flow += a_dict[line.name][bus.bus_number-1][0] * (bus.dispatch + bus.p_spec)
+    print("{} power flow: {} pu".format(line.name, round(line.p_power_flow, 3) ) )
 
 
 
