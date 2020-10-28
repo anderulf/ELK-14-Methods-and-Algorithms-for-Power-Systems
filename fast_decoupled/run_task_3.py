@@ -1,5 +1,5 @@
-from classes import Bus, Line
-from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method, Fast_Decoupled
+from supporting_classes import Bus, Line
+from fast_decoupled.support import run_primal_method, run_dual_method, Fast_Decoupled
 from supporting_methods import print_title1, print_title2
 """
 Initial values

@@ -1,7 +1,7 @@
 import numpy as np
 import cmath as ma
 from supporting_methods import print_title3, polar_to_rectangular
-from classes import Jacobian, Mismatch
+from supporting_classes import Jacobian, Mismatch
 
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations

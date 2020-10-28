@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-from newton_raphson_method.newton_raphson_support import Load_Flow, run_newton_raphson
+from newton_raphson_method.support import Load_Flow, run_newton_raphson
 
 class Continuation(Load_Flow):
     """

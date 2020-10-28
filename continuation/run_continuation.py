@@ -1,7 +1,7 @@
-from classes import Bus, Line
+from supporting_classes import Bus, Line
 import numpy as np
 from supporting_methods import print_title1, print_title2, print_title3
-from newton_raphson_method.newton_raphson_support import run_newton_raphson
+from newton_raphson_method.support import run_newton_raphson
 from continuation.continuation_support import Continuation
 """
 Continuation settings

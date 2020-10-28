@@ -1,5 +1,5 @@
-from classes import Bus, Line
-from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
+from supporting_classes import Bus, Line
+from Distribution_factors_and_IMML.support import IMML_algorithm
 import numpy as np
 from supporting_methods import print_title1, print_title3, get_from_and_to_bus
 

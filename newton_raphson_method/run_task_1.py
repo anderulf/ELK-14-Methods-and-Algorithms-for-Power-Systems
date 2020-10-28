@@ -1,6 +1,6 @@
-﻿from classes import Bus, Line
+﻿from supporting_classes import Bus, Line
 from supporting_methods import print_title1, print_title2
-from newton_raphson_method.newton_raphson_support import run_newton_raphson, Load_Flow
+from newton_raphson_method.support import run_newton_raphson, Load_Flow
 """
 Input values
 """

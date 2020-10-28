@@ -1,7 +1,7 @@
-from classes import Bus, Line
+from supporting_classes import Bus, Line
 from supporting_methods import print_title1, print_title2
-from newton_raphson_method.newton_raphson_support import run_newton_raphson
-from fast_decoupled.fast_decoupled_methods import Fast_Decoupled, run_primal_method, run_dual_method
+from newton_raphson_method.support import run_newton_raphson
+from fast_decoupled.support import Fast_Decoupled, run_primal_method, run_dual_method
 
 """
 Initial values

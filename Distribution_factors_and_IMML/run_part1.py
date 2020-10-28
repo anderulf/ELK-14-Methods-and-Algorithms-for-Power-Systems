@@ -1,5 +1,5 @@
 import numpy as np
-from classes import Line, Bus
+from supporting_classes import Line, Bus
 from supporting_methods import print_title1, print_title2, print_title3, create_simplified_y_bus, calculate_distribution_factors
 import copy
 """
