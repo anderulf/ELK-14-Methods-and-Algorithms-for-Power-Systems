@@ -1,4 +1,5 @@
 import numpy as np
+import cmath as ma
 from supporting_methods import print_title3, create_simplified_y_bus
 from newton_raphson_method.newton_raphson_support import Load_Flow
 
@@ -83,7 +84,7 @@ def run_dual_method(fast_dec, printing=False):
             print_title3("No convergence")
             break
     return fast_dec.iteration
-"""
+
 def run_standard_method(fast_dec, printing=False):  # Standard is implemented in the same way as the primal algorithm
     fast_dec.iteration = 0
     # Calculate initial active power injections
@@ -117,7 +118,7 @@ def run_standard_method(fast_dec, printing=False):  # Standard is implemented in
             print_title3("No convergence")
             break
     return fast_dec.iteration
-"""
+
 
 class Fast_Decoupled(Load_Flow):
     """
