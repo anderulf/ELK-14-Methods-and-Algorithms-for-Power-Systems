@@ -1,7 +1,7 @@
 import numpy as np
 import cmath as ma
 from supporting_methods import print_title3, create_simplified_y_bus
-from newton_raphson_method.newton_raphson_support import Load_Flow
+from newton_raphson_method.support import Load_Flow
 
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations
