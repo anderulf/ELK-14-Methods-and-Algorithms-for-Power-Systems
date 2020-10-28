@@ -83,7 +83,7 @@ fast_dec.calc_new_power_injections()
 phase = "Standard"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
-standard_iterations = run_standard_method(fast_dec, printing=True)
+standard_iterations = run_primal_method(fast_dec, printing=True) 
 fast_dec.print_final_solution(phase)
 print("\nNewton raphson iterations: ", NR_iterations)
 print("Primal iterations: ", primal_iterations)
