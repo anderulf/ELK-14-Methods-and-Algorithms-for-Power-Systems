@@ -1,7 +1,7 @@
 from classes import Bus, Line
 from Distribution_factors_and_IMML.IMML_algorithm import IMML_algorithm
 import numpy as np
-from supporting_methods import print_title1, print_title3
+from supporting_methods import print_title1, print_title3, get_from_and_to_bus
 
 """
 Settings
@@ -52,8 +52,9 @@ print("\nIMML is a fast and general technique for simulating impacts of modifyin
       "the state of the new voltage angles as well as the new power flow for the given modification\n")
 
 print_title1("Task 2")
+from_bus, to_bus = get_from_and_to_bus(outage_task_2)
 #Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
-from_bus, to_bus = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_2)
+IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus)
 # from_bus and to_bus is the line which is not considered
 for index, line in enumerate(lines):
     if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
@@ -62,27 +63,29 @@ for index, line in enumerate(lines):
         line.p_power_flow =  (line.from_bus.delta - line.to_bus.delta)/line.reactance
         print_title3(line.name)
         print("\nActive power flow on line:", round(line.p_power_flow, 3))
-        print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
+        print("Change from basecase: {} pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
-print("\nWhen line {} is disconnected the flow which originally was flowing between bus 1 and 2 is now flowing on line 1-3\n"
+print("\nWhen line 1-2 is disconnected the flow which originally was flowing between bus 1 and 2 is now flowing on line 1-3\n"
       "instead. Hence the change on line 1-3 and line 2-3 is opposite. Less power flows from bus 3 to bus 2 because it\n"
-      "cannot flow further to bus 1.".format(outage_task_2))
+      "cannot flow further to bus 1.")
 
 print_title1("Task 3")
 
-from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_3, h_modification=0.5)
+from_bus, to_bus = get_from_and_to_bus(outage_task_3)
+IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_13.reactance *= 2
 for index, line in enumerate(lines):
     line.p_power_flow = (line.from_bus.delta - line.to_bus.delta)/line.reactance
     print_title3(line.name)
     print("\nActive power flow on line:", round(line.p_power_flow, 3))
-    print("Change from basecase: {}pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
+    print("Change from basecase: {} pu".format(round(line.p_power_flow - lines_from_part1[index], 3)))
 
-print("\nBecause one of the lines are disconnected, the net reactance on line 1-3 doubles to {}pu. The flow from bus 3\n"
+print("\nBecause one of the lines are disconnected, the net reactance on line 1-3 doubles to {} pu. The flow from bus 3\n"
       "to bus 1 has decreased because of this increase in reactance. Because of this, more power flows from bus 3 to \n"
       "bus 1 via bus 2. The flow on line 3-4 has not changed because the total load in the system is unchanged."
       "".format(line_13.reactance))
+
 P_array_new = np.zeros([len(buses) - 1, 1])
 for line in lines:
     if line.from_bus.bus_number == slack_bus_number:

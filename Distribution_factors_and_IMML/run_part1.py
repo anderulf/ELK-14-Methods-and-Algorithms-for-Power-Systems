@@ -5,7 +5,7 @@ import copy
 """
 Settings
 """
-avoid_line = "Line 2-3x"
+avoid_line = "Line 2-3"
 """
 Input values
 """
@@ -33,17 +33,6 @@ line_34 = Line(buses[3], buses[4], r["3-4"], x["3-4"])
 lines = [line_12, line_13, line_23, line_34]
 
 #Assignment 4 part 1
-
-"""
-X_12 = 0.2
-X_13 = 0.1
-X_23 = 0.25
-X_34 = 0.25
-
-P_1 = -1.25
-P_2 = -0.4
-P_3 = -0.6
-"""
 
 print_title1("Task 1")
 print("In order to build the given equation system it is assumed that R = 0 and that the voltage magnitudes are constant\n"
@@ -84,15 +73,15 @@ print_title1("Task 4")
 bus_to_be_changed_task4 = "1"
 p_diff_task4 = 0.5
 P[bus_to_be_changed_task4] -= p_diff_task4
-print_title2("Load on bus {} increased with {}pu".format(bus_to_be_changed_task4, p_diff_task4))
+print_title2("Load on bus {} increased with {} pu".format(bus_to_be_changed_task4, p_diff_task4))
 P_array[int(bus_to_be_changed_task4)-1] = P[bus_to_be_changed_task4]
 
 for index, line in enumerate(lines):
     print_title3(line.name)
     # Calculate new power flow based on changed specified power
     line.p_power_flow = np.matmul(np.transpose(a_dict[line.name]), P_array)
-    print("\nPower flow on line:".format(line.name), "{}pu".format(round(line.p_power_flow[0][0], 4)) )
-    print("Change from Basecase: {}pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
+    print("\nPower flow on line:".format(line.name), "{} pu".format(round(line.p_power_flow[0][0], 4)) )
+    print("Change from Basecase: {} pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
 
 print("\nWe can observe that the flow from the slack bus (bus 4) to bus 3 is equal to the increase in load on bus {}.\n"
       "This means the slack bus has to cover the change in load.".format(bus_to_be_changed_task4))
@@ -102,17 +91,17 @@ print_title1("Task 5")
 bus_to_be_changed_task5 = "2"
 p_diff_task5 = 0.3
 P[bus_to_be_changed_task5] += p_diff_task5
-print_title2("Load on bus {} increased with {}pu and load on bus {} decreased with {}pu".format(bus_to_be_changed_task4,p_diff_task4, bus_to_be_changed_task5, p_diff_task5))
+print_title2("Load on bus {} increased with {} pu and load on bus {} decreased with {} pu".format(bus_to_be_changed_task4,p_diff_task4, bus_to_be_changed_task5, p_diff_task5))
 P_array[int(bus_to_be_changed_task5)-1] = P[bus_to_be_changed_task5]
 
 for index, line in enumerate(lines):
     print_title3(line.name)
     # Calculate new power flow based on changed specified power
     line.p_power_flow = np.matmul(np.transpose(a_dict[line.name]), P_array)
-    print("\nPower flow on line:".format(line.name), "{}pu".format(round(line.p_power_flow[0][0], 4)) )
-    print("Change from Basecase: {}pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
+    print("\nPower flow on line:".format(line.name), "{} pu".format(round(line.p_power_flow[0][0], 4)) )
+    print("Change from Basecase: {} pu".format(round(line.p_power_flow[0][0] - lines_from_task3[index].p_power_flow[0][0], 4)))
 
-print("\nLike in task 4 the slack bus covers the net increase in the load in the system which is {}pu. The trend is \n"
+print("\nLike in task 4 the slack bus covers the net increase in the load in the system which is {} pu. The trend is \n"
       "that power flows from left to right, like in the basecase. The distribution factors explains how the change in \n"
       "loads, cause changes in the power flow on the lines. For example line 1-2 can be used as an example: \n"
       "increased load at bus 1 and decreased load at bus 2 causes an increased flow from bus 2 to bus 1, and decreased\n"

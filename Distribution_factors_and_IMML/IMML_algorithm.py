@@ -1,9 +1,14 @@
 import numpy as np
 
-def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outage, h_modification=1, printing=True):
+# Numpy printing options
+np.set_printoptions(suppress=True)  # suppress scientific notations
+
+def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=1, printing=True):
     """
     Outage should be a string in the format "x-y" where x is the from bus, and y is the to bus
     The buses are changed by the algorithm so the bus data can be used after the algorithm is run
+
+    from_bus and to_bus are the buses on which outage line is connected to
 
     Printing is set to True by default
 
@@ -20,12 +25,9 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
     diagonal_elements = np.sum(H, axis=1)  # axis 1 meaning the we sum each column along the rows
     for i, Y_ii in enumerate(diagonal_elements):
         H[i, i] = -Y_ii  # subtracting because the off diagonal elements are negative (--=+)
-    # Remove slack bus
+    # Remove slack bus from H-matrix
     H = np.delete(H, slack_bus_number - 1, axis=0)
     H = np.delete(H, slack_bus_number - 1, axis=1)
-    from_bus, to_bus = outage.split("-")
-    from_bus = int(from_bus)
-    to_bus = int(to_bus)
     delta_h = H[from_bus-1, to_bus-1]*h_modification
     M = np.zeros([len(buses)-1, 1])
     M[from_bus-1] = 1
@@ -72,9 +74,6 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, outa
         print("\nP_array: \n", P_array)
         print("\nDelta_0:\n ", np.round(delta_0, 4))
         print("\nX-vector: \n", np.round(x, 4))
-        #print("\nTemp correction 2: \n", np.round(angle_diff, 4))
-        #print("\nc_inverse: \n", np.round(c_inverse, 4))
         print("\nc: \n", np.round(c, 4))
         print("\ndelta_corrections: \n", np.round(delta_correction, 4))
         print("\nNew angles: \n", np.round(delta, 4), "\n")
-    return from_bus, to_bus
