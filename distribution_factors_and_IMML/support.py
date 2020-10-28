@@ -1,4 +1,6 @@
 import numpy as np
+from copy import deepcopy
+from supporting_methods import print_title3
 
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations
@@ -34,10 +36,10 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from
     M[to_bus-1] = -1
 
     # X-vector = H_invers * M
-    #x = H_invers[:,from_bus-1] - H_invers[:,to_bus-1]
+    # x = H_invers[:,from_bus-1] - H_invers[:,to_bus-1]
     x = np.linalg.solve(H, M)
 
-    #z = M_transpose * x = M_transpose *H_invers*M
+    # z = M_transpose * x = M_transpose *H_invers*M
     z = x[from_bus-1] - x[to_bus -1]
 
     P_array = np.zeros([len(buses)-1, 1])
@@ -48,14 +50,14 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from
             P_array[int(bus)-1] = specified_active_powers[bus]
     delta_0 = np.linalg.solve(H, P_array)
 
-    #M_transpose*H_invers*P
+    # M_transpose*H_invers*P
     angle_diff = (delta_0[from_bus-1] - delta_0[to_bus-1])[0]
 
-    #temp_correction_2 = np.matmul(np.transpose(M), delta_0)[0][0] # Is a scalar value
+    # temp_correction_2 = np.matmul(np.transpose(M), delta_0)[0][0] # Is a scalar value
 
     c_inverse = (1/delta_h + z)[0] # Is generally a scalar value
     # Utilizing scalar values is a lot more efficiency compared to using matrix multiplication for larger systems
-    # Special Case occurs when running several modifaction in the systems simustaneously
+    # Special Case occurs when running several modifaction in the system simultaneously
     c = 1/c_inverse
     #delta_correction_temp_1 = c * angle_diff
     delta_correction = -x * c * angle_diff
@@ -77,3 +79,31 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from
         print("\nc: \n", np.round(c, 4))
         print("\ndelta_corrections: \n", np.round(delta_correction, 4))
         print("\nNew angles: \n", np.round(delta, 4), "\n")
+
+def calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, avoid_line=None, printing=True):
+    """
+    Runs a distribution factor calculation
+    """
+    right_hand_side_dict = {}
+    a_dict = {}
+    right_hand_side = np.zeros([len(P_array), 1])
+    for line in lines:
+        for bus in buses.values():
+            if bus.bus_number == slack_bus_number:
+                pass
+            elif bus.bus_number == line.from_bus.bus_number:
+                right_hand_side[int(bus.bus_number) - 1] = 1 / line.reactance
+            elif bus.bus_number == line.to_bus.bus_number:
+                right_hand_side[int(bus.bus_number) - 1] = -1 / line.reactance
+            else:
+                right_hand_side[int(bus.bus_number) - 1] = 0
+        right_hand_side_dict[line.name] = deepcopy(right_hand_side)
+        a = np.linalg.solve(B_p, right_hand_side)
+        a_dict[line.name] = a
+        line.p_power_flow = np.matmul(np.transpose(a), P_array)
+        if line.name != avoid_line and printing:
+            print_title3("{}:".format(line.name))
+            print("\nRight hand side: \n", np.round(right_hand_side_dict[line.name], 4))
+            print("\nDistribution factors: \n", np.round(a_dict[line.name], 4))
+            print("\nPower flow on line:\n", "{}pu".format(round(line.p_power_flow[0][0], 4)))
+    return right_hand_side_dict, a_dict
