@@ -6,3 +6,6 @@ __pycache__/*
 testing_script.py
 fast_decoupled/__pycache__/
 Distribution_factors_and_IMML/__pycache__/
+newton_raphson_method/__pycache__/
+continuation/__pycache__/
+

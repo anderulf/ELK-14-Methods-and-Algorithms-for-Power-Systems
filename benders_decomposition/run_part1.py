@@ -1,4 +1,4 @@
-from classes import Bus, Line
+from supporting_classes import Bus, Line
 from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
 import numpy as np
 import pyomo.environ as pyo

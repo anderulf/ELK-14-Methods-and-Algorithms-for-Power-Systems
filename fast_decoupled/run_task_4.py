@@ -1,5 +1,5 @@
-from classes import Bus, Line, Fast_Decoupled
-from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method
+from supporting_classes import Bus, Line
+from fast_decoupled.support import run_primal_method, run_dual_method, Fast_Decoupled
 from supporting_methods import print_title1, print_title2
 """
 Settings
@@ -14,14 +14,16 @@ Initial values
 slack_bus_number = 3
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
-# Q values from project
-Q = {"1": -0.5, "2": -0.5, "3": None}
-# P values from project
+# Specified active load data
 P = {"1": -1, "2": -0.5, "3": None}
-P["1"] -= load_increase_at_bus_1
+# Specified reactive load data
+Q = {"1": -0.5, "2": -0.5, "3": None}
 # line data
 r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.1 , "2-3": 0.15}
+
+# Load is increased on the bus
+P["1"] -= load_increase_at_bus_1
 
 # Create buses
 buses = {}
@@ -35,16 +37,14 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 lines = [line_12, line_13, line_23]
 
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
-#reset calc values
+
+# Reset calculated injections
 fast_dec.calc_new_power_injections()
 
 fast_dec.set_up_matrices()
 
 #4.
 print_title1("Task 4")
-
-# Reset resistances back to their initial value
-r = {"1-2": 0.05, "1-3": 0.05, "2-3": 0.05}
 
 print_title2("Primal Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
 
@@ -58,7 +58,7 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 
 lines = [line_12, line_13, line_23]
 
-# Recreate object
+# Recreate Fast Decoupled object
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 phase = "Primal"
 fast_dec.set_up_matrices(phase)
