@@ -23,6 +23,7 @@ def polar_to_rectangular(abs, angle):
     b = abs*np.sin(angle)
     return complex(a, b)
 
+"""
 def complex_angle(complex_number):
     r, angle = rectangular_to_polar(complex_number)
     return angle
@@ -30,6 +31,15 @@ def complex_angle(complex_number):
 def complex_radius(complex_number):
     r, angle = rectangular_to_polar(complex_number)
     return r
+"""
+def get_from_and_to_bus(input_string):
+    """
+    input string should be on the format "x-y"
+    where x is the from bus and y is the to bus
+    from and to bus are outputed as integers
+    """
+    from_bus, to_bus = input_string.split("-")
+    return int(from_bus), int(to_bus)
 
 def print_title1(input_string=None):
     """
