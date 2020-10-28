@@ -1,19 +1,20 @@
-from classes import Bus, Line, Fast_Decoupled
-from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method
+from classes import Bus, Line
+from fast_decoupled.fast_decoupled_methods import run_primal_method, run_dual_method, Fast_Decoupled
 from supporting_methods import print_title1, print_title2
 """
 Initial values
 """
-#  Voltages for 1,2 and the delta are guessed initial values
+#  Voltages and angles are set to flat start
 slack_bus_number = 3
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
-# Q values from project
-Q = {"1": -0.5, "2": -0.5, "3": None}
-# P values from project
+# Specified active load data
 P = {"1": -1, "2": -0.5, "3": None}
-# line data
+# Specified reactive load data
+Q = {"1": -0.5, "2": -0.5, "3": None}
+# Line data
 x = {"1-2": 0.2, "1-3": 0.2 , "2-3": 0.15}
+
 # Task 3
 # Set Rij = Xij
 r = x

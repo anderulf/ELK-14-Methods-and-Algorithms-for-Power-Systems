@@ -2,19 +2,20 @@ from classes import Bus, Line
 from supporting_methods import print_title1, print_title2
 from newton_raphson_method.newton_raphson_support import run_newton_raphson
 from fast_decoupled.fast_decoupled_methods import Fast_Decoupled, run_primal_method, run_dual_method
+
 """
 Initial values
 """
-#  Voltages for 1,2 and the delta are guessed initial values
 slack_bus_number = 3
+# Voltage and angles are set to flat start
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
-# Q values from project
-Q = {"1": -0.5, "2": -0.5, "3": None}
-# P values from project
+# Specified active load data
 P = {"1": -1, "2": -0.5, "3": None}
+# Specified reactive load data
+Q = {"1": -0.5, "2": -0.5, "3": None}
 
-# line data
+# Line data
 r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.2 , "2-3": 0.15}
 
@@ -29,7 +30,7 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 
 lines = [line_12, line_13, line_23]
 
-#Husk å oppdater continuation til run_fast_decoupled!!!
+# Create the Fast_Decoupled Load Flow object
 fast_dec = Fast_Decoupled(buses, slack_bus_number, lines)
 fast_dec.set_up_matrices()
 
@@ -84,6 +85,8 @@ fast_dec.calc_new_power_injections()
 phase = "Standard"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
+# Note that the standard method can be implemented equal to the primal or dual method. In this case it's run using
+# the primal method so run_primal_method is used.
 standard_iterations = run_primal_method(fast_dec, printing=True) 
 fast_dec.print_final_solution(phase)
 print("\nNewton raphson iterations: ", NR_iterations)
