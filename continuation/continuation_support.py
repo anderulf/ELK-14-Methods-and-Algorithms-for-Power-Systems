@@ -1,5 +1,6 @@
+import numpy as np
 import copy
-from newton_raphson_method.newton_raphson_support import Load_Flow
+from newton_raphson_method.newton_raphson_support import Load_Flow, run_newton_raphson
 
 class Continuation(Load_Flow):
     """
@@ -16,6 +17,9 @@ class Continuation(Load_Flow):
     def initialize(self, max_voltage_step, max_load_step):
         """
         Initialize some values
+
+        max voltage step is not implemented in the assignment. It is used in continuation as a upper limit on how much
+        a voltage can change through a prediction step
         """
         self.max_voltage_step = max_voltage_step
         self.max_load_step = max_load_step
@@ -52,6 +56,8 @@ class Continuation(Load_Flow):
         Determine if NR load flow converges at the current step
 
         Computational heavy way of determining this. Could perhaps allow higher error limit? Other ways of determining?
+
+        This method is used for the continuation method but not implemented in the ELK-14 assignment
         """
         self.jacobian.reset_original_matrix()
         self.mismatch.reset_original_vector()
@@ -95,6 +101,8 @@ class Continuation(Load_Flow):
         Return the index in the jacobian matrix for the highest voltage change
         The returned value is offset with the number of pq and pv buses corresponding to the number of angle elements before
         the voltage elements in the jacobian matrix.
+
+        This method is used for the continuation method but not implemented in the ELK-14 assignment
         """
         max_voltage_bus_index = 0
         max_voltage = 0
@@ -118,7 +126,6 @@ class Continuation(Load_Flow):
         """
         self.old_buses_dict = copy.deepcopy(self.buses_dict)
         self.old_mismatch = copy.deepcopy(self.mismatch)
-        # some other values? mismatch etc.
 
     def reverse_step(self):
         """
@@ -126,7 +133,6 @@ class Continuation(Load_Flow):
         """
         self.buses_dict = self.old_buses_dict
         self.mismatch = self.old_mismatch
-        # some other values? mismatch etc.
 
     def expand_other_vectors(self):
         """

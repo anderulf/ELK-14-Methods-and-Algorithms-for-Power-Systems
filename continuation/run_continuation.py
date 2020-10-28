@@ -1,6 +1,8 @@
-from classes import Bus, Line, Continuation
+from classes import Bus, Line
 import numpy as np
-from supporting_methods import print_title1, print_title2, print_title3, run_newton_raphson
+from supporting_methods import print_title1, print_title2, print_title3
+from newton_raphson_method.newton_raphson_support import run_newton_raphson
+from continuation.continuation_support import Continuation
 """
 Continuation settings
 """
@@ -119,3 +121,7 @@ while continuation.power_error() > 0.0001:
     if continuation.diverging():
         print_title3("No convergence")
         break
+
+
+print("\nThis implementation shows the different steps in the continuation load flow method. A fully integrated \n"
+      "algorithm is able to make these steps automatically.")
