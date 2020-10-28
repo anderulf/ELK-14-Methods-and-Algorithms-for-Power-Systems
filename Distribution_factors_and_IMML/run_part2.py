@@ -18,7 +18,7 @@ lines_from_part1 = [line_12_flow_from_part1, line_13_flow_from_part1, line_23_fl
 Input values
 """
 slack_bus_number = 4
-V = {"1": 1, "2": 1, "3": 1, "4": 1 }
+V = {"1": 1, "2": 1, "3": 1, "4": 1}
 delta = {"1": 0, "2": 0, "3": 0, "4": 0}
 # Q values from assignment
 Q = {"1": 0, "2": 0, "3": 0, "4": None}

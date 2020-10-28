@@ -21,10 +21,10 @@ Input values
 slack_bus_number = 3
 V = {"1": 1, "2": 1, "3": 1}
 delta = {"1": 0, "2": 0, "3": 0}
-# Q values from project
-Q = {"1": -0.5, "2": -0.5, "3": None}
-# P values from project
+# Specified active load data
 P = {"1": -0.8, "2": -0.4, "3": None}
+# Specified reactive load data
+Q = {"1": -0.5, "2": -0.5, "3": None}
 # line data
 r = {"1-2": 0.1, "1-3": 0.05, "2-3": 0.05}
 x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
