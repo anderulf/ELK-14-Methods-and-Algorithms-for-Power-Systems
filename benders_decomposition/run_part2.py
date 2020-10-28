@@ -1,7 +1,7 @@
-from classes import Bus, Line
-from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
+from supporting_classes import Bus, Line
+from supporting_methods import print_title1, print_title3, create_simplified_y_bus, get_from_and_to_bus
 import numpy as np
-from IMML_algorithm import IMML_algorithm
+from distribution_factors_and_IMML.support import IMML_algorithm, calculate_distribution_factors
 
 #import pyomo.environ as pyo
 #from pyomo.opt import SolverFactory
@@ -58,8 +58,8 @@ B_p = create_simplified_y_bus(B_p, lines, slack_bus_number)
 _, a_dict_old = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, printing=False)
 
 print_title1("Task 1")
-
-from_bus, to_bus  = IMML_algorithm(P, buses, lines, slack_bus_number, outage_task_1, h_modification=0.5, printing=False)
+from_bus, to_bus = get_from_and_to_bus(outage_task_1)
+IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5, printing=False)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_23.reactance *= 2
 line_23.transfer_capacity /=2
@@ -98,15 +98,9 @@ print_title1("Task 2")
 B_p = np.zeros([len(P), len(P)])
 B_p = create_simplified_y_bus(B_p, lines, slack_bus_number)
 _, a_dict = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, printing=False)
-"""
-# Calculate the flow on lines using the distribution factors
-for line in lines:
-    line.p_power_flow = 0
-    for bus in buses.values():
-        if bus.bus_number != slack_bus_number:
-            line.p_power_flow += a_dict[line.name][bus.bus_number-1][0] * (basecase_dispatch[str(bus.bus_number)] + bus.p_spec)
-    print("\n{} power flow: {}".format(line.name, round(line.p_power_flow, 4)), "pu")
-"""
+
+print("\nDist factors before outage: \n", a_dict_old)
+print("\nDist factors after outage \n", a_dict)
 # The subproblem is formulated
 
 

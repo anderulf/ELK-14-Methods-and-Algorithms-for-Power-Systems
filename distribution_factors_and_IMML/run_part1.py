@@ -1,6 +1,7 @@
 import numpy as np
 from supporting_classes import Line, Bus
-from supporting_methods import print_title1, print_title2, print_title3, create_simplified_y_bus, calculate_distribution_factors
+from supporting_methods import print_title1, print_title2, print_title3, create_simplified_y_bus
+from distribution_factors_and_IMML.support import calculate_distribution_factors
 import copy
 """
 Settings

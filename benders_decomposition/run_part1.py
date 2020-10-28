@@ -1,5 +1,6 @@
-from classes import Bus, Line
-from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
+from supporting_classes import Bus, Line
+from supporting_methods import print_title1, print_title3, create_simplified_y_bus
+from distribution_factors_and_IMML.support import calculate_distribution_factors
 import numpy as np
 #import pyomo.environ as pyo
 #from pyomo.opt import SolverFactory
