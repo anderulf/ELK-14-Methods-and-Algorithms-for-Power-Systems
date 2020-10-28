@@ -1,6 +1,6 @@
-# ELK-14: Methods and Algorithms for Power-Systems at NTNU
+# ELK-14: Methods and Algorithms for Power-Systems
 
-Specialization course for electric power engineering program
+Specialization course for electric power engineering program at NTNU
 
 Cooperation with Trude Byre and Hilde Enevoldsen
 
