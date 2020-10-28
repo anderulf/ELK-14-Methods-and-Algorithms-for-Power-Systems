@@ -1,8 +1,8 @@
-from supporting_classes import Bus, Line
+from classes import Bus, Line
 from supporting_methods import print_title1, print_title3, create_simplified_y_bus, calculate_distribution_factors
 import numpy as np
-import pyomo.environ as pyo
-from pyomo.opt import SolverFactory
+#import pyomo.environ as pyo
+#from pyomo.opt import SolverFactory
 import copy
 """
 Settings
@@ -23,7 +23,7 @@ P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
 # line data
 r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
 x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.2, "3-4": 0.25}
-gen_cost = {"Bus 1": 4, "Bus 2": 5, "Bus 3": 3, "Bus 4": 2}
+gen_cost = {"1": 4, "2": 5, "3": 3, "4": 2}
 trans_cap = {"Line 1-2": 1, "Line 1-3": 1, "Line 2-3": 1.5, "Line 3-4": 1}
 
 
@@ -70,29 +70,34 @@ for line in lines:
 
 if congested:
     print("\nCongested line(s):\n", congested_lines)
-    print("\nSince one ore more lines are congested, linear programming is required.")
+    print("\nSince one or more lines are congested, linear programming is required.")
 else:
     print("\nNo lines are congested.")
 
+print("Only the constraints corresponding to the congested lines are included in the OPF using LPsolve.")
+
 # Calculated values from LP-solve for part 1 task 1
-dispatch = [0.8, 0, 1.3, 1]
-dispatch_duals   = [0, 0, 0, 0] # Dual values for dispatch limits set to prod > 0
+dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}
+k = 9.1
+dispatch_duals   = {"1": 0, "2": 0, "3": 0, "4": 0} # Dual values for dispatch limits set to prod > 0
 for index, bus in enumerate(buses.values()):
-    bus.gen_cost = gen_cost["Bus {}".format(bus.bus_number)]
-    bus.p_gen = dispatch[index]
-    bus.marginal_cost = dispatch_duals[index]
+    bus.gen_cost = gen_cost["{}".format(bus.bus_number)]
+    bus.p_gen = dispatch["{}".format(bus.bus_number)]
+    bus.marginal_cost = dispatch_duals["{}".format(bus.bus_number)]
 
+print("\nOptimal objective function value, from LPsolve:", k)
+for bus_number in dispatch.keys():
+    print("Dispatch for bus {} : {} pu".format(int(bus_number)+1, dispatch[bus_number]))
 
-
-
+print_title1("Task 2")
+#Task 2
+#Check the marginal costs (reduced cost, dual variables) and check these against the operating cost at each bus.
 
 
 
 """
 #The optimization part with Pyomo (Ignored because LTsolve is used)
-
 print_title1("Optimization part")
-
 # The set for optimization
 bus_set = []
 line_set = []
@@ -102,10 +107,8 @@ for bus in buses.values():
     loads["Bus {}".format(bus.bus_number)] = bus.p_spec
 for line in lines:
     line_set.append(line.name)
-
 # We declare the model (ie. creating a pyo object called model)
 model = pyo.ConcreteModel()
-
 """
 """
 Sets:
@@ -113,11 +116,9 @@ Sets:
     - Lines
 """
 """
-
 # We declare the set for buses
 model.Bus = pyo.Set(ordered=True, initialize=bus_set)
 model.Line = pyo.Set(ordered=True, initialize=line_set)
-
 """"""
 Parameters:
     - distribution factors
@@ -125,7 +126,6 @@ Parameters:
     - generation costs
     - transfer capacities
 """"""
-
 dist_factors = {}
 line_a = {}
 for line in lines:
@@ -133,50 +133,30 @@ for line in lines:
         if bus.bus_number != slack_bus_number:
             line_a["Bus {}".format(bus.bus_number)] = a_dict[line.name][index][0]
     dist_factors[line.name] = copy.deepcopy(line_a)  # <-- value må være en ny dict for flere busser
-
-
 model.a = pyo.Param(model.Line, initialize=dist_factors, within=pyo.Any)
-
 model.loads = pyo.Param(model.Bus, initialize=loads, within=pyo.Reals)
-
 model.gen_cost = pyo.Param(model.Bus, initialize=gen_cost, within=pyo.Reals)
-
 model.trans_cap = pyo.Param(model.Line, initialize=trans_cap, within=pyo.Reals)
-
 """"""
 Variables:
     - Variable for generation at a bus
 """"""
-
 # Declare the variable for generation at a bus
 model.generation = pyo.Var(model.Bus, within=pyo.NonNegativeReals)
-
-
-
 # Objective: Minimize cost of generation
 def Objective(model):
     return (sum(model.gen_cost[n] * model.generation[n] for n in model.Bus))
-
-
 model.OBJ = pyo.Objective(rule=Objective, sense=pyo.minimize)
-
 """"""
 Constraints:
     production cannot be more than inflow and stored capacity
     reservoir cannot hold more than inflow minus reservoir capacity (rest is spillage)
-
 """"""
-
 # Constraint for power balance
-
 # Constraint for power balance during the first period. Production is equal to inflow - stored for next period - spilled water
 def power_balance(model):
     return (sum(model.generation[n] for n in model.Bus) == sum(model.loads[n] for n in model.Bus))
-
-
 model.power_balance = pyo.Constraint(rule=power_balance)
-
-
 # Constraint for flow on line
 def line_upper_limit(model, line):
     print(line)
@@ -185,9 +165,7 @@ def line_upper_limit(model, line):
         if index != slack_bus_number - 1:
             flow += model.a[line][bus] * (model.generation[bus] - model.loads[bus])
     return flow <= model.trans_cap[line]
-
 model.line_upper_limit = pyo.Constraint(model.Line, rule=line_upper_limit)
-
 def line_lower_limit(model, line):
     flow = 0
     for index, bus in enumerate(model.Bus):
@@ -195,39 +173,17 @@ def line_lower_limit(model, line):
             flow += model.a[line][bus] * (model.generation[bus] - model.loads[bus])
     return flow >= -model.trans_cap[line]
     #return (sum(model.a[line][bus] * (model.generation[bus] - model.loads[bus]) for bus in model.Bus[:-1]) >= -model.trans_cap[line])
-
-
 model.line_lower_limit = pyo.Constraint(model.Line, rule=line_lower_limit)
-
-
 # Solver used (since quadratic term in objective function, gurobi must be used)
 opt = SolverFactory("gurobi")
-
 # Include dual values, the dual values of the constraints will help us find the system price
 model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-
 # Solve the problem
 results = opt.solve(model, load_solutions=True)
-
 print("Displaying results:")
 # Display values
 model.display()
-
 print("Displaying dual results:")
 # Display dual values
 model.dual.display()
-
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
