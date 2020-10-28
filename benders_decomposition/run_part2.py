@@ -58,6 +58,8 @@ B_p = create_simplified_y_bus(B_p, lines, slack_bus_number)
 _, a_dict_old = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, printing=False)
 
 print_title1("Task 1")
+
+# Update 
 from_bus, to_bus = get_from_and_to_bus(outage_task_1)
 IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5, printing=False)
 # Removal of one line means the equivalent impedance on the remaining line is doubled

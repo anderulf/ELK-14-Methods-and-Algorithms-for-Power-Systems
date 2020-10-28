@@ -9,18 +9,18 @@ import copy
 Settings
 """
 error = 1e-5
+# From LTsolve
+#P = {"1": -0.8, "2": -0.9, "3": 0.7, "4": 0}
 """
 Input values
 """
 slack_bus_number = 4
 V = {"1": 1, "2": 1, "3": 1, "4": 1 }
 delta = {"1": 0, "2": 0, "3": 0, "4": 0}
-# Q values from assignment
-Q = {"1": 0, "2": 0, "3": 0, "4": None}
-# P values from project
+# Specified active load at bus
 P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
-# From LTsolve
-#P = {"1": -0.8, "2": -0.9, "3": 0.7, "4": 0}
+# Specified reactive load at bus
+Q = {"1": 0, "2": 0, "3": 0, "4": None}
 # line data
 r = {"1-2": 0.0, "1-3": 0.0, "2-3": 0.0, "3-4": 0}
 x = {"1-2": 0.2, "1-3": 0.1, "2-3": 0.2, "3-4": 0.25}
@@ -99,7 +99,7 @@ for line in lines:
     for bus in buses.values():
         if bus.bus_number != slack_bus_number:
             line.p_power_flow += a_dict[line.name][bus.bus_number-1][0] * (bus.dispatch + bus.p_spec)
-    print("{} power flow: {} pu".format(line.name, round(line.p_power_flow, 3) ) )
+    print("{} power flow: {} pu".format(line.name, round(line.p_power_flow, 3)))
 
 
 
