@@ -29,9 +29,11 @@ trans_cap = {"Line 1-2": 1, "Line 1-3": 1, "Line 2-3": 1.5, "Line 3-4": 1}
 
 
 # Create buses
-buses = {}
-for bus_number in V:
-    buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
+bus1 = Bus(1, P["1"], Q["1"], V["1"], delta["1"])
+bus2 = Bus(2, P["2"], Q["2"], V["2"], delta["2"])
+bus3 = Bus(3, P["3"], Q["3"], V["3"], delta["3"])
+bus4 = Bus(4, P["4"], Q["4"], V["4"], delta["4"])
+buses = {1: bus1, 2: bus2, 3: bus3, 4: bus4}
 # Add lines
 line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"])
 line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"])
@@ -90,9 +92,9 @@ print("min: {} PG1 + {} PG2 + {} PG3 + {} PG4;".format(gen_cost["1"], gen_cost["
 print("\n/*Constraints: */\n")
 for line in congested_lines:
     bus_numbers = "{}{}".format(line.from_bus.bus_number, line.to_bus.bus_number)
-    line_constraint_basecase = "P{0}: {1} <= {2} PG1 + {3} PG2 + {4} PG3 <= {5};".format(bus_numbers, round(-line.transfer_capacity, 2),
-            round(a_dict[line.name][0][0], 2),round(a_dict[line.name][1][0], 2), round(a_dict[line.name][2][0],2),
-            round(line.transfer_capacity, 2))
+    line_constraint_basecase = "P{0}: {1} <= {2} PG1 + {3} + {4} PG2 + {5} + {6} PG3 + {7} <= {8};".format(bus_numbers, round(-line.transfer_capacity, 2),
+            round(a_dict[line.name][0][0], 2), round(a_dict[line.name][0][0] * bus1.p_spec,3),round(a_dict[line.name][1][0], 2), round(a_dict[line.name][1][0] * bus2.p_spec,3), round(a_dict[line.name][2][0],2),
+            round(a_dict[line.name][2][0] * bus3.p_spec,3), round(line.transfer_capacity, 2))
 
     print(line_constraint_basecase)
 
