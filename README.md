@@ -25,3 +25,4 @@ General methods and classes are supplied in supporting_methods.py and supporting
 Bus, Line, Jacobian, and Mismatch classes are used in most of the assignments so they are located in the supporting_classes.py.
 The Load Flow class for newton raphson is located under the newton raphson folder. Contination and Fast_Decoupled uses the Load Flow class as a parent
 
+github: https://github.com/anderulf/ELK-14-Methods-and-Algorithms-for-Power-Systems
