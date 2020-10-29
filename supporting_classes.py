@@ -28,7 +28,7 @@ class Bus:
         self.dispatch = None
         self.p_gen = None
         self.gen_cost = None
-        self.marginal_cost = None
+        self.sensitivity = None
 
     def classify_bus_type(self):
         """

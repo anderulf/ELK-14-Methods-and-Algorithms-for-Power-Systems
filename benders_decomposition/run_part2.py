@@ -12,6 +12,7 @@ Settings
 outage_task_1 = "2-3"
 error = 1e-5
 basecase_dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}
+basecase_congested_lines = []
 """
 Input values
 """
@@ -42,15 +43,18 @@ line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"])
 line_34 = Line(buses[3], buses[4], r["3-4"], x["3-4"])
 
 lines = [line_12, line_13, line_23, line_34]
+basecase_congested_lines.extend([line_13, line_34])
 
 for line in lines:
     line.transfer_capacity = trans_cap[line.name]
 
 P_array = np.zeros([len(P)-1, 1])
+system_load = 0
 voltage_angles_labels = []
 for index, p_spec in enumerate(P.values()):
     if p_spec:
         P_array[index] = basecase_dispatch[str(index +1)] + p_spec
+        system_load -=p_spec
         voltage_angles_labels.insert(index, "\u03B4{}".format(index+1))
 print("\nP_array:\n", P_array)
 
@@ -122,38 +126,61 @@ for line in congested_lines:
                                                 round(line.transfer_capacity - line.p_power_flow, 3))
 
     print(constraint)
-    print("\nLoad balance: \u0394PG1_up + \u0394PG2_up + \u0394PG3_up + \u0394PG4_up - \u0394PG1_down - \u0394PG2_down - PG3_down - \u0394PG4_down = 0;" )
+    print("\nLoad balance: \u0394PG1_up + \u0394PG2_up + \u0394PG3_up + \u0394PG4_up - \u0394PG1_down - \u0394PG2_down - \u0394PG3_down - \u0394PG4_down = 0;" )
 
 
 print_title1("Task 3")
 
 # Input this objective function and these constraints to LPsolve and get new optimal solution
-
+"""
+Output from LPsolve:
+PG1_up                   0.233372
+PG2_up                          0
+PG3_up                          0
+PG4_up                          0
+PG1_down                        0
+PG2_down                        0
+PG3_down                 0.233372
+PG4_down                        0
+"""
 # Get the output from LPsolve
 k = 0.46674446
 new_dispatch = {"1": 0.8+0.233372, "2": 0, "3": 1.3-0.233372, "4": 1}
-new_marginal_cost = {"1": 0, "2": 0, "3": 0, "4": 0}
+duals = {"1": 0, "2": 0.667445, "3": 2, "4": 2}
+costs = {"1": 1, "2": 1, "3": 1, "4": 1}
 for bus in buses.values():
-    bus.marginal_cost = new_marginal_cost["{}".format(bus_number)]
+    bus.sensitivity = duals["{}".format(bus.bus_number)] - costs["{}".format(bus.bus_number)]
 # Print the results
-
 print("\nOptimal objective function value, from LPsolve:", round(k, 3))
 for bus_number in new_dispatch.keys():
-    print("Dispatch for bus {} : {} pu".format(int(bus_number), round(new_dispatch[bus_number], 3)))
+    print("\nDispatch for bus {} : {} pu".format(int(bus_number), round(new_dispatch[bus_number], 3)))
+    print("Sensitivity for bus {} : {} ".format(int(bus_number), round(buses[int(bus_number)].sensitivity, 3)))
 
 print_title1("Task 4")
 
 # Formulate the constraint to be added to master problem in order to make a feasible solution with the contingency
 
-master_constraint = "Ks + C1 * MC1 * \u0394PG1 + C2 * MC2 * \u0394PG2 + C3 * MC3 * \u0394PG3 + C4 * MC4 * \u0394PG4 <= 0"
-master_constraint_values = "{} ".format(k)
-for bus in buses.values():
-    master_constraint_values += "+ {}*(PG1-{})".format(round(bus.marginal_cost,3), basecase_dispatch["{}".format(bus.bus_number)])
+master_constraint = "Ks + C1 * dKs/d\u0394PG1 * \u0394PG1 + C2 * dKs/d\u0394PG2 * \u0394PG2 + C3 * dKs/d\u0394PG3 * \u0394PG3 + C4 * dKs/d\u0394PG4" \
+                    " * \u0394PG4 <= 0"
+
+
+master_constraint_values = "{} ".format(round(k, 3))
+rhs = -k
+master_constraint_values_final = "Bender_Cut: "
+for index, bus in enumerate(buses.values()):
+    master_constraint_values += " + {}*(PG{}-{})".format(round(bus.sensitivity,3),bus.bus_number , basecase_dispatch["{}".format(bus.bus_number)])
+    if index != 0:
+        master_constraint_values_final += " + "
+
+    master_constraint_values_final += "{}*PG{}".format(round(bus.sensitivity,3), bus.bus_number)
+    rhs += bus.sensitivity * basecase_dispatch["{}".format(bus.bus_number)]
 
 master_constraint_values += " <= 0"
+master_constraint_values_final += " <= {}".format(round(rhs, 3))
 print_title3("Final constraint to be added to master problem: ")
 print(master_constraint)
 print(master_constraint_values)
+print(master_constraint_values_final)
 
 print_title3("Final master formulation:")
 
@@ -163,18 +190,15 @@ print("min: Ks = {} PG1 + {} PG2 + {} PG3 + {} PG4".format(gen_cost["1"], gen_co
 # Either get the constraints from task 2 or make new with a_dict before contingency, if so just calculate before
 #  removing the line in the beginning of the code and create with code below
 print("\nConstraints: \n")
-for line in congested_lines:
-    line.p_power_flow = line.p_power_flow
+for line in basecase_congested_lines:
     bus_numbers = "{}{}".format(line.from_bus.bus_number, line.to_bus.bus_number)
-    s_up = "P{}: {} (PG1-PG10) + {} (PG2-PG20) + {} (PG3-PG30) >= {}".format(bus_numbers, round(a_dict_old[line.name][0][0], 2),
-                                                round(a_dict_old[line.name][1][0], 2), round(a_dict_old[line.name][2][0],2),
-                                                round(-line.transfer_capacity - line.p_power_flow, 2))
-    s_down = "P{}: {} (PG1-PG10) + {} (PG2-PG20) + {} (PG3-PG30) <= {}".format(bus_numbers, round(-a_dict_old[line.name][0][0], 2),
-                                                round(-a_dict_old[line.name][1][0], 2), round(-a_dict_old[line.name][2][0], 2),
-                                             round(line.transfer_capacity - line.p_power_flow,2))
-    print(s_up)
-    print(s_down)
-    print("\n")
+    line_constraint_basecase = "P{0}: {1} <= {2} PG1 + {3} PG2 + {4} PG3 >= {5}".format(bus_numbers, round(-line.transfer_capacity, 2),
+            round(a_dict_old[line.name][0][0], 2),round(a_dict_old[line.name][1][0], 2), round(a_dict_old[line.name][2][0],2),
+            round(line.transfer_capacity, 2))
 
-print(master_constraint_values)
-print("\nLoad balance: PG1 + PG2 + PG3 + PG4 = {}".format(sum(P_array)[0]))
+    print(line_constraint_basecase)
+
+print("\n{}".format(master_constraint_values_final))
+print("\nLoad_balance: PG1 + PG2 + PG3 + PG4 = {}".format(system_load))
+
+print_title1("Task 5")
