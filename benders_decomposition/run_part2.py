@@ -38,8 +38,8 @@ buses = {1: bus1, 2: bus2, 3: bus3, 4: bus4}
 # Add lines
 line_12 = Line(buses[1], buses[2], r["1-2"], x["1-2"], trans_cap["1-2"])
 line_13 = Line(buses[1], buses[3], r["1-3"], x["1-3"], trans_cap["1-3"])
-line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"], trans_cap["1-3"])
-line_34 = Line(buses[3], buses[4], r["3-4"], x["3-4"], trans_cap["1-3"])
+line_23 = Line(buses[2], buses[3], r["2-3"], x["2-3"], trans_cap["2-3"])
+line_34 = Line(buses[3], buses[4], r["3-4"], x["3-4"], trans_cap["3-4"])
 
 lines = [line_12, line_13, line_23, line_34]
 
@@ -235,7 +235,7 @@ for bus in buses.values():
     print("Bus {} dispatch: {} pu".format(bus.bus_number, round(bus.dispatch, 4)))
 print("\nThe new master formulation with the benders cut has a small increase in the objective function. In the \n"
       "basecase formulation the cost was 9.1, and it has now increased to {}. This is because the master formulation\n"
-      "now has the advantage that a outage on line 2-3 should not cause any congestions. This was done by increasing\n"
+      "now has the advantage that a outage on line 2-3 should not cause any violations. This was done by increasing\n"
       "the production on bus 1 from 0.8 pu to 1.03 pu, and decreasing production on bus 3 from 1.3 pu to 1.07 pu. This\n"
       "will be verified.".format(round(k_final, 1))  )
 
