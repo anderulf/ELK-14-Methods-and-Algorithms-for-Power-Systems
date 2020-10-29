@@ -110,36 +110,36 @@ print("\nDist factors after outage \n", a_dict)
 # Create the objective function for the subproblem
 
 print("\nObjective function for subproblem: ")
-print("min: Ks = (PG1-PG10) + (PG2-PG20) + (PG3-PG30) + (PG4-PG40)- (PG1-PG10) - (PG2-PG20) - (PG3-PG30) - (PG4-PG40)")
+print("min: Ks = \u0394PG1_up + \u0394PG2_up + \u0394PG3_up + \u0394PG4_up + \u0394PG1_down + \u0394PG2_down + PG3_down + \u0394PG4_down;")
 # Create constraints based on IMML congestion analysis to be considered in the subproblem
-print("\nConstraint(s) to be added to the subproblem formulation in addition to the load balance: \n")
+print("\n/* Constraint(s) to be added to the subproblem formulation in addition to the load balance: */ \n")
 for line in congested_lines:
     line.p_power_flow = line.p_power_flow[0][0]
     bus_numbers = "{}{}".format(line.from_bus.bus_number, line.to_bus.bus_number)
-    s_up = "P{}: {} (PG1-PG10) + {} (PG2-PG20) + {} (PG3-PG30) >= {}".format(bus_numbers, round(a_dict[line.name][0][0], 2),
-                                                round(a_dict[line.name][1][0], 2), round(a_dict[line.name][2][0],2),
-                                                round(-line.transfer_capacity - line.p_power_flow, 2))
-    s_down = "P{}: {} (PG1-PG10) + {} (PG2-PG20) + {} (PG3-PG30) <= {}".format(bus_numbers, round(-a_dict[line.name][0][0], 2),
-                                                round(-a_dict[line.name][1][0], 2), round(-a_dict[line.name][2][0], 2),
-                                                  round(line.transfer_capacity - line.p_power_flow,2))
-    print(s_up)
-    print(s_down)
+    constraint = "P{0}: {1} <=  {2} \u0394PG1_up + {3} \u0394PG2_up + {4} \u0394PG3_up - {2} \u0394PG1_down - {3} \u0394PG2_down - {4} \u0394PG3_down" \
+                 " <= {5};".format(bus_numbers, round(-line.transfer_capacity - line.p_power_flow, 3), round(a_dict[line.name][0][0], 3),
+                                                round(a_dict[line.name][1][0], 3), round(a_dict[line.name][2][0],3),
+                                                round(line.transfer_capacity - line.p_power_flow, 3))
+
+    print(constraint)
+    print("\nLoad balance: \u0394PG1_up + \u0394PG2_up + \u0394PG3_up + \u0394PG4_up - \u0394PG1_down - \u0394PG2_down - PG3_down - \u0394PG4_down = 0;" )
+
 
 print_title1("Task 3")
 
 # Input this objective function and these constraints to LPsolve and get new optimal solution
 
 # Get the output from LPsolve
-k = 0
-new_dispatch = {"1": 0, "2": 0, "3": 0, "4": 0}
+k = 0.46674446
+new_dispatch = {"1": 0.8+0.233372, "2": 0, "3": 1.3-0.233372, "4": 1}
 new_marginal_cost = {"1": 0, "2": 0, "3": 0, "4": 0}
 for bus in buses.values():
     bus.marginal_cost = new_marginal_cost["{}".format(bus_number)]
 # Print the results
 
-print("\nOptimal objective function value, from LPsolve:", k)
+print("\nOptimal objective function value, from LPsolve:", round(k, 3))
 for bus_number in new_dispatch.keys():
-    print("Dispatch for bus {} : {} pu".format(int(bus_number)+1, new_dispatch[bus_number]))
+    print("Dispatch for bus {} : {} pu".format(int(bus_number), round(new_dispatch[bus_number], 3)))
 
 print_title1("Task 4")
 
