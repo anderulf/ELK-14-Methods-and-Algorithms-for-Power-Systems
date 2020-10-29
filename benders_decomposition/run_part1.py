@@ -67,15 +67,41 @@ for line in lines:
     print("Transfer capacity {}pu".format(line.transfer_capacity))
     if line.transfer_capacity <= (abs(line.p_power_flow) - error):
         congested = True
-        congested_lines.append(line.name)
+        congested_lines.append(line)
 
 if congested:
-    print("\nCongested line(s):\n", congested_lines)
+    print("\nCongested line(s):\n")
+    for line in congested_lines:
+        print(line.name)
     print("\nSince one or more lines are congested, linear programming is required.")
 else:
     print("\nNo lines are congested.")
 
 print("Only the constraints corresponding to the congested lines are included in the OPF using LPsolve.")
+
+# Create LPsolve formulation
+print_title3("Master formulation:")
+
+print("min: {} PG1 + {} PG2 + {} PG3 + {} PG4;".format(gen_cost["1"], gen_cost["2"], gen_cost["3"], gen_cost["4"]))
+# Create constraints based on IMML congestion analysis to be considered in the subproblem
+
+# Either get the constraints from task 2 or make new with a_dict before contingency, if so just calculate before
+#  removing the line in the beginning of the code and create with code below
+print("\n/*Constraints: */\n")
+for line in congested_lines:
+    bus_numbers = "{}{}".format(line.from_bus.bus_number, line.to_bus.bus_number)
+    line_constraint_basecase = "P{0}: {1} <= {2} PG1 + {3} PG2 + {4} PG3 <= {5};".format(bus_numbers, round(-line.transfer_capacity, 2),
+            round(a_dict[line.name][0][0], 2),round(a_dict[line.name][1][0], 2), round(a_dict[line.name][2][0],2),
+            round(line.transfer_capacity, 2))
+
+    print(line_constraint_basecase)
+
+print("\nLoad_balance: PG1 + PG2 + PG3 + PG4 = {};\n".format(-sum(P_array)[0]))
+
+for bus in buses.values():
+    print("PG{1}_limit: PG{1} >= 0;".format(bus.bus_number, bus.bus_number))
+
+print_title1("Task 5")
 
 # Calculated values from LP-solve for part 1 task 1
 dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}
@@ -86,6 +112,8 @@ for index, bus in enumerate(buses.values()):
     bus.gen_cost = gen_cost["{}".format(bus.bus_number)]
     bus.p_gen = dispatch["{}".format(bus.bus_number)]
     bus.marginal_cost = dispatch_duals["{}".format(bus.bus_number)]
+
+
 
 print("\nOptimal objective function value, from LPsolve:", k)
 for bus_number in dispatch.keys():
@@ -101,103 +129,24 @@ for line in lines:
             line.p_power_flow += a_dict[line.name][bus.bus_number-1][0] * (bus.dispatch + bus.p_spec)
     print("{} power flow: {} pu".format(line.name, round(line.p_power_flow, 3)))
 
-
-
 print_title1("Task 2")
 #Task 2
 #Check the marginal costs (reduced cost, dual variables) and check these against the operating cost at each bus.
 
+duals = {"1": 0, "2": 1.5, "3": 0, "4": 0}
+
+print_title3("Dual values")
+for index, dual in enumerate(duals.values()):
+    print("Bus {} dual value: {}".format(index+1, dual))
 
 
-"""
-#The optimization part with Pyomo (Ignored because LTsolve is used)
-print_title1("Optimization part")
-# The set for optimization
-bus_set = []
-line_set = []
-loads = {}
+print("\nDual values gives indications on the marginal cost of production. All generators that produce will obtain an\n"
+      "dual value equal to zero. This is because a upper bound for dispatch does not exist. On the other hand we \n"
+      "observe that PG2 has a dual value equal to {}. This is because PG2 is limited by the lower bound, zero, which\n"
+      "means the objective function would be decreased by 1.5 if PG2 were allowed to produce -1 pu. As this is not\n"
+      "a realistic case all producers will have marginal costs equal to their production cost, C. Line constraints\n"
+      "with dual values different from zero are limited, which means the objective function will decrease if the \n"
+      "transfer capacity on these lines are increased.".format(duals["2"]))
+print_title3("Marginal costs")
 for bus in buses.values():
-    bus_set.append("Bus {}".format(bus.bus_number))
-    loads["Bus {}".format(bus.bus_number)] = bus.p_spec
-for line in lines:
-    line_set.append(line.name)
-# We declare the model (ie. creating a pyo object called model)
-model = pyo.ConcreteModel()
-"""
-"""
-Sets:
-    - Buses
-    - Lines
-"""
-"""
-# We declare the set for buses
-model.Bus = pyo.Set(ordered=True, initialize=bus_set)
-model.Line = pyo.Set(ordered=True, initialize=line_set)
-""""""
-Parameters:
-    - distribution factors
-    - loads
-    - generation costs
-    - transfer capacities
-""""""
-dist_factors = {}
-line_a = {}
-for line in lines:
-    for index, bus in enumerate(buses.values()):
-        if bus.bus_number != slack_bus_number:
-            line_a["Bus {}".format(bus.bus_number)] = a_dict[line.name][index][0]
-    dist_factors[line.name] = copy.deepcopy(line_a)  # <-- value må være en ny dict for flere busser
-model.a = pyo.Param(model.Line, initialize=dist_factors, within=pyo.Any)
-model.loads = pyo.Param(model.Bus, initialize=loads, within=pyo.Reals)
-model.gen_cost = pyo.Param(model.Bus, initialize=gen_cost, within=pyo.Reals)
-model.trans_cap = pyo.Param(model.Line, initialize=trans_cap, within=pyo.Reals)
-""""""
-Variables:
-    - Variable for generation at a bus
-""""""
-# Declare the variable for generation at a bus
-model.generation = pyo.Var(model.Bus, within=pyo.NonNegativeReals)
-# Objective: Minimize cost of generation
-def Objective(model):
-    return (sum(model.gen_cost[n] * model.generation[n] for n in model.Bus))
-model.OBJ = pyo.Objective(rule=Objective, sense=pyo.minimize)
-""""""
-Constraints:
-    production cannot be more than inflow and stored capacity
-    reservoir cannot hold more than inflow minus reservoir capacity (rest is spillage)
-""""""
-# Constraint for power balance
-# Constraint for power balance during the first period. Production is equal to inflow - stored for next period - spilled water
-def power_balance(model):
-    return (sum(model.generation[n] for n in model.Bus) == sum(model.loads[n] for n in model.Bus))
-model.power_balance = pyo.Constraint(rule=power_balance)
-# Constraint for flow on line
-def line_upper_limit(model, line):
-    print(line)
-    flow = 0
-    for index, bus in enumerate(model.Bus):
-        if index != slack_bus_number - 1:
-            flow += model.a[line][bus] * (model.generation[bus] - model.loads[bus])
-    return flow <= model.trans_cap[line]
-model.line_upper_limit = pyo.Constraint(model.Line, rule=line_upper_limit)
-def line_lower_limit(model, line):
-    flow = 0
-    for index, bus in enumerate(model.Bus):
-        if index != slack_bus_number -1:
-            flow += model.a[line][bus] * (model.generation[bus] - model.loads[bus])
-    return flow >= -model.trans_cap[line]
-    #return (sum(model.a[line][bus] * (model.generation[bus] - model.loads[bus]) for bus in model.Bus[:-1]) >= -model.trans_cap[line])
-model.line_lower_limit = pyo.Constraint(model.Line, rule=line_lower_limit)
-# Solver used (since quadratic term in objective function, gurobi must be used)
-opt = SolverFactory("gurobi")
-# Include dual values, the dual values of the constraints will help us find the system price
-model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
-# Solve the problem
-results = opt.solve(model, load_solutions=True)
-print("Displaying results:")
-# Display values
-model.display()
-print("Displaying dual results:")
-# Display dual values
-model.dual.display()
-"""
+    print("Bus {} marginal cost: {}".format(bus.bus_number, bus.gen_cost))
