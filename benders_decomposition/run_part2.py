@@ -21,7 +21,7 @@ delta = {"1": 0, "2": 0, "3": 0, "4": 0}
 # Q values from assignment
 Q = {"1": 0, "2": 0, "3": 0, "4": None}
 # P values from project
-P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": 0}
+P = {"1": -1.6, "2": -0.9, "3": -0.6, "4": None}
 # From LTsolve
 #P = {"1": -0.8, "2": -0.9, "3": 0.7, "4": 0}
 # line data
@@ -50,8 +50,9 @@ P_array = np.zeros([len(P)-1, 1])
 voltage_angles_labels = []
 for index, p_spec in enumerate(P.values()):
     if p_spec:
-        P_array[index] = p_spec
+        P_array[index] = basecase_dispatch[str(index +1)] + p_spec
         voltage_angles_labels.insert(index, "\u03B4{}".format(index+1))
+print("\nP_array:\n", P_array)
 
 B_p = np.zeros([len(P), len(P)])
 B_p = create_simplified_y_bus(B_p, lines, slack_bus_number)
@@ -59,9 +60,9 @@ _, a_dict_old = calculate_distribution_factors(B_p, P_array, buses, lines, slack
 
 print_title1("Task 1")
 
-# Update 
+# Update
 from_bus, to_bus = get_from_and_to_bus(outage_task_1)
-IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5, printing=False)
+IMML_algorithm(P_array, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5, printing=False)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_23.reactance *= 2
 line_23.transfer_capacity /=2
@@ -69,7 +70,7 @@ line_23.transfer_capacity /=2
 # Congestion check
 congested = False
 congested_lines = []
-print_title3("Power flow on lines")
+print_title3("Power flow on lines after running an IMML")
 for line in lines:
     line.p_power_flow = (line.from_bus.delta - line.to_bus.delta) / line.reactance
     print("\n{} power flow: {}pu".format(line.name, round(line.p_power_flow, 4)))
