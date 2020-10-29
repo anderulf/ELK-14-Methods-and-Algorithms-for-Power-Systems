@@ -53,8 +53,14 @@ print("\nIMML is a fast and general technique for simulating impacts of modifyin
 
 print_title1("Task 2")
 from_bus, to_bus = get_from_and_to_bus(outage_task_2)
+
+P_array = np.zeros([len(P)-1, 1])
+for index, p_spec in enumerate(P.values()):
+    if p_spec:
+        P_array[index] = p_spec
+
 #Find voltage angles and the power flow when the line 1-2 is disconnected by using the IMML
-IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus)
+IMML_algorithm(P_array, buses, lines, slack_bus_number, from_bus, to_bus)
 # from_bus and to_bus is the line which is not considered
 for index, line in enumerate(lines):
     if from_bus == line.from_bus.bus_number and to_bus == line.to_bus.bus_number:
@@ -72,7 +78,7 @@ print("\nWhen line 1-2 is disconnected the flow which originally was flowing bet
 print_title1("Task 3")
 
 from_bus, to_bus = get_from_and_to_bus(outage_task_3)
-IMML_algorithm(P, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5)
+IMML_algorithm(P_array, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
 line_13.reactance *= 2
 for index, line in enumerate(lines):

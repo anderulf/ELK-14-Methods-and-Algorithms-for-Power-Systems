@@ -10,7 +10,7 @@ class Bus:
 
     alpha and beta should only be inputed for continuation load flow method
     """
-    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, beta=None, alpha=None):
+    def __init__(self, bus_number, p_spec, q_spec, voltage, delta, beta=None, alpha=None, dispatch=None):
         self.bus_number = bus_number
         self.p_spec = p_spec
         self.q_spec = q_spec
@@ -22,12 +22,14 @@ class Bus:
         self.delta_q = 1
         self.bus_type = None
         self.classify_bus_type()
+        # Variables for continuation
         self.beta = beta
         self.alpha = alpha
-        # Variable for benders decomposition
+        # Variables for benders decomposition
+        self.dispatch = dispatch
         self.p_gen = None
         self.gen_cost = None
-        self.marginal_cost = None
+        self.sensitivity = None
 
     def classify_bus_type(self):
         """
@@ -70,7 +72,7 @@ class Bus:
                 f"{self.p_calc:.4f}", f"{self.q_calc:.4f}", f"{self.delta_p:.4f}", f"{self.delta_q:.4f}") + s)
 
 class Line:
-    def __init__(self, from_bus, to_bus, resistance, reactance):
+    def __init__(self, from_bus, to_bus, resistance, reactance, transfer_capacity=None):
         self.name = "Line {}-{}".format(from_bus.bus_number, to_bus.bus_number)
         self.from_bus = from_bus
         self.to_bus = to_bus
@@ -86,7 +88,7 @@ class Line:
         self.from_current = 0
         self.p_power_flow = 0
         self.q_power_flow = 0
-        self.transfer_capacity = None
+        self.transfer_capacity = transfer_capacity
 
 
     def __str__(self):

@@ -5,7 +5,7 @@ from supporting_methods import print_title3
 # Numpy printing options
 np.set_printoptions(suppress=True)  # suppress scientific notations
 
-def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=1, printing=True):
+def IMML_algorithm(P_array, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=1, printing=True):
     """
     Outage should be a string in the format "x-y" where x is the from bus, and y is the to bus
     The buses are changed by the algorithm so the bus data can be used after the algorithm is run
@@ -42,12 +42,12 @@ def IMML_algorithm(specified_active_powers, buses, lines, slack_bus_number, from
     # z = M_transpose * x = M_transpose *H_invers*M
     z = x[from_bus-1] - x[to_bus -1]
 
-    P_array = np.zeros([len(buses)-1, 1])
-    for bus in specified_active_powers:
-        if int(bus) == slack_bus_number:
-            pass
-        else:
-            P_array[int(bus)-1] = specified_active_powers[bus]
+    #P_array = np.zeros([len(buses)-1, 1])
+    #for bus in specified_active_powers:
+        #if int(bus) == slack_bus_number:
+            #pass
+        #else:
+            #P_array[int(bus)-1] = specified_active_powers[bus]
     delta_0 = np.linalg.solve(H, P_array)
 
     # M_transpose*H_invers*P
