@@ -1,0 +1,15 @@
+min: 4 PG1 + 5 PG2 + 3 PG3 + 2 PG4;
+
+/*Constraints: */
+
+P13: -1 <= 0.8 PG1 -1.28 + 0.4 PG2 - 0.36 + -0.0 PG3 -0 <= 1;
+P34: -1 <= 1.0 PG1 -1.6 + 1.0 PG2 - 0.9 + 1.0 PG3 - 0.6 <= 1;
+
+Benders_cut: -1 PG1 + -0.333 PG2 + 1 PG3 + 1 PG4 <= 1.033;
+
+Load_balance: PG1 + PG2 + PG3 + PG4 = 3.1; 
+
+PG1_limit: PG1 >= 0;
+PG2_limit: PG2 >= 0;
+PG3_limit: PG3 >= 0;
+PG4_limit: PG4 >= 0;

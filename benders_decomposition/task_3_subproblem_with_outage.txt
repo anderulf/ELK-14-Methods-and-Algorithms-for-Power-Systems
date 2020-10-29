@@ -1,0 +1,18 @@
+/*Objective function: */
+min: PG1_up + PG2_up + PG3_up + PG4_up + PG1_down + PG2_down + PG3_down + PG4_down  ;               //  Every change is a penalty
+
+/*Constraints:  */
+
+P13:  0.2 <= 0.857 PG1_up + 0.571 PG2_up -0.857 PG1_down - 0.571 PG2_down <= 2.2 ;	                // The constants here are the distribution factors
+
+load_balance: PG1_up + PG2_up + PG3_up + PG4_up - PG1_down - PG2_down - PG3_down - PG4_down = 0;    //  Change should net zero
+
+PG1_up_limit:       PG1_up   >= 0   ;                                                               //  Can upregulate as much as it want
+PG2_up_limit:       PG2_up   >= 0   ;
+PG3_up_limit:       PG3_up   >= 0   ;
+PG4_up_limit:       PG4_up   >= 0   ;
+PG1_down_limit:     PG1_down <= 0.8 ;                                                               //  0.8 is basecase production
+PG2_down_limit:     PG2_down <= 0   ;                                                               //  Cannot be downregulated because it did not produce in basecase
+PG3_down_limit:     PG3_down <= 1.3 ;                                                               //  1.3 is basecase production
+PG4_down_limit:     PG4_down <= 1   ;                                                               //  1 is basecase production
+
