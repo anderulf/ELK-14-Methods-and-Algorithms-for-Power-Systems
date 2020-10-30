@@ -18,6 +18,7 @@ def run_primal_method(fast_dec, printing=False):
     fast_dec.calculate_fast_decoupled_mismatches("P")
     while fast_dec.power_error() > 0.0001:
         fast_dec.iteration += 1
+        fast_dec.reset_values()
         # Calculate the corrections for angles
         theta_correction = np.linalg.solve(fast_dec.B_p, fast_dec.mismatch.get_P())
         # Update theta i X-vector, theta_new = theta_correction + theta_old
@@ -37,7 +38,6 @@ def run_primal_method(fast_dec, printing=False):
         # Calculate the mismatches
         fast_dec.calculate_fast_decoupled_mismatches("P")
         fast_dec.calculate_fast_decoupled_mismatches("Q")
-
         if printing:
             print_title3("Iteration {}".format(fast_dec.iteration))
             fast_dec.print_data(theta_correction, voltage_correction)
@@ -58,6 +58,7 @@ def run_dual_method(fast_dec, printing=False):
     fast_dec.calculate_fast_decoupled_mismatches("Q")
     while fast_dec.power_error() > 0.0001:
         fast_dec.iteration += 1
+        fast_dec.reset_values()
         # Voltage_correction = B_dp.invers*Q_mismatch(v, theta_updated) (samme som over)
         voltage_correction = np.linalg.solve(fast_dec.B_dp, fast_dec.mismatch.get_Q())
         # Update voltage i X-vector, V_new = V_correction + v_old
