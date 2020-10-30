@@ -103,6 +103,15 @@ print("\nLoad_balance: PG1 + PG2 + PG3 + PG4 = {};\n".format(-sum(P_array)[0]))
 for bus in buses.values():
     print("PG{1}_limit: PG{1} >= 0;".format(bus.bus_number, bus.bus_number))
 print_title3("Solution from LPsolve:")
+"""
+Value of objective function: 9.10000000
+
+Actual values of the variables:
+PG1                           0.8
+PG2                             0
+PG3                           1.3
+PG4                             1
+"""
 
 # Calculated values from LP-solve for part 1 task 1
 dispatch = {"1": 0.8, "2": 0, "3": 1.3, "4": 1}

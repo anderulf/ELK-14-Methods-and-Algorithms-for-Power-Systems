@@ -101,7 +101,6 @@ print("\nNote that only the constraints corresponding to the congested lines are
 
 
 print_title1("Task 2")
-#Behold restriksjonene som var fra før, line 1-3 and line 3-4.
 
 # For convenience the distribution factors are calculated
 B_p = np.zeros([len(P), len(P)])
@@ -109,7 +108,6 @@ B_p = create_simplified_y_bus(B_p, lines, slack_bus_number)
 _, a_dict = calculate_distribution_factors(B_p, P_array, buses, lines, slack_bus_number, printing=False)
 
 # The subproblem is formulated
-
 
 # Create the objective function for the subproblem
 
@@ -149,16 +147,20 @@ PG4_down                        0
 """
 # Get the output from LPsolve
 k = 0.46674446
-new_dispatch = {"1": 0.8+0.233372, "2": 0, "3": 1.3-0.233372, "4": 1}
+dispatch_change ={"1": 0.233372, "2": 0, "3": -0.233372, "4": 0}
+new_dispatch = {}
 duals = {"1": 0, "2": 0.667445, "3": 2, "4": 2}
 costs = {"1": 1, "2": 1, "3": 1, "4": 1}
 for bus in buses.values():
     bus.sensitivity = duals["{}".format(bus.bus_number)] - costs["{}".format(bus.bus_number)]
 # Print the results
+print_title3("Subproblem LPsolve output")
 print("\nOptimal objective function value, from LPsolve:", round(k, 3))
-for bus_number in new_dispatch.keys():
-    print("\nDispatch for bus {} : {} pu".format(int(bus_number), round(new_dispatch[bus_number], 3)))
-    print("Sensitivity for bus {} : {} ".format(int(bus_number), round(buses[int(bus_number)].sensitivity, 3)))
+for bus_number in dispatch_change.keys():
+    new_dispatch[bus_number] = basecase_dispatch[bus_number] + dispatch_change[bus_number]
+    print("\nChange in dispatch for bus {}: {} pu".format(int(bus_number), round(dispatch_change[bus_number], 3)))
+    print("Dispatch for bus {}: {} pu".format(int(bus_number), round(new_dispatch[bus_number], 3)))
+    print("Sensitivity for bus {}: {} ".format(int(bus_number), round(buses[int(bus_number)].sensitivity, 3)))
 
 print_title1("Task 4")
 
