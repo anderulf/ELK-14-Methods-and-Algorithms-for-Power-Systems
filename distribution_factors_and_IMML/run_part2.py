@@ -76,7 +76,7 @@ print("\nWhen line 1-2 is disconnected the flow which originally was flowing bet
       "cannot flow further to bus 1.")
 
 print_title1("Task 3")
-
+print_title3("Values from IMML calculations")
 from_bus, to_bus = get_from_and_to_bus(outage_task_3)
 IMML_algorithm(P_array, buses, lines, slack_bus_number, from_bus, to_bus, h_modification=0.5)
 # Removal of one line means the equivalent impedance on the remaining line is doubled
