@@ -145,7 +145,7 @@ class Continuation(Load_Flow):
         else:
             self.mismatch_vector_labels.append("S")
             self.x_vector_labels.append("S")
-            self.correction_vector_labels.append("S")
+            self.correction_vector_labels.append("\u0394S")
             self.x_old = np.vstack([self.x_old, 0])
             self.x_new = np.vstack([self.x_new, 0])
             self.x_diff = np.vstack([self.x_diff, 0])
