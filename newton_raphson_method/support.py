@@ -88,8 +88,6 @@ class Load_Flow:
         self.correction_vector_labels = []
         self.create_label_vectors()
         self.mismatch = Mismatch(self.m, self.n, self.mismatch_vector_labels)
-        self.net_losses_p = 0
-        self.net_losses_q = 0
         self.error_history = [] # A list of all load flow errors (maximum of delta_p and delta_q) for every iteration taken
         # Variables for continuation load flow
         self.max_voltage_step = None
@@ -154,9 +152,8 @@ class Load_Flow:
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
                 self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
-                self.net_losses_p += round(buses[i].p_calc, 3)
-                self.net_losses_q += round(buses[i].q_calc,3)
-
+                self.total_losses_p += buses[i].p_calc
+                self.total_losses_q += buses[i].q_calc
 
             else:
                 for j in buses:
@@ -171,8 +168,8 @@ class Load_Flow:
                 # Add values to net injection vector
                 self.net_injections_vector[i-1] = round(buses[i].p_calc, 3)
                 self.net_injections_vector[i + self.n] = round(buses[i].q_calc,3)
-                self.net_losses_p += round(buses[i].p_calc, 3)
-                self.net_losses_q += round(buses[i].q_calc, 3)
+                self.total_losses_p += buses[i].p_calc
+                self.total_losses_q += buses[i].q_calc
 
     def error_specified_vs_calculated(self):
         """
@@ -192,7 +189,6 @@ class Load_Flow:
         """
         Adds all the error terms to a list and returns the maximum value of the list
         """
-        #print("\nPower error:")
         error_list = []
         buses = self.buses_dict
         for i in buses:
@@ -260,8 +256,6 @@ class Load_Flow:
             line.q_loss = apparent_loss.imag
             line.real_power_flow = (-v_from * line.from_current).real
             line.reactive_power_flow = (-v_from * line.from_current).imag
-            self.total_losses_p += line.p_loss
-            self.total_losses_q += line.q_loss
 
     def calculate_slack_values(self):
         """
@@ -269,6 +263,8 @@ class Load_Flow:
 
         This function is currently not in use
         """
+        self.buses_dict[self.slack_bus_number].p_calc = 0
+        self.buses_dict[self.slack_bus_number].q_calc = 0
         for i in self.buses_dict:
             # Skip slack
             if i == self.slack_bus_number:
@@ -289,9 +285,6 @@ class Load_Flow:
         """
         self.total_losses_p = 0
         self.total_losses_q = 0
-
-        self.net_losses_p = 0
-        self.net_losses_q = 0
 
     def create_label_vectors(self):
         for i in self.buses_dict:
@@ -329,7 +322,7 @@ class Load_Flow:
         Print line values (losses, flows, current)
         """
         for line in self.lines:
-            print("Line {}-{} has I={}, P_flow={}, Q_flow={}, P_loss={} and Q_loss={}".format(line.from_bus.bus_number, line.to_bus.bus_number, round(line.from_current,3), round(line.real_power_flow,3), round(line.reactive_power_flow,3), round(line.p_loss,3), round(line.q_loss,3)))
+            print("Line {}-{} has I = {} pu, P_flow = {} pu, Q_flow = {} pu, P_loss = {} pu and Q_loss = {} pu".format(line.from_bus.bus_number, line.to_bus.bus_number, round(line.from_current,3), round(line.real_power_flow,3), round(line.reactive_power_flow,3), round(line.p_loss,3), round(line.q_loss,3)))
 
     def print_matrices(self):
         print("\nJacobi matrix:")
