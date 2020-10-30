@@ -9,7 +9,7 @@ flat_start can be True or False
     True: For load increases the load flow starts from the input values
     False: For load increases the load flow starts from the previous load flow
 """
-flat_start = False
+flat_start = True
 # Additional active load 0.2pu 30% at Bus 1, and 70% at Bus 2.
 bus_1_load_increase = 0.06
 bus_2_load_increase = 0.14
@@ -32,8 +32,8 @@ x = {"1-2": 0.2, "1-3": 0.25 , "2-3": 0.15}
 """
 Program
 """
-print_title1("Task 3")
-print_title2("NR iteration with load increases. Flat start={}".format(flat_start))
+print_title1("Task 2")
+print_title2("NR iteration with active load increases. Flat start={}".format(flat_start))
 
 # Create buses
 buses = {}
@@ -112,7 +112,8 @@ print("\nTotal iterations: ", total_iterations)
 print("Setting for analysis: flat start = {}".format(flat_start))
 plt.plot(P_increase,V_vector_bus1,label='V_Bus_1')
 plt.plot(P_increase,V_vector_bus2, label='V_Bus_2')
-plt.xlabel('Total load power drawn from the system')
+plt.xlabel('Total load power drawn from the system [pu]')
 plt.ylabel('Voltage [pu]')
+plt.title("Task 2: active load increases with flat start = {}".format(flat_start))
 plt.legend()
 plt.show()
