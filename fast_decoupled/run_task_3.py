@@ -59,5 +59,5 @@ dual_iterations = run_dual_method(fast_dec, printing=True)
 
 print("\nPrimal method iterations: ", primal_iterations)
 print("Dual method iterations: ", dual_iterations)
-print("\nDual method converges faster for Rij = Xij in larger systems. In this small 3 bus system the difference is minor")
-print("When Xij>Rij the fast decoupled power flow method converges significantly faster")
+print("\nDual method converges faster for Rij = Xij in larger systems. In this small 3 bus system the difference is minor.")
+print("The fast decoupled power flow method generally does not perform well when R/X is high.")

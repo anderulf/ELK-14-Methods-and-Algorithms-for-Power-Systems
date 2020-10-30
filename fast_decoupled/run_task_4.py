@@ -46,7 +46,7 @@ fast_dec.set_up_matrices()
 #4.
 print_title1("Task 4")
 
-print_title2("Primal Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
+print_title2("Primal Decoupled Power Flow with {} pu load on bus 1".format(abs(P["1"])))
 
 for bus_number in V:
     buses[int(bus_number)] = Bus(int(bus_number), P[bus_number], Q[bus_number], V[bus_number], delta[bus_number])
@@ -65,7 +65,7 @@ fast_dec.set_up_matrices(phase)
 
 primal_iterations = run_primal_method(fast_dec, printing=True)
 
-print_title2("Dual Decoupled Power Flow with {}pu load on bus 1".format(abs(P["1"])))
+print_title2("Dual Decoupled Power Flow with {} pu load on bus 1".format(abs(P["1"])))
 
 # Reset to flat start
 for bus_number in V:
@@ -79,4 +79,5 @@ dual_iterations = run_dual_method(fast_dec, printing=True)
 
 print("\nPrimal method iterations: ", primal_iterations)
 print("Dual method iterations: ", primal_iterations)
-print("\nPrimal and dual methods uses same amount of iterations but this is not likely for bigger systems")
+print("\nPrimal and dual methods uses same amount of iterations but this is not likely for bigger systems. In bigger \n"
+      "systems the dual method is preferred.")

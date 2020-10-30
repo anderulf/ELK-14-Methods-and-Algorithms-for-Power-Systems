@@ -58,6 +58,7 @@ phase = "Primal"
 #Initialize primal jacobian
 fast_dec.set_up_matrices(phase)
 primal_iterations = run_primal_method(fast_dec, printing=True)
+fast_dec.calculate_slack_values()
 fast_dec.print_final_solution(phase)
 
 print_title2("Dual Fast Decoupled Power Flow")
@@ -72,6 +73,7 @@ phase = "Dual"
 # Initialize primal jacobian (phase)
 fast_dec.set_up_matrices(phase)
 dual_iterations = run_dual_method(fast_dec, printing=True)
+fast_dec.calculate_slack_values()
 fast_dec.print_final_solution(phase)
 
 print_title2("Standard Decoupled Power Flow")
@@ -87,9 +89,14 @@ phase = "Standard"
 fast_dec.set_up_matrices(phase)
 # Note that the standard method can be implemented equal to the primal or dual method. In this case it's run using
 # the primal method so run_primal_method is used.
-standard_iterations = run_primal_method(fast_dec, printing=True) 
+standard_iterations = run_primal_method(fast_dec, printing=True)
+fast_dec.calculate_slack_values()
 fast_dec.print_final_solution(phase)
+print("\nNote that losses are neglected in this assignment ie. P3 = -sum(P1, P2)")
 print("\nNewton raphson iterations: ", NR_iterations)
 print("Primal iterations: ", primal_iterations)
 print("Dual iterations: ", dual_iterations)
 print("Standard iterations: ", standard_iterations)
+
+print("\nFast decoupled power flow method is less time consuming compared to conventional NR due to the use of a \n"
+      "constant jacobian. This is not shown explicitly in this assignment because the system is very small.")
